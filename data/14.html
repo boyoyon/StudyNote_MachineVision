@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>準備中</title>
+        <title>ダイナミックビジョン</title>
         <style type="text/css">
             p
             {
@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,8 +75,1992 @@
     </style>
     </head>
     <body>
-        <h1><center>準備中</center></h1>
+        <h1><center>14章 ダイナミックビジョン(準備中)</center></h1>
 <p>
+ほとんどの生物視覚システムは、変化する世界に対応するために進化してきた。
+マシンビジョンシステムも同様に発展してきた。コンピュータビジョンシステムにとって、移動・変化する物体、変化する照明、そして変化する視点に対応する能力は、様々なタスクを実行する上で不可欠である。初期のコンピュータビジョンシステムは主に静的なシーンを対象としていたが、動的なシーンを分析するためのコンピュータビジョンシステムは、様々な用途向けに設計されている。
+<!-- Most biological vision systems have evolved to cope with the changing world.
+Machine vision systems have developed in the same way. For a computer vi-
+sion system, the ability to cope with moving and changing objects, changing
+illumination, and changing viewpoints is essential to perform several tasks.
+Although early computer vision systems were concerned primarily with static
+scenes, computer vision systems for analyzing dynamic scenes are being de-
+signed for different applications.-->
+</p><p>
+動的シーン解析システムへの入力は、変化する世界から撮影された画像フレームのシーケンスである。画像シーケンスを取得するために使用されるカメラも動いている可能性がある。各フレームは、特定の瞬間におけるシーンの画像を表す。シーンの変化は、カメラの動き、物体の動き、照明の変化、または物体の構造、サイズ、または形状の変化によって引き起こされる可能性がある。通常、シーンの変化はカメラまたは物体の動き、あるいはその両方によるものであり、物体は剛体または準剛体であると想定され、その他の変化は許容されない。システムは、変化を検出し、観察者と物体の動きの特性を決定し、高レベルの抽象化を用いて動きを特徴付け、物体の構造を復元し、移動する物体を認識する必要がある。ビデオ編集やビデオデータベースなどのアプリケーションでは、シーケンス内のマクロな変化を検出することが求められる場合がある。これらの変更により、セグメントは、同様のカメラモーションやシーケンス内の同様のシーンを示す多数の関連セグメントに分割される。
+<!-- The input to a dynamic scene analysis system is a sequence of image
+frames taken from a changing world. The camera used to acquire the image
+sequence may also be in motion. Each frame represents an image of the
+scene at a particular instant in time. The changes in a scene may be due
+to the motion of the camera, the motion of objects, illumination changes, or
+changes in the structure, size, or shape of an object. It is usually assumed
+that the changes in a scene are due to camera and/or object motion, and
+that the objects are either rigid or quasi-rigid; other changes are not allowed.
+The system must detect changes, determine the motion characteristics of the
+observer and the objects, characterize the motion using high-level abstrac-
+tion, recover the structure of the objects, and recognize moving objects. In
+applications such as video editing and video databases, it may be required
+to detect macro changes in a sequence. These changes will partition the
+segment into many related segments exhibiting similar camera motion or a
+similar scene in a sequence.-->
+
+</p><p>
+シーンには通常、複数のオブジェクトが含まれる。ある時点におけるシーンの画像は、カメラの位置に依存するシーンの投影を表す。カメラとワールド設定の動的な性質には、4つの可能性がある。
+<div class="styleBullet">
+<ul>
+<li>1. 固定カメラ、固定オブジェクト (SCSO)</li><br>
+<li>2. 固定カメラ、移動オブジェクト (SCMO)</li><br>
+<li>3. 移動カメラ、固定オブジェクト (MCSO)</li><br>
+<li>4. 移動カメラ、移動オブジェクト (MCMO)</li>
+</ul>
+</div>
+<!-- A scene usually contains several objects. An image of the scene at a given
+time represents a projection of the scene, which depends on the position of
+the camera. There are four possibilities for the dynamic nature of the camera
+and world setup:
+<div class="styleBullet">
+<ul>
+<li>1. Stationary camera, stationary objects (SCSO)</li><br>
+<li>2. Stationary camera, moving objects (SCMO)</li><br>
+<li>3. Moving camera, stationary objects (MCSO)</li><br>
+<li>4. Moving camera, moving objects (MCMO)</li>
+</ul>
+</div>　-->
+</p><p>
+画像シーケンスを解析するには、上記の各ケースで異なる手法が必要である。最初のケースは、単純に静止シーンを解析するものである。
+<!-- For analyzing image sequences, different techniques are required in each of
+the above cases. The first case is simply static-scene analysis.-->
+</p><p>
+多くのアプリケーションでは、必要な情報を得るために単一の画像を処理だけが必要になる場合がある。この種の分析は、本書のこれまでの章で説明してきた。
+<!--In many applications, it may be necessary to process a single image to
+obtain the required information. This type of analysis has been the topic of
+discussion in the earlier chapters in this book.-->
+</p><p>
+アプリケーションによっては、動的な環境から抽出した情報が必要になる場合がある。また、ビジョンシステムが単一の視点から動的なプロセスを理解しなければならない場合もある。移動ロボットや自律走行車などのアプリケーションでは、ビジョンシステムは移動中に取得した画像シーケンスを解析する必要がある。後述するように、移動カメラから情報を復元するには、カメラが静止している場合とは異なる手法が必要である。
+<!-- Some applications require information extracted from a dynamic envi-
+ronment; in some cases a vision system must understand a dynamic process
+from a single viewpoint. In applications such as mobile robots or autonomous
+vehicles, a vision system must analyze an image sequence acquired while in
+motion. As we will see, recovering information from a mobile camera requires
+different techniques than those useful when the camera remains stationary.-->
+</p><p>
+画像フレームのシーケンスは、シーンの理解を助けるより多くの情報を提供するが、システムが処理するデータ量が大幅に増加する。シーケンスの各フレームに静的シーン分析手法を適用するには、静的シーン分析のあらゆる困難さに加えて、膨大な量の計算が必要になる。幸いなことに、動的シーン分析の研究では、多くの場合、静的シーンよりも動的シーンの方が情報の回復が容易であることが示されている。
+<!-- A sequence of image frames offers much more information to aid in un-
+derstanding a scene but significantly increases the amount of data to be
+processed by the system. The application of static-scene analysis techniques
+to each frame of a sequence requires an enormous amount of computation,
+in addition to all of the difficulties of static-scene analysis. Fortunately, re-
+search in dynamic-scene analysis has shown that the recovery of information
+in many cases is easier in dynamic scenes than in static scenes.-->
+</p><p>
+動的シーン解析において、SCMOシーンは最も注目を集めている。このようなシーン解析の目標は通常、動きを検出し、移動物体のマスクを抽出して認識し、その動き特性を計算することである。MCSOシーンとMCMOシーンは、ナビゲーションアプリケーションにおいて非常に重要である。MCMOは動的シーン解析において最も一般的であり、おそらく最も難しい状況だが、コンピュータビジョンにおいて最も開発が遅れている分野でもある。
+<!-- In dynamic-scene analysis, SCMO scenes have received the most atten-
+tion. In analyzing such scenes, the goal is usually to detect motion, to extract
+masks of moving objects for recognizing them, and to compute their motion
+characteristics. MCSO and MCMO scenes are very important in navigation
+applications. MCMO is the most general and possibly the most difficult sit-
+uation in dynamic scene analysis, but it is also the least developed area of
+computer vision.-->
+
+</p><p>
+動的シーン分析には3つの段階がある。
+<div class="styleBullet">
+<ul>
+<li>● 周辺フェーズ</li>
+<li>● 注意フェーズ</li>
+<li>● 認知フェーズ</li>
+</ul>
+</div>
+<!-- Dynamic scene analysis has three phases:
+
+● Peripheral
+● Attentive
+● Cognitive-->
+</p><p>
+周辺フェーズでは、後の分析フェーズで非常に役立つ近似情報の抽出に取り組む。この情報はシーン内の活動を示し、シーンのどの部分を注意深く分析する必要があるかを判断するために使用される。注意フェーズでは、シーンの活動部分に分析を集中させ、物体の認識、物体の動きの分析、シーンで発生するイベントの履歴の作成、その他の関連活動に使用できる情報を抽出する。認知フェーズでは、物体に関する知識、動作動詞、その他のアプリケーション依存の概念を適用して、存在する物体と発生するイベントの観点からシーンを分析する。
+<!-- The peripheral phase is concerned with extraction of approximate infor-
+mation which is very helpful in later phases of analysis. This information
+indicates the activity in a scene and is used to decide which parts of the
+scene need careful analysis. The attentive phase concentrates analysis on the
+active parts of the scene and extracts information which may be used for
+recognition of objects, analysis of object motion, preparation of a history of
+events taking place in the scene, or other related activities. The cognitive
+phase applies knowledge about objects, motion verbs, and other application-
+dependent concepts to analyze the scene in terms of the objects present and
+the events taking place.-->
+</p><p>
+動的シーン解析システムへの入力は、\(F(x, y, t)\) で表されるフレームシーケンスである。ここで、\(x\) と \(y\) は時刻 \(t\) におけるシーンを表すフレーム内の空間座標である。関数の値はピクセルの輝度を表す。画像は、3次元座標系の原点に配置されたカメラを用いて取得されたと仮定する。この観察者中心システムで使用される投影法は、透視投影法または直交投影法のいずれかである。
+<!-- The input to a dynamic scene analysis system is a frame sequence, rep-
+resented by F(x, y,t) where x and y are the spatial coordinates in the frame
+representing the scene at time t. The value of the function represents the in-
+tensity of the pixel. It is assumed that the image is obtained using a camera
+located at the origin of a three-dimensional coordinate system. The pro-
+jection used in this observer-centered system may be either perspective or
+orthogonal.-->
+</p><p>
+フレームは通常一定の間隔で撮影されるため、\(t\) は絶対時間 \(t\)に撮影されたフレームではなく、シーケンスの \(t\) 番目のフレームを表すと仮定する。
+<!-- Since the frames are usually taken at regular intervals, we will assume
+
+that t represents the ¢th frame of the sequence, rather than the frame taken
+at absolute time \(t\).-->
+</p>
+<h2>14.1 変化の検出</h2>
+<p>
+シーケンス内の連続する2つのフレームにおける変化の検出は、多くのアプリケーションにとって非常に重要なステップである。シーン内で知覚可能な動きは、そのシーンのフレームシーケンスに何らかの変化をもたらす。このような変化が検出されれば、動きの特性を分析できる。物体の動きの成分については、動きを画像平面に平行な平面に限定すれば、定量的な評価が可能である。一方、3次元の動きについては、定性的な評価しかできない。シーン内の照明の変化も、テレビ放送や映画におけるシーンの変化と同様に、輝度値の変化をもたらす。
+<!-- Detection of changes in two successive frames of a sequence is a very impor-
+tant step for many applications. Any perceptible motion in a scene results in
+some change in the sequence of frames of the scene. Motion characteristics
+can be analyzed if such changes are detected. A good quantitative estimate
+of the motion components of an object may be obtained if the motion is re-
+stricted to a plane that is parallel to the image plane; for three-dimensional
+motion, only qualitative estimates are possible. Any illumination change in
+a scene will also result in changes in intensity values, as will scene changes
+in a TV broadcast or a movie.-->
+</p><p>
+動的シーン解析のほとんどの手法は、フレームシーケンスにおける変化の検出に基づいている。フレーム間の変化から始めて、シーケンス全体を解析することができる。変化は、ピクセル、エッジ、領域など、さまざまなレベルで検出できる。ピクセルレベルで検出された変化を集約することで、後続のフェーズにおける計算要件を制限するための有用な情報を得ることができる。
+<!-- Most techniques for dynamic-scene analysis are based on the detection of
+changes in a frame sequence. Starting with frame-to-frame changes, a global
+analysis of the sequence may be performed. Changes can be detected at
+different levels: pixel, edge, or region. Changes detected at the pixel level
+can be aggregated to obtain useful information with which the computational
+requirements of later phases can be constrained.-->
+</p><p>
+このセクションでは、変化検出のためのさまざまな手法について説明する。
+まず、最も単純でありながら最も有用な変化検出手法の一つである差分画像から始め、次にエッジと領域の変化検出について説明する。
+<!-- In this section, we will discuss different techniques for change detection.
+We will start with one of the simplest, yet one of the most useful change
+detection techniques, difference pictures, and then discuss change detection
+for edges and regions.-->
+</p>
+<h3>14.1.1 差分画像</h3>
+<p>
+2つのフレーム間の変化を検出する最も明白な方法は、2つのフレームの対応するピクセルを直接比較し、それらが同一かどうかを判定することである。最も単純な形では、フレーム\(F(x,y,j)\) と\(F(x,y,k)\) 間の二値差分画像 \(DP_{jk}(x, y)\) は、次のように得られる。
+\[
+DP_{jk}(x,y)=\Bigg\{
+\begin{array}{c}
+1 & if |F(x,y,j)-F(x,y,k)|\gt\tau \\
+0 & otherwise
+\end{array}
+\tag{14.1}
+\]
+ここで、\(\tau\)は閾値である。
+<!-- The most obvious method of detecting change between two frames is to
+directly compare the corresponding pixels of the two frames to determine
+whether they are the same. In the simplest form, a binary difference picture
+DP;x(x, y) between frames \(F(x,y,j)\) and \(F(x,y,k)\) is obtained by:
+\[
+DP_{jk}(x,y)=\Big\{
+\begin{array}{c}
+1 & if |F(x,y,j)-F(x,y,k)|\gt\tau \\
+0 & ptherwise
+\end{array}
+\tag{14.1}
+\]
+where \(\tau\) is a threshold.-->
+</p><p>
+<!-- In a difference picture, pixels which have value 1 may be considered to be
+the result of object motion or illumination changes. This assumes that the
+frames are properly registered. In Figures 14.1 and 14.2 we show two cases
+of change detection, one due to illumination changes in a part of image and
+the other due to motion of an object. ,
+
+A concept discussed in Chapter 3, thresholding, will play a very important
+role here also. Slow-moving objects and slowly varying intensity changes may
+not be detected for a given threshold value.
+
+Size Filter
+
+A difference picture obtained using the above simple test on real scenes usu-
+ally results in too many noisy pixels. A simple size filter is effective in elimi-
+410 CHAPTER 14. DYNAMIC VISION
+
+(a) (b)
+
+Figure 14.1: ‘I'wo frames from a sequence, (a) and (b), and their difference
+picture, (c). Notice that the changed areas (shown in black) are due to the
+motion of objects. We used 7 = 25.
+
+(a)
+
+Figure 14.2: Two frames from a sequence, (a) and (b), and their difference
+picture, (c). Notice that the changed areas are due to the changes in the
+illumination in the part of the scene. We used r = 25.
+
+(c)
+
+nating many noisy areas in the difference picture. Pixels that do not belong
+to a connected cluster of a minimum size are usually due to noise and can be
+filtered out. Only pixels in a difference picture that belong to a 4-connected
+(or 8-connected) component larger than some threshold size are retained
+for further analysis. For motion detection, this filter is very effective, but
+unfortunately it also filters some desirable signals, such as those from slow or
+small moving objects. In Figure 14.3 we show the difference picture for the
+frames shown in Figure 14.1 with 7 = 10 and the result of the size filtering.
+14.1. CHANGE DETECTION 41]
+
+Figure 14.3: The difference picture for the frames shown in Figure 14.1 with
+7 = 10 and the result of the size filtering are shown in (a) and (b), respec-
+tively. Notice that size filtering has removed many noisy regions in the image.
+All regions below 10 pixels were filtered out.
+
+Robust Change Detection
+
+To make change detection more robust, intensity characteristics of regions or
+groups of pixels at the same location in two frames may be compared using
+either a statistical approach or an approach based on the local approxima-
+tion of intensity distributions. Such comparisons will result in more reliable
+change detection at the cost of added computation.
+
+A straightforward domain-independent method for comparing regions in
+images is to consider corresponding areas of the frames. These corresponding
+areas may be the superpixels formed by pixels in nonoverlapping rectangular
+areas comprising m rows and n columns. The values of m and n are selected
+to compensate for the aspect ratio of the camera. ‘Thus, a frame partitioned
+into disjoint superpixels, as shown in Figure 14.4(a), may be considered.
+Another possibility is to use a local mask, as in all convolutions, and compare
+the intensity distributions around the pixel, as shown in Figure 14.4(b).
+
+One such method is based on comparing the frames using the likelihood
+412° | CHAPTER 14. DYNAMIC VISION
+
+Figure 14.4: Partitioning frames for applying the likelihood ratio test. In
+(a) we show nonoverlapping areas, called superpixels, and (b) shows regular
+masks representing the local area of a pixel.
+
+ratio. Thus, we may compute
+
+2
+i a (14.2)
+
+Oy * 05
+
+7 ekped + (e)"]
+
+(where » and o? denote the mean gray value and the variance for the sample
+areas from the frames) and then use |
+
+1 ifA>T
+
+DPix(2, y) = 0 otherwise (14.3)
+
+where 7 is a threshold. The likelihood ratio test combined with the size filter
+works quite well for many real world scenes. In Figure 14.5, we show the
+results of change detection using the likelihood ratio test.
+
+The likelihood test discussed above was based on the assumption of uni-
+form second-order statistics over a region. The performance of the likelihood
+ratio test can be improved significantly by using facets and quadratic sur-
+faces to approximate the intensity values of pixels belonging to superpixels.
+These-higher order approximations allow for better characterization of inten-
+sity values and result in more robust change detection.
+14.1. CHANGE DETECTION 413
+
+(b)
+Figure 14.5: The results of the likelihood ratio test on the image pair in Fig.
+14.1 for (a) superpixels and (b) regular masks.
+
+Note that the likelihood ratio test results in detecting dissimilarities at
+the superpixel level. Since the tests use the likelihood ratio, they can only
+determine whether or not the areas under consideration have similar gray-
+level characteristics; information about the relative intensities of the areas is
+not retained. As shown later, the sign of the changes can also provide useful
+information for the analysis of motion.
+
+Accumulative Difference Pictures
+
+Small or slow-moving objects will usually result in a small number of changes
+using differencing approaches. A size filter may eliminate such pixels as noise.
+This problem of detecting small and slow-moving objects is exacerbated when
+using robust differencing approaches since superpixels effectively raise the size
+threshold for the detection of such objects.
+
+By analyzing the changes over a sequence of frames, instead of just be-
+414 | CHAPTER 14. DYNAMIC VISION
+
+(a) (by (c)
+
+Figure 14.6: Results for change detection using accumulative difference pic-
+tures. In (a) and (b) we show the first and last frames, respectively, of a
+synthetic object in motion. The accumulative difference picture is given in
+
+tween two frames, this problem may be solved. An accumulative difference
+picture may be used to detect the motion of small and slow-moving objects
+more reliably. An accumulative difference picture is formed by comparing
+every frame of an image sequence to a reference frame and increasing the
+entry in the accumulative difference picture by 1 whenever the difference for
+the pixel, or some measure for the superpixel, exceeds the threshold. Thus,
+an accumulative difference picture ADP, is computed over k frames by
+
+ADP (z,y) = 0 | — (14.4)
+ADP, (z,y) = ADP_1(2,y) + DP; (2, y). (14.5)
+
+The first frame of a sequence is usually the reference frame, and the accu-
+mulative difference picture ADP) is initialized to 0. Small and slow-moving
+objects can be detected using an ADP. In Figure 14.6, results of detecting
+changes using accumulative difference pictures are shown.
+
+Difference Pictures in Motion Detection
+
+_ The most attractive aspect of the difference picture for motion detection is its
+simplicity. In its simplest form, the difference picture is noise-prone. Changes
+in illumination and registration of the camera, in addition to electronic noise
+of the camera, can result in many false alarms. A likelihood ratio in conjunc-
+tion with a size filter can eliminate most of the camera noise. Changes in
+14.1. CHANGE DETECTION 415
+
+illumination will create problems for all intensity-based approaches and can
+be handled only at a symbolic level. Misregistration of frames results in the
+assignment of false motion components. If the misregistration is not severe,
+accumulative difference pictures can eliminate it.
+
+It should be emphasized that measuring dissimilarities at the pixel level
+can only detect intensity changes. In dynamic scene analysis, this is the low-
+est level of analysis. After such changes have been detected, other processes
+are required to interpret these changes. Experience has shown that the most
+efficient use of the difference picture is to have peripheral processes direct
+the attention of interpretation processes to areas of the scene where some
+activity is taking place. Approximate information about events in a scene
+may be extracted using some features of difference pictures.
+
+14.1.2 Static Segmentation and Matching
+
+Segmentation is the task of identifying the semantically meaningful compo-
+nents of an image and grouping the pixels belonging to such components.
+Segmentation need not be performed in terms of objects; some predicates
+based on intensity characteristics may also be used. Predicates based on
+intensity characteristics are usually called features. If an object or feature
+appears in two or more images, segmentation may be necessary in order to
+identify the object in the images. The process of identifying the same object
+or feature in two or more frames is called the correspondence process.
+
+Static-scene analysis techniques can be used to segment, or at least par-
+tially segment, each frame of a dynamic sequence. Matching can then be
+used to determine correspondences and detect changes in the location of cor-
+responding segments. Cross-correlation and Fourier domain features have
+been used to detect cloud motion. Several systems have been developed
+which segment each frame of a sequence to find regions, corners, edges, or
+other features in the frames. The features are then matched in consecutive
+frames to detect any displacement. Some restriction on the possible matches
+for a feature can be achieved by predicting the new location of the feature
+based on the displacements in previous frames.
+
+The major difficulty in the approaches described above is in segmentation.
+Segmentation of an image of a static scene has been a difficult problem. In
+most cases, a segmentation algorithm results in a large number of features
+in each frame, which makes the correspondence problem computationally
+416 CHAPTER 14. DYNAMIC VISION
+
+quite expensive. Moreover, it is widely believed that motion detection can
+be used to produce better segmentation, as opposed to the techniques of
+segmentation and matching used to determine motion above.
+
+14.2 Segmentation Using Motion
+
+The goal of many dynamic-scene analysis systems is to recognize moving
+objects and to find their motion characteristics. If the system uses a sta-
+tionary camera, segmentation generally involves separating moving compo-
+nents in the scene from stationary components. Then the individual moving
+objects are identified based either on their velocity or on other characteris-
+tics. For systems using a moving camera, the segmentation task may be the ©
+same as above or may include further segmentation of the scene’s stationary
+- components by exploiting the camera motion. Most research efforts for the
+segmentation of dynamic scenes have assumed a stationary camera.
+
+Researchers in perception have known for a long time that motion cues
+are helpful for segmentation. Computer vision techniques for segmenting
+SCMO scenes perform well compared to techniques for segmenting stationary
+scenes. Segmentation into stationary and nonstationary components, in a
+system using a moving camera, has only recently received attention. One
+problem in segmenting moving-observer scenes is that every surface in the
+scene has image plane motion. This is precisely what can be used to aid the
+separation of moving and stationary objects in stationary-camera scenes. For
+segmenting moving-camera scenes, the motion assigned to components in the
+Images due to the motion of the camera should be removed. The fact that
+the image motion of a surface depends both on the surface’s distance from
+the camera and on the structure of the surface complicates the situation.
+
+Segmentation may be performed using either region-based or edge-based
+approaches. In this section, some approaches for the segmenting of dynamic
+scenes are discussed.
+
+14.2.1 Time-Varying Edge Detection
+
+As a result of the importance of edge detection in static scenes, it is rea-
+sonable to expect that time-varying edge detection may be very important
+in dynamic-scene analysis. In segment-and-match approaches, efforts are
+14.2. SEGMENTATION USING MOTION 417
+
+mK on
+(a) (b) (c)
+
+Figure 14.7: In (a) and (b), two frames of a sequence are shown. In (c),
+edges are detected using the time-varying edge detector.
+
+wasted on attempting to match static features to moving features. These
+static features are obstacles to extracting motion information. If only mov-
+ing features are detected, the computation needed to perform matching may
+be substantially reduced.
+
+A moving edge in a frame is an edge, and moves. Moving edges can be de-
+tected by combining the temporal and spatial gradients using a logical AND
+operator. This AND can be implemented through multiplication. Thus, the
+time-varying edginess of a point in a frame E(z, y,t) is given by
+
+Ex(z,y,t) = Jo (14.6)
+
+= E(x,y,t) - D(z, y) (14.7)
+
+where dF(z, y,t)/dS and dF(z, y, t)/dt are, respectively, the spatial and tem-
+poral gradients of the intensity at point (z,y,t). Various conventional edge
+detectors can be used to compute the spatial gradient, and a simple differ-
+ence can be used to compute the temporal gradient. In most cases, this edge
+detector works effectively. By applying a threshold to the product, rather
+than first differencing and then applying an edge detector or first detecting
+edges and then computing their temporal gradient, this method overcomes
+the problem of missing slow-moving or weak edges. See Figures 14.7 and
+14.8.
+
+As shown in Figure 14.8, this edge detector will respond to slow-moving
+edges that have good edginess and to poor edges that are moving with ap-
+preciable speed. Another important fact about this detector is that it does
+418 CHAPTER 14. DYNAMIC VISION
+
+Figure 14.8: A plot showing the performance of the edge detector. Note
+that slow-moving edges will be detected if they have good contrast, and that
+poor-contrast edges will be detected if they move well.
+
+not assume any displacement size. The performance of the detector is satis-
+factory even when the motion of an edge is very large.
+
+14.2.2 Stationary Camera
+Using Difference Pictures
+
+Difference and accumulative difference pictures find the areas in a scene which
+are changing. An area is usually changing due to the movement of an object.
+Although change detection results based on difference pictures are sensitive to
+noise, the areas produced by a difference picture are a good place from which
+to start segmentation. In fact, it is possible to segment a scene with very
+little computation using accumulative difference pictures. In this section,
+such an approach is discussed.
+
+Let us define absolute, positive, and negative difference pictures and ac-
+cumulative difference pictures as follows:
+14.2. SEGMENTATION USING MOTION 419
+
+_ f 1. if |F(z,y,1) - F(z,y,2)| > T
+DPix(z,y) = 0 otherwise. (14.8)
+
+J 1 if F(x,y,1)— Flz,y,2) >T
+PDP12(2,y) = 0 otherwise (14.9)
+NDPi2(z,y) = 0 otherwise (14.10)
+AADP,(2,y) = AADP,_1(2,y) + DPin(z, y) (14.11)
+PADP,(2,y) = PADP,-1(2,y) + PDPin(z, y) (14.12)
+NADP, (2,y) = NADP,-1(2,y) + NDPiy(2, y). — (14.13)
+
+Depending on the relative intensity values of the moving object and the
+background being covered and uncovered, PADP and NADP provide com-
+plementary information. In either the PADP or NADP, the region due to the
+motion of an object continues to grow after the object has been completely
+displaced from its projection in the reference frame, while in the other, it
+stops growing. The area in the PADP or NADP corresponds to the area
+covered by the object image in the reference frame. The entries in this area
+continue to increase in value, but the region stops growing in size. Accumu-
+lative difference pictures for a synthetic scene are shown in Figure 14.9. A
+test to determine whether or not a region is still growing is needed in order
+to obtain a mask of an object. The mask can then be obtained from the ac-
+cumulative difference picture where the object’s area stops growing after the
+object is displaced from its projection. In its simplest form, this approach has
+one obvious limitation. Masks of moving objects can be extracted only after
+the object has been completely displaced from its projection in the reference
+frame. However, it appears that properties of difference and accumulative
+difference pictures can be used to segment images in complex situations,
+such as running occlusion. To prevent running occlusions from disrupting
+segmentation, the segmentation process should not wait for an object’s cur-
+rent position to be completely displaced from its projection in the reference
+frame. Regions in the accumulative difference pictures can be monitored as
+opposed to monitoring the reference frame projections of objects. Simple
+tests on the rate of region growth and on the presence of stale entries allow a
+system to determine which regions are eventually going to mature and result
+420 CHAPTER 14. DYNAMIC VISION
+
+(d) (e) (f)
+Figure 14.9: (a)-(c) show frames 1, 5, and 7 of a scene containing a moving
+object. The intensity-coded positive, negative, and absolute ADPs are shown
+
+in parts (d), (e), and (f), respectively.
+
+-. in a mask for an object in the reference frame. Early determination of refer-
+ence frame positions of objects, and hence, extraction of masks for objects,
+allows a system to take the action necessary to prevent running occlusion.
+
+14.3. Motion Correspondence
+
+Given two frames of a sequence, one can analyze them to determine fea-
+tures in each frame. To determine the motion of objects, one can establish
+the correspondence among these features. The correspondence problem in
+motion is similar to the correspondence problem in stereo. In stereo, the
+major constraint used is the epipolar constraint. However, in motion, other
+constraints must be used. In the following we describe a constraint propaga-
+14.3. MOTION CORRESPONDENCE 42]
+
+tion approach to solve the correspondence problem. Since this approach is
+similar to the problem for stereo, and for historical reasons, we present the
+formulation similar to that for stereo.
+
+Relaxation Labeling
+
+In many applications, we are given a set of labels that may be assigned
+_ to objects that may appear in the “world.” Possible relationships among
+different objects in this world and the conditions under which a certain set
+of labels may or may not be applied to a set of objects is also known. The
+relationships among the objects in the image may be found using techniques
+discussed in earlier chapters. Now, based on the knowledge about the labels
+in the domain, proper labels must be assigned to the objects in the image.
+This problem is called the labeling problem.
+
+The labeling problem may be represented as shown in Figure 14.10. Each
+node represents an object or entity which should be assigned a label. The arcs
+connecting nodes represent relations between objects. This figure represents
+the observed entities and relations among them in a given situation. We
+have to assign labels to each entity based on the label set and the constraints
+among the labels for the given domain.
+
+Assume that we have a processor at each node. We define sets R, C, L,
+and P for each node. The set R contains all possible relations among the
+nodes. The set C' represents the compatibility among these relations. The
+compatability among relations helps in constraining the relationships and
+labels for each entity in an image. The set D contains all labels that can be
+assigned to nodes, and the set P represents the set of possible levels that
+can be assigned to a node at any instant in computation. Each processor
+knows the label of its node and all nodes which are connected to it. It also
+knows all relations involving its node and the sets R and C. Assume that
+in the first iteration the possible label set P} of node i is L for all i. In
+other words, all nodes are assigned all possible labels initially. The labeling
+process should then iteratively remove invalid labels from P* to give P*+?.
+Since at any stage labels are discarded considering only the current labels of
+the node, its relations with other nodes, and the constraints, each processor
+has sufficient information to refine its label set P*. Thus, it is possible for
+all processors to work synchronously. Note that at any time a processor
+
+uses only information directly available to it, that is, information pertaining
+— 422 | CHAPTER 14. DYNAMIC VISION
+
+Third propagation | |
+
+Figure 14.10: Parallel propagation in graphs.
+
+only to its object. Each iteration, however, propagates the effect through its
+neighbor or related nodes, to other nodes that are not directly related. The
+circle of influence of a node increases with each iteration. This propagation
+of influence results in global consistency through direct local effects.
+
+In most applications, some knowledge about the objects is available at
+the start of the labeling process. Segmentation, or some other process which
+takes place before labeling, often gives information that can be used to refine
+the initial set P; for a node. This knowledge can be used to refine the initial
+label sets for objects. The labeling process is then used to further refine these
+sets to yield a unique label for each object. The labeling problem now may
+be considered in a slightly different form than the above. Based on some
+unary relations, a label set P/ can be assigned to an object. The correct
+label is uncertain. However, a confidence value can be assigned to each label
+l, € P}. The confidence value, like a subjective probability, indicates a belief
+that the entity may be assigned this label based on the available evidence
+in the image. Thus, for each element J, € P;, a nonnegative probability pj,
+represents the confidence that the label J; is the correct label for node z. This
+confidence value may be considered the membership value if approaches from
+fuzzy set theory are used in constraint propogation.
+
+The task of the labeling process is to use the constraints to refine the
+14.3. MOTION CORRESPONDENCE | 423
+
+confidence value for each label. The confidence value p, is influenced by
+the confidence values in the labels of the connected nodes. Thus, in the tth
+iteration, the confidence value p‘, for the label J, at node i is the function
+of the confidence value pj,’ and the confidence values of the labels of all
+directly related nodes. In each iteration a node looks at the labels of all its
+related nodes and then uses the known constraints to update the confidence
+in its labels. The process may terminate either when each node has been
+assigned a unique label or when the confidence values achieve a steady state.
+Note that in place of just the presence or absence of a label, there is now a
+continuum of confidence values in a label for an object.
+
+The above process, commonly called the relaxation labeling process, at-
+tempts to decide which of the possible interpretations is correct on the basis
+of local evidence. Interestingly, though, the final interpretation is globally
+correct. In each iteration, the confidence in a label is directly influenced only
+by directly related nodes. However, this influence is propagated to other
+nodes in later iterations. The sphere of influence increases with the number
+of iterations. In relaxation labeling, the constraints are specified in terms of
+compatibility functions. Suppose that objects O; and O, are related by R,;,
+and under this relation labels L;, and L,, are highly “likely” to occur. The
+knowledge about the likelihood of these labels can be expressed in terms of a
+function that will increase the confidence in these labels for the objects under
+consideration. In such a situation, the presence of L;, at O; encourages the
+assignment of L;, to O;. It is also possible that the incompatibility of certain
+labels can be used to discourage labels by decreasing their confidence values.
+
+In the following, we discuss an algorithm that uses relaxation labeling
+to determine disparity values in images. The algorithm to determine optical
+
+flow, discussed later in this chapter, also is an example of relaxation labeling.
+
+Disparity Computations as Relaxation Labeling
+
+The matching problem is to pair a point p; = (2;, y;) in the first image with
+a point p; = (z;,y;) in the second image. The disparity between these points
+is the displacement vector between the two points:
+
+The result of matching is a set of conjugate pairs.
+424 CHAPTER 14. DYNAMIC VISION
+
+In any kind of matching problem, there are two questions that must be
+answered: ,
+
+e How are points selected for matching? In other words, what are the
+features that are matched?
+
+e How are the correct matches chosen? What constraints, if any, are
+placed on the displacement vectors? |
+
+Three properties guide matching:
+Discreteness, which is a measure of the distinctiveness of individual points
+
+Similarity, which is a measure of how closely two points resemble one an-
+other
+
+Consistency, which is a measure of how well a match conforms to nearby
+matches , ,
+
+The property of discreteness means that features should be isolated points.
+For example, line segments would not make good features since a point can
+be matched to many points along a line segment. Discreteness also minimizes
+expensive searching by reducing the problem of analyzing image disparities
+to the problem of matching a finite number of points.
+
+The set of potential matches form a bipartite graph, and the matching
+problem is to choose a (partial) covering of this graph. As shown in Figure
+14.11, initially each node can be considered as a match for each node in
+the other partition. Using some criterion, the goal of the correspondence
+problem is to remove all other connections except one for each node. The
+property of similarity indicates how close two potential matching points are
+to one another; it is a measure of affinity. Similarity could be based on any
+property of the features that are selected to implement discreteness.
+
+The property of consistency is implied by the spatial continuity of surfaces
+in the scene and assumes that the motion is well behaved. Consistency allows
+the obvious matches to improve the analysis of more difficult matches. Some
+points are sufficiently distinct and similar that it is easy to match them; this
+match can assist in matching nearby points.
+
+The discrete feature points can be selected using any corner detector or a
+feature detector. One such feature detector is the Moravec interest operator.
+14.3. MOTION CORRESPONDENCE 425
+
+(a) (b)
+
+Figure 14.11: (a) A complete bipartite graph. Here each node in group A
+has a connection with each node in group B. Using a characteristic of nodes
+(points) and some other knowledge, a correspondence algorithm must remove
+all but one connection for each node, as shown in (b).
+
+This operator detects points at which intensity values are varying quickly in
+at least one direction. This operator can be implemented in the following
+steps: }
+
+1. Compute sums of the squares of pixel differences in four directions
+(horizontal, vertical, and both diagonals) over a 5 x 5 window.
+
+2. Compute the minimum value of these variances.
+_ 3. Suppress all values that are not local maxima.
+
+4. Apply a threshold to remove weak feature points.
+
+Any feature detector can be used in place of the above operator. One can
+use a corner detector or computed curvature values at every point and select
+high curvature points as features.
+
+Next one must pair each feature point in the first image with all points in
+the second image within some maximum distance. This will eliminate many
+_ connections from the complete bipartite graph. The connections removed are
+those that are between points far away in two images and hence unlikely to
+be candidate matches. Each node a; has position (z;, y;) in the first image
+and a set of possible labels (disparity vectors). The disparity labels are
+displacement vectors or the undefined disparity, which allows some feature
+points to remain unmatched. ,
+426 | CHAPTER 14. DYNAMIC VISION
+
+The initial probabilities of a match are computed using a measure of
+similarity between the feature points in the two images. A good measure is
+the sum of the squares of the pixel differences, s;, in corresponding windows.
+The following approach may be used for assigning these probabilities.
+
+Let { be a candidate label at a point. This label represents a disparity
+vector at the point. First we compute w,(/), which represents the similarity
+between the point (z;, y;) and its potential match at disparity I.
+
+1
+~ 1+es,(1)’
+where s;(1) is the sum of the squared differences corresponding to label J, and
+
+c is some positive constant. ‘The probability that this point has undefined
+disparity is obtained by first defining |
+
+py (undefined) = 1 — max(w;,(1)). | (14.16)
+
+This probability is determined based on the strength of the most similar
+point for (x;,y;). If there are no strongly similar points, then it is likely
+that the point has no match in this image. The probabilities of the various
+
+matches (labels) are
+
+will
+Pill) = <n (14.17)
+where p;(l/i) is the conditional probability that a; has label | given a, is
+matchable, and the sum is over all labels I’ excluding the “undefined” label.
+The probability estimates are refined using the consistency property and
+iterative relaxation algorithm. In this approach, the labels at each node are
+strengthened or weakened based on the labels of the neighboring nodes in
+that iteration. The most important property used here is that all disparities
+should be similar in a given neighborhood. Thus, similar disparities of nodes
+in a neighborhood should strengthen each other and dissimilar ones should
+
+be weakened. This is accomplished using the following approach.
+
+Let us consider probability for disparity vectors of all neighbors of a;. For
+each neighbor, sum the probability of labels (disparities) that are close to,
+
+or similar to, the disparity of a;:
+
+agQ= Yo Dd v5). (14.18)
+
+Neighbors. Nearby
+of a; disparities
+14.3. MOTION CORRESPONDENCE | 427
+
+(c)
+
+Figure 14.12: This figure shows two frames of a sequence and the disparities of
+
+the matched feature points (shown magnified by a factor of 5) after applying
+the relaxation labeling algorithm.
+428 , | CHAPTER 14. DYNAMIC VISION
+
+The probabilities are now refined with the iterative calculation:
+pit *(L) = pi(A+ BaF ()) (14.19)
+
+for constants A and B. Constants A and B are selected to control the rate of
+convergence of the algorithm. The updated probabilities must be normalized.
+Usually, a good solution is obtained after only a few iterations. To speed up
+the algorithm, matches with low probability are removed.
+
+In Figure 14.12, we show two frames of a sequence and disparities found
+using the above algorithm. Interested readers should see [21] for an in-depth
+analysis of disparity calculations.
+
+14.4 Image Flow
+
+Image flow is the distribution of velocity, relative to the observer, over the
+points of an image. Image flow carries information which is valuable for an-
+alyzing dynamic scenes. Several methods for dynamic-scene analysis have
+been proposed which assume that image flow information is available. Un-
+fortunately, however, although image flow has received a significant amount
+of attention from researchers, the techniques developed for computing im-
+age flow do not produce results of the quality which will allow the valuable
+information to be recovered. Current methods for computing image flow,
+information which is critical in optical flow, and the recovery of such infor-
+mation are discussed in this section.
+
+Definition 14.1 Image flow is the velocity field in the image plane due to
+the motion of the observer, the motion of objects in the scene, or apparent
+motion which is a change in the image intensity between frames that mimics
+object or observer motion.
+
+14.4.1 Computing Image Flow
+
+Image flow is determined by the velocity vector of each pixel in an image.
+Several schemes have been devised for calculating image flow based on two or
+more frames of a sequence. These schemes can be classified into two general
+categories: feature-based and gradient-based. Ii a stationary camera is used,
+most of the points in an image frame will have zero velocity. This is assuming
+14.4. IMAGE FLOW a 429
+
+that a very small subset of the scene is in motion, which is usually true. Thus,
+most applications for image flow involve a moving camera.
+
+14.4.2 Feature-Based Methods
+
+Feature-based methods for computing image flow first select some features in
+the image frames and then match these features and calculate the disparities —
+between frames. As discussed in an earlier section, the correspondence may
+be solved on a stereo image pair using relaxation. The same approach may
+be used to solve the correspondence problem in dynamic scenes. However,
+the problem of selecting features and establishing correspondence is not easy.
+Moreover, this method only produces velocity vectors at sparse points. This
+approach was discussed above as disparity analysis.
+
+14.4.3. Gradient-Based Methods
+
+Gradient-based methods exploit the relationship between the spatial and
+temporal gradients of intensity. This relationship can be used to segment
+images based on the velocity of points.
+
+Suppose the image intensity at a point in the image plane is given as
+E(z,y,t). Assuming small motion, the intensity at this point will remain
+constant, so that ,
+
+dE |
+a =
+Using the chain rule for differentiation, we see that
+
+0. (14.20)
+
+—— 4 —~4—=9. (14.21)
+
+Using
+dz
+and q
+_w
+v= 7 (14.23)
+
+the relationship between the spatial and temporal gradients and the velocity
+
+components is:
+h,ut+ Eyv+ BE; = 0. (14.24)
+430 CHAPTER 14. DYNAMIC VISION
+
+Figure 14.13: If one sees a point using a tube such that only one point is
+visible, then motion of the point cannot be determined. One can only get the
+_ sense of the motion, not the components of the motion vector. This problem
+is commonly called the aperture problem.
+
+In the above equation, #,, E,, and &, can be computed directly from the
+image. Thus, at every point in an image, there are two unknowns, u and
+v, and only one equation. Using information only at a point, image flow
+cannot be determined. This can be explained using Figure 14.13. This is
+known as the aperture problem. The velocity components at a point cannot
+be determined using the information at only one point in the image without
+making further assumptions.
+
+It can be assumed that the velocity field varies smoothly over an image.
+Under this assumption, an iterative approach for computing image flow using
+two or more frames can be developed. The following iterative equations are
+used for the computation of image flow. These equations can be derived
+using the variational approach discussed below.
+
+P ,
+
+Us Uaverage — bas , (14.25)
+P
+
+U = Vaverage — Ey (14.26)
+
+where
+P= Fez Uaverage + Foy Vaverage + Fx (14.27)
+14.4. IMAGE FLOW 7 | 431]
+
+and
+D=°+Ei+ E. (14.28)
+
+In the above equations £,, Ey, E;, and A represent the spatial gradients
+in the x and y directions, the temporal gradient, and a constant multiplier,
+respectively. When only two frames are used, the computation is iterated
+over the same frames many times. For more than two frames, each iteration
+uses a new frame.
+
+An important fact to remember about gradient-based methods is that
+they assume a linear variation of intensities and compute the point-wise
+velocities under this assumption. It is typically expected that this assumption
+is satisfied at edge points in images and, hence, the velocity can be computed
+at these points. The smoothness constraint is not satisfied at the boundaries
+of objects because the surfaces of objects may be at different depths. When
+overlapping objects are moving in different directions, the constraint will also
+be violated. These abrupt changes in the velocity field at the boundaries
+cause problems. ‘To remove these problems, some other information must be
+used to refine the optical flow determined by the above method.
+
+14.4.4 Variational Methods for Image Flow
+
+Recall that the aperture problem says that the image-flow velocity at a point
+in the image plane cannot be computed by only using the changes in the
+image at that point without using information from other sources. Image
+flow can be computed using variational methods that combine the image
+flow constraint equation with an assumption about the smoothness of the
+image-flow velocity field. The image-flow constraint equation is
+
+E,u+ Eyv+E,=0 (14.29)
+
+where u and v are the z and y components of the image-flow, respectively,
+and f,, By, and &; are the spatial and temporal derivatives of the image
+intensity. For a smoothness measure, use the sum of the squared magnitudes
+of each image flow component as the integrand in the regularization term:
+432 CHAPTER 14. DYNAMIC VISION
+
+Combine the smoothness measure with a measure of deviations from the
+problem constraint weighted by a parameter that controls the balance be-
+tween deviations from the image-flow constraint and deviations from smooth-
+
+ness: ,
+Bu\* (Au\* (dv \? Av\?
+(5) + (F) + (5 + (=) dx dy.
+
+| [eer By+ Be v
+| (14.31)
+
+Use the calculus of variations to transform this norm into a pair of partial
+differential equations
+
+v?V7u
+
+y2V7¥
+
+Evu+ E,Eyv+ E,E; (14.32)
+E,Eyu+ Eiv + EyE;. (14.33)
+
+Use finite difference methods to replace the Laplacian in each equation with
+a weighted sum of the flow vectors in a local neighborhood, and use iterative
+methods to solve the difference equations.
+
+14.4.5 Robust Computation of Image Flow
+
+The motion information can be unreliable at motion boundaries, since the
+process of occluding or disoccluding the background does not obey the image-
+flow constraints of Equation 14.24. The incorrect motion constraints are
+outliers. Robust methods avoid the problems caused by incorrect motion
+constraints at boundaries.
+
+Image flow can be computed using robust regression with least-median-
+squares regression. ‘The least-median-squares algorithm is applied over suc-
+cessive neighborhoods. Within each neighborhood, the algorithm tries all
+possible pairs of constraint lines. The intersection of each pair of constraint
+lines is computed and the median of the square of the residuals is computed
+to assign a cost to each estimate. Each intersection and its cost are stored.
+After all possible pairs have been tried, the intersection corresponding to
+the minimum cost is used as the estimate for the image-flow velocity for the
+center of the neighborhood.
+
+There are several steps in computing the intersection of the constraint
+lines and the residuals. The constraint lines are represented in polar form
+using the distance d of the constraint line from the origin in velocity space
+and the angle a of the image gradient:
+14.4. IMAGE FLOW 433
+
+d = pcos(a — 8), (14.34)
+
+where p(x, y) and G(z, y) are the speed and direction of motion, respectively.
+Let the coordinates of the first constraint line be d; and a1, and the co-
+ordinates of the second constraint line be d; and ay. The position of the
+intersection in rectangular coordinates is
+—_ dy sin Q2 — dosinay (14.35)
+| sin(ay — Q2)
+— dp cosa, — d, cosa»
+
+y (14.36)
+
+sin(ay — 2)
+The fit of the model to the constraint lines is the median of the squared
+residuals:
+
+med (r?). (14.37)
+
+The r residual between the motion estimate and each constraint line is the
+perpendicular distance of the constraint line from the estimate x and y. The
+residual is given by ,
+r=zcosa+ ysina. (14.38)
+
+The position of the intersection of the pair of constraint lines, given by Equa-
+tion 14.36, is a candidate solution. The median of the squared residuals of
+the constraint lines with respect to the candidate is computed and saved,
+along with the candidate, as a potential solution. The median of the squared
+residuals is the median of the square of the perpendicular distance of each
+constraint line in the neighborhood from the candidate.
+
+The typical neighborhood size is 5 x 5. An n x n neighborhood contains
+n* constraint lines. The number of possible pairs of constraint lines in an
+n X n neighborhood would be
+
+n*(n? — 1)
+
+5 (14.39)
+
+A 5 x 5 neighborhood would yield 300 pairs. It is not necessary to try all
+possible pairs if computation time is restricted. Rousseeuw and Leroy [207,
+p. 198] provide a table showing the number of trials that must be run to
+fit a model with p parameters and 95% confidence to data sets with var-
+lous percentages of outliers. Assume that at most 50% of the constraints
+434 CHAPTER 14. DYNAMIC VISION
+
+1 Re ee ie ae te ae ate ge ae
+Or See Be ae ae a a ae ne See.
+re re a ee eee
+RP re ae Re ie rt a ne ee a oe
+a ee ae a ee ee a ee ee
+we Baie iar ale Be Ser ne ae ar ne a ee
+
+ede ie ae ae ie ee ee ee
+re er ae ae i ee ee eee
+Pe Se ae aap ee ae Se a ae ae ee ee
+Se ae ae ie ak er re rr ree
+See ee ee eh ty ee
+
+Rr ae Re ae wr a a ee ar
+
+Ae a a a a le
+ee ea ae ee ae ne ne a eee
+Oe Se ae a i ae a ee ee
+
+ene Be iy ae a ae nr ee ee ae
+
+(c)
+
+Figure 14.14: Image flow computed using the least-median-squares algo-
+rithm. ‘T'wo frames of a synthetic image sequence were computed by filling a
+64 x 64 background image and a 32 x 32 foreground image with pixels from a
+uniform random number generator. The foreground image was overlayed on
+the center of the background image to create the first frame and overlayed
+one pixel to the right to create the second frame.
+
+in the neighborhood will be outliers. The local estimate of the image-flow
+velocity field requires only two constraint lines. From the table published by
+Rousseeuw and Leroy, only 11 pairs of constraints would have to be tried to
+provide a consistent estimate with 95% confidence. Using more pairs would
+increase the odds of finding a consistent estimate. If fewer than all possi-
+ble pairs of constraint lines are used, the pairs should be selected so that
+the constraints in each pair are far apart. This reduces the problems with
+ill-conditioning caused by intersecting constraint lines that have nearly the
+same orientation. A preprogrammed scheme could be used for selecting the
+constraint line pairs in each neighborhood. The results using this approach
+are shown in Figure 14.14.
+14.4. IMAGE FLOW | 435
+
+14.4.6 Information in Image Flow
+
+Many researchers have studied the types of information that can be extracted
+from an image-flow field, assuming that high-quality image flow has been
+computed. Let us assume an environment which contains rigid, stationary
+surfaces at known depths, and that the observer, the camera, moves through
+this world. The image flow can be derived from the known structure. Thus,
+the structure of the environment can be obtained, in principle, from the
+computed image-flow field.
+
+Areas with smooth velocity gradients correspond to single surfaces in the
+image and contain information about the structure of the surface. Areas with
+large gradients contain information about occlusion and boundaries, since
+only different objects at different depths can move at different speeds relative
+to the camera. Using an observer-based coordinate system, a relationship
+between the surface orientation and the smooth velocity gradients can be
+derived. ‘he orientation is specified with respect to the direction of motion
+of the observer. ,
+
+The translational component of object motion is directed toward a point
+in the image called the focus of expansion (FOE) when the observer is ap-
+proaching or the focus of contraction when the observer is receding; see Figure
+14.15. This point is the intersection of the direction of object motion in the
+image plane. Surface structure can be recovered from the first and second
+spatial derivatives of the translational component. The angular velocity i is
+fully determined by the rotational component.
+
+The importance of the FOE for recovering structure from the translational
+components of image flow encouraged several researchers to develop methods
+for determining the FOE. If the FOE is correctly determined, it may be used
+for computing the translational components of image flow. Since all flow
+vectors meet at the FOE, their direction is already known and only their
+magnitude remains to be computed. Thus, the two-dimensional problem of
+the computation of image flow is reduced to a one-dimensional problem. This
+fact has been noted by many researchers. However, it has not been applied,
+possibly due to the uncertainty in the proposed approaches for locating the
+FOE in real scenes.
+436 CHAPTER 14. DYNAMIC VISION
+
+Figure 14.15: The velocity vectors for the stationary components of a scene,
+as seen by a translating observer, meet at the focus of expansion (FOE).
+
+14.5 Segmentation Using a Moving Camera
+
+If the camera is moving, then every point in the image has nonzero velocity
+relative to it.' The velocity of points relative to the camera depends both
+on their own velocity and on their distance from the camera. Difference
+picture-based approaches may be extended for segmenting moving camera
+scenes. Additional information will be required, however, to decide whether
+the motion at a point is due solely to its depth or is due to a combination
+of its depth and its motion. Gradient-based approaches will also require
+additional information. -
+
+If the camera’s direction of motion is known, then the FOE with respect
+to the stationary components in a scene can easily be computed. The FOE
+will have coordinates
+
+, ae
+ay = = (14.40)
+and q
+y= (14.41)
+
+‘With the exception of the pathological case where object points are moving with the
+same velocity as the camera.
+14.5. SEGMENTATION USING A MOVING CAMERA 437
+
+in the image plane, where dz, dy, dz is the camera displacement between
+frames. As discussed in a later section, the velocity vectors of all the station-
+ary points in a scene project onto the image plane so that they intersect at
+the FOE. A transformation with respect to the FOE may be used to simplify
+the task of segmentation. The ego-motion polar (EMP) transformation of an
+image transforms a frame F(z’, y’,t) into E(r’,6,t) using
+
+E(r',6,t) = F(2',y’,t) (14.42)
+where ,
+r= y/(2! — 2)? + (y' — yf)? (14.43)
+and | ,
+6=tan™! (4 i , (14.44)
+x! — xp
+
+In EMP space, stationary points are displaced only along the 6 axis be-
+
+tween the frames of an image sequence, while points on moving objects are
+displaced along the r’ axis as well as the @ axis. Thus, the displacement in
+the EMP space may be used to segment a scene into its stationary and non-
+stationary components. In Figure 14.16, three frames of a sequence acquired
+by a moving camera are shown. The results of the segmentation are shown
+in Figure 14.17.
+_ A method for representing object motion in images, acquired by a moving
+camera, is derived from the fact that all of the velocity vectors of stationary
+objects in a scene acquired by a translating observer intersect at the FOE. An
+image frame may be transformed, with respect to the FOE, to a second frame
+in which the abscissa is r’ and the ordinate is 6. Under this transformation,
+it is possible to segment a dynamic scene into its moving and stationary
+components, as discussed earlier. | |
+
+14.5.1 Ego-Motion Complex Log Mapping
+
+More information about moving, as well as stationary, objects may be ex-
+tracted using a complex logarithmic mapping (CLM) rather than the simple
+polar mapping. Let us define ,
+
+w = loga, (14.45)
+438 , CHAPTER 14. DYNAMIC VISION
+
+(a) (b) (c)
+Figure 14.16: Three frames of a scene acquired by a moving camera are
+shown in (a), (b), and (c).
+
+Figure 14.17: Moving objects are segmented from stationary objects, in the
+
+frames shown in Figure 14.16, using EMP segmentation. Moving objects
+appear brighter.
+14.5. SEGMENTATION USING A MOVING CAMERA | 439
+
+where w and a@ are complex variables:
+
+a=a2'+ jy =r'(cosé+jsing) = r'e® (14.46)
+and | ,
+w = u(z) + jo(z). (14.47)
+Under this transformation, it can be shown that
+u(r’, 0) = logr’ , (14.48)
+u(r’, 0) = 8. (14.49)
+
+The above results state that if the observer is moving, the horizontal dis-
+placement of a stationary point in CLM space depends only on the depth
+of the point and, furthermore, the vertical displacement is zero. This fact is
+_ very useful, not only in segmenting dynamic scenes into moving and station-
+ary components, but also in determining the depth of stationary points. It
+has been shown that the retino-striate mapping can be approximated by a
+complex log function. This mapping is considered to be responsible for size,
+rotation, and projection invariances in biological systems. In the following
+_ discussion it is shown that if the mapping is obtained with respect to the
+FOE, rather than the center of the image, some other advantages can be
+achieved. ,
+
+14.5.2 Depth Determination
+
+First assume a camera is translating along its optical axis in a static world.
+For a stationary point in the environment, with real-world coordinates (x, y, z)
+relative to the observer at a time instant, the perspective projection, (z’, y/ )
+of this point onto the image plane is given by
+
+)
+
+/
+ZT =
+
+(14.50)
+
+IL
+ra
+y
+
+/
+
+y = (14.51)
+
+Zz
+
+assuming that the projection plane is parallel to the z-y plane at z = 1.
+The latter assumption simplifies the derivation without loss of generality.
+For translational motion along the direction of the gaze of the observer, the
+4400 CHAPTER 14. DYNAMIC VISION
+
+relationship between the distance r’ of the projection of the point from the
+center of the image and the distance z of the scene point from the observer
+
+1s
+dr! d gl? + 2 / |
+- - i (14.52)
+
+dz dz ge
+By the chain rule for differentiation, ,
+du du dr 14.53
+dz dr’ dz’ (14.53)
+and from Equation 14.48,
+a 14.54
+dr! _ rl ( . )
+Therefore, we have , ,
+dz =r’ zpos (14.55)
+Similarly, to find dv/dz,
+d9  d(tan7? 4)
+a in 0 | (14.56)
+d
+/ nr ae 14.57
+dz dO0dz ~~ (14.57)
+
+In Equation 14.55 we see that the depth, z, of a point can be determined
+from the horizontal displacement, du, in CLM space for that point and from
+the velocity, dz, of the observer. This is a formalization of the observable
+phenomenon that near objects appear to get bigger faster than far objects,
+- as you approach them. Furthermore, the axial movement of the observer will
+result only in a horizontal change in the mapping of the image points, since
+dv/dz = 0. There will be no vertical movement of the mapped points. Thus,
+the correspondence of points between the two mapped images will become
+easier, since there is only a horizontal change in the points’ locations over
+time. Now, assuming that there is sufficient control of the camera to be
+able to determine the amount of its movement, both variables necessary to
+determine image depths are readily available. Thus, it is possible to recover
+depth, in principle, if the camera motion is along its optical axis.
+14.5. SEGMENTATION USING A MOVING CAMERA 44]
+
+In real-life applications of machine vision it is not always possible to
+constrain the motion of the camera to be along the optical axis. Thus, the
+approach must be extended to arbitrary camera motion. To see that the
+depth can be recovered for an arbitrary translational motion of the camera,
+let us assume that the transform is taken with respect to the point (a, 6) in
+the image plane. Then
+
+r = /(2’—a)? 4 (y'! — 6)? (14.58)
+u = logr’ = log ,/(2’ — a)? + (y' — 6). (14.59)
+Now
+wf yey pie 14.60
+dz dz a , (14.60)
+
+Let us substitute for x’ and y’ from Equations 14.50 and 14.51, and evaluate
+dr’ /dz.
+
+_ 2V% Az (14.61)
+
+dz dz
+_ 1
+2,/(4 — a)? + (# — 6)? |
+2(= } ‘BF 4a ( b) ee Y 14.62
+z 2 22 z z? (14.62)
+1
+
+If (a, 6) is an arbitrary point in the image, the above equations are compli-
+cated and require detailed knowledge of the relationship between the camera
+442 | CHAPTER 14. DYNAMIC VISION
+
+and the objects in the scene. However, if we let (a,b) be the focus of expan-
+sion, the equations become greatly simplified. The focus of expansion (FOE)
+is an important point on the image plane. If a camera moves toward the
+objects in the scene, the objects appear to get bigger. If the vectors that
+represent this expansion of the objects in the image plane are extended, they
+will all meet in a single point, the FOE. If the camera is moving away from |
+the scene, the objects will seem to get smaller. In this case the point at which
+the extended vectors meet: is called the focus of contraction, the FOC. For
+
+either case, it is the pixel where the path of the translating camera pierces
+the image plane. If (a,b) is the FOE, then
+
+a = — andb= —. | (14.65)
+
+Hs, | (14.67)
+
+Now let us examine dv/dz, when v is calculated with respect to the FOE
+(a, b):
+
+‘— 5
+v = O= tan Y (14.68)
+x’ —a |
+d 1 d fy’'-—b ,
+es >? (4 ). (14.69)
+dz 1+ (4 v=b)" dz \z'—a
+Considering only the second factor of this equation, and substituting for 2’
+and y’,
+d {y'—b} d (2 —b) |
+— = 14.
+dz (e=*) dz (2 — a) | (14.70)
+_ @-a@#-yS-4-)Ge-a)s
+— (= —a)3 (14.71)
+( — a)(#~ ¥) ~ (¥-(# - 2)
+
+(14.72)
+14.6. TRACKING | oe | | 443
+
+Remembering that de/dz = a and dy/dz = 6,
+
+dfy—b\ _ (-a)(— #)—-(2—a)(b— 4)
+dz (! — *) a 2(2 — a)? (14.73)
+= 0, (14.74)
+Therefore,
+dv
+= = 0. (14.75)
+
+Note that when the mapping is done with respect to the FOE, then the
+displacement in the u direction depends only on the z coordinate of the
+point. For other values of (a,6) the above property will not be true. Thus,
+if the FOE is known or can be computed, the approach can be applied to an
+arbitrarily translating camera, as long as there is some movement in depth
+(dz is in the denominator and so cannot be zero). This extension is called
+the ego-motion complex logarithmic mapping (ECLM) since it is based on
+the motion parameters of the camera itself.
+
+14.6 ‘Tracking
+
+In many applications, an entity, a feature or an object, must be tracked over
+a sequence of frames. If there is only one entity in the sequence, the problem
+is easy to solve. In the presence of many entities moving independently
+in a scene, tracking requires the use of constraints based on the nature of
+objects and their motion. Due to inertia, the motion of a physical entity
+cannot change instantaneously. If a frame sequence is acquired at a rate
+such that no dramatic change takes place between two consecutive frames,
+then for most physical objects, no abrupt change in motion can be observed.
+The projection of a smooth three-dimensional trajectory is also smooth in
+the two-dimensional image plane. This allows us to make the smoothness
+assumption in images. This property is used to formulate path coherence.
+Path coherence implies that the motion of an object at any point in a frame
+sequence will not change abruptly.
+
+We can combine the solution of the correspondence problem for stere-
+opsis and motion. The following three assumptions help in formulating an
+approach to solve the correspondence problem:
+444 | CHAPTER 14. DYNAMIC VISION
+
+e The location of the given point will be relatively unchanged from one
+frame to the next frame.
+
+e The scalar velocity of a given point will be relatively unchanged from
+one frame to the next. ,
+
+e The direction of motion of a given point will be relatively unchanged
+from one frame to the next frame.
+
+We can also use the smoothness of image motion in monocular image se-
+quences. To formalize the idea of the smoothness of motion, let us first for-
+malize the idea of path coherence which states that the motion of an object
+at any time instant cannot change abruptly.
+
+14.6.1 Deviation Function for Path Coherence
+
+To use the above properties in an algorithm, we formulate a function to
+implement the above ideas concretely and use it to evaluate motion properties
+in a frame sequence. The path coherence function should follow these four
+
+guiding principles:
+1. The function value is always positive.
+
+2. It should consider the amount of angular deviation without any effect
+of the sign of the direction of motion.
+
+3. The function should respond equally to the incremental speed.
+4. The function should be normalized in the range 0.0 to 1.0.
+
+Trajectories of two point-tokens are shown in Figure 14.18. Let the tra-
+jectory be represented as
+
+T, = (P},P?, Pi,...,PP) (14.76)
+
+where T; is trajectory and P* represents a point in the kth image. If the coor-
+dinates of the point are given by the vector X; in the frame, the coordinates
+in the kth frame can be represented as X;,. Representing the trajectory in
+
+vector form, | ,
+T; — (Xi1, X72, X43, sae , Xin) : (14.77)
+14.6. TRACKING AAD
+
+Figure 14.18: The trajectories of two points. The points in the first, second,
+and third frames are labeled 0, A, and ©, respectively.
+
+Now let us consider the deviation d;* in the path of the point in the kth
+_ frame. The deviation in the path is a measure of path coherence, given by
+
+di* = b(Xin1Xix, XikXik+1); (14.78)
+
+where ¢ is a path coherence function. The deviation for the complete trajec-
+tory is defined as
+
+n—l
+D; = S~ d;*. 7 (14.79)
+k=2
+
+It there are m points in a sequence of n frames resulting in m trajectories,
+the deviation of all trajectories should be considered, which is given by
+
+m n—l
+
+D(T,,T2,T3,...,Tm) = > S- dj*. | (14.80)
+w=k k=2 |
+
+Thus, the correspondence problem is solved by maximizing the smoothness of
+motion; that is, the total deviation D is minimized to find the set of correct
+
+trajectories.
+
+14.6.2. Path Coherence Function
+
+After understanding the trajectory function, let us define a constraint func-
+tion for path coherence. If the sampling rate of the camera is high enough,
+then change in the direction and velocity of any moving point in consecutive
+time frames is smooth.
+446 CHAPTER 14. DYNAMIC VISION
+
+Figure 14.19: Deviations in a trajectory.
+
+This is described by the deviation function:
+
+In the vector form it can represented as
+
+, Xin-1 Xin XipXikyr
+o(PF, P,P) =u, (2 - pk Xe za)
+
+| Xig—1X in| |] Xie Xn-41 ||
+
+| X jk—-1Ask|l || XGe AG
+tu (1-2 | = ell | XieXieta ll (14.82)
+| Xix—1Xizl| + |] Xie Xex+1 ||
+
+where w; and wz are weights that are selected to assign differing importance
+to direction and velocity changes (see Figure 14.19).
+
+Note that the first term is the dot product of displacement vectors and the
+second considers the geometric and arithmetic mean of the magnitude. The
+first term in the above expression can be considered as direction coherence,
+and the second term can be considered as speed coherence. The weight can
+be selected in the range 0.00 to 1.00 such that their sum is 1.
+
+One of the main difficulties with the use of multiple frames is the problem
+of occlusion. When working with a large sequence of frames, it is possible
+that some objects may disappear totally or partially. Similarly, some new
+objects may appear in the frame sequence from some intermediate frame on-
+ward. In addition, the changing geometry of objects due to motion and the
+changes in scene illumination over the frame sequence can cause significant
+changes in the feature point data that is to be matched over the frames.
+14.6. TRACKING | , 447
+
+All these changes in the feature point data set lead to incorrect correspon-
+dence, if such a correspondence is obtained by performing minimization to
+extract a globally smooth set of complete trajectories. By forcing the trajec-
+tories to satisfy some local constraints and allowing them to be incomplete,
+if necessary, trajectories in the presence of occlusion can be obtained.
+
+14.6.3. Path Coherence in the Presence of Occlusion
+
+Two limitations of the path coherence algorithm are:
+
+e It assumes that the same number of feature points are available in every
+frame.
+
+e It assumes that the same set of feature points are being extracted in
+every frame. !
+
+In practice, the number of feature points can drastically change from
+frame to frame. Even when the feature point count is the same over all the
+frames, it may not necessarily be the same set of feature points that was
+extracted in the earlier frames. Thus, while searching for a smooth set of.
+trajectories, we must allow the possibility of obtaining incomplete trajectories
+indicating either occlusion, appearance of a new object, or simply the absence
+of the corresponding feature points in the subsequent or earlier frames due to
+poor feature detection. Moreover, some constraints in the form of maximum
+possible displacement and maximum local smoothness deviation must be
+placed on the acceptable trajectories to avoid chance groupings of distant
+feature points that may happen to form a smooth path.
+
+Given a set P’ of m; feature points for each of the n frames, the algorithm
+below finds the maximal set of complete or partially complete trajectories
+that minimizes the sum of local smoothness deviations for all the trajectories
+obtained subject to the conditions that the local smoothness deviation for
+none of the trajectories exceeds ¢max and the displacement between any two
+successive frames for any trajectory is always less than dmax. The above local
+constraints limit the acceptable location of a feature point in the next frame
+given its location in two previous frames.
+448 CHAPTER 14. DYNAMIC VISION
+
+14.6.4 Modified Greedy Exchange Algorithm
+
+To account for missing points due to occlusion, phantom points are used.
+Phantom feature points are hypothetical points which are used as fillers to
+extend all trajectories over the given frame set. These points are introduced
+during the trajectory initialization phase as described later. The notion of
+phantom feature points serves two purposes: it allows us to satisfy the local
+constraints, and it provides a way to deal with incomplete trajectories. For
+the notion of phantom feature points to be useful, we must define the displace-
+ment and local smoothness deviation values for a trajectory that has some
+phantom feature points assigned to it. For computing the frame-to-frame
+displacement for a trajectory T;, a displacement function Disp(P;*, P;***) is
+defined as follows:
+
+Euclidean Disp(P;*, P;“*") if both points are true feature
+dmax points otherwise.
+
+This definition of frame-to-frame displacement for a trajectory implies
+that a phantom feature point always moves by a fixed amount dpax. For
+
+computing the local smoothness deviation for a trajectory T; in the kth frame
+function, DEV(P*~', PF, P**?) is defined as follows:
+
+0 if P*—} is a phantom point
+DEV(P*1, PF, P§**) = ¢(P;*-!, P.*, P,***) . if all three are true feature points
+Pmax otherwise.
+
+The above definition of the local smoothness deviation function is equivalent
+to the path coherence function if all three feature points are true feature
+points. It introduces a penalty of @max for not having a true feature for T;
+in the subsequent frame or missing a true feature point in the current frame,
+the kth frame. There is no penalty if a trajectory begins from the current
+frame under consideration. However, as the greedy exchange algorithm is
+applied alternately in the forward and backward directions, it is clear that
+the assignment of phantom feature points in the subsequent frames or earlier
+frames is equally discouraged. With the above definitions for computing the
+displacement and local smoothness deviation values, the steps of the modified
+greedy exchange algorithm are as follows:
+14.6. TRACKING , : 449
+
+Initialization:
+
+1. For each of the m, true feature points in P*¥,k =1,2)....n— 1, de-
+termine the nearest neighbor in P**! that is within the distance dnnax
+Resolve arbitrarily in case of multiple choices.
+
+2. Form initial trajectories by linking the nearest neighbors in the succes-
+sive frames. Extend all incomplete trajectories using phantom feature
+points to span n frames.
+
+3. For every trajectory of step 2 above, form an additional trajectory
+consisting only of phantom feature points.
+
+Exchange Loop:
+
+forward-flag = on;
+backward-flag = on;
+For each frame index k = 2 ton —1:
+
+while (forward-flag == on or backward-flag = on)
+do 7
+
+if (forward-flag == on) then
+
+begin
+
+fori=1ltom-—l1
+forj =i+l1ltom
+if within constraints of dmax
+calculate:
+
+Gi’ = [O(P*?, Pi*, Pt?) + (PF, BF, PAY
+—[¢(P*, Pik, Pi) + (PF, BF, Pt). (14.83)
+
+Pick the 77 pair with maximum gain.
+
+if (gain is greater than 0)
+
+begin
+Exchange the point in (k + 1)th frame.
+Set backward-flag on.
+
+end (if)
+
+else
+
+Set forward-flag off.
+end (if)
+450 CHAPTER 14. DYNAMIC VISION
+
+else if (backward-flag == on) then
+begin
+fori =ltom-—1
+for 7 =i+tltom
+if within constraints of dmax
+calculate Gi;" from Equation 14.83.
+Pick the 77 pair with maximum gain.
+if (gain is greater than 0)
+begin
+Exchange the point in (k + 1)th frame.
+Set backward-flag on.
+end (if)
+else ,
+Set forward-flag off.
+end (if)
+end (while)
+end (for)
+
+Termination:
+
+Repeat the exchange loop until there are no more frames.
+
+The exchange operation of the above algorithm must be applied alter-
+nately in the forward and backward directions. The number of trajectories
+formed during step 2 of the initialization depends on the quality of the data.
+In an ideal case, where the same set of m feature points are consistently
+present in all the frames, only m trajectories will be formed and none of these
+will have any phantom points. In the worst case, when the feature points of
+any one frame do not have any correlation with the feature points of any other
+frame, the number of trajectories formed can be as large as the total count of
+true feature points from all the frames. In general, the number of trajecto-
+ries formed will be at least mmax, Where Mmax = max(m1,m2,..., Mn), and
+different trajectories will have different numbers of phantom feature points.
+
+It should be noted that the introduction of phantom feature points does
+not require the locations of these points. Also, the introduction of trajec-
+tories with only phantom feature points during step 3 of the initialization
+phase does not affect the overall sum of local smoothness deviation values,
+14.7. SHAPE FROM MOTION | 451
+
+the criterion being minimized to determine the correspondence. The intro-
+
+smoothness deviation value greater than ¢max in any frame. The checking of
+the 2 pairs in the exchange loop ensures that the dma, constraint will not be
+
+violated.
+
+14.7 Shape from Motion
+
+One of the major goals of dynamic scene analysis is to get three-dimensional
+information about the structure of objects in the scene and their three-
+dimensional motion characteristics. By the structure of an object, we mean
+the relative locations of points on the object. Thus, if we know the locations
+of points on an object with respect to a reference point, with a scale factor,
+then we say that the structure of the object is known. To get this infor-
+mation, however, image plane information about objects must be converted
+to scene information. As we saw in stereo, by using multiple views of an
+object, or by using multiple locations of a camera, this information may be
+recovered. The interpretation of two-dimensional displacements in terms of
+three-dimensional motion is complicated.
+
+An assumption about the rigidity of objects is helpful in recovering the
+structure of objects. The rigidity assumption states that any set of ele-
+ments undergoing a two-dimensional transformation, which has a unique
+interpretation as a rigid body moving in space, should be so interpreted.
+This assumption provides a much-needed constraint in the scene that can
+be used to determine the relative locations of points. The structure-from-
+_ motion theorem states that given three distinct orthographic projections of
+four noncoplanar points in a rigid configuration, the structure and motion
+compatible with the three views are uniquely determined up to a reflection
+about the image plane.
+
+The structure-from-motion theorem provides a precise statement about
+constraints and possible solutions. By changing constraints on the types
+of objects and types of projections, and by using different mathematical
+approaches, many different formulations of the above problem are possible.
+Approaches to recovering three-dimensional structures from image sequences
+may be divided into the following two general classes.
+452 CHAPTER 14. DYNAMIC VISION
+
+Token-Based Methods
+
+Suppose that we have several views of an object available and that these
+views can be considered orthographic. An interest operator is applied to
+- consecutive frames of this sequence and some interesting points or tokens,
+such as corners, are extracted. Also suppose that the correspondence prob-
+lem between interesting points has been solved, using a method discussed
+earlier. If token correspondence has been established, the structure-from-
+motion theorem states that it is possible to recover the three-dimensional
+location of four noncoplanar points and their motion from their orthogonal
+projections. This gives an implicit three-dimensional structure for an object.
+Here we will consider an approach to recover this structure.
+
+Suppose that we have four points in space and their orthographic pro-
+jections are known in three frames. Let the points be Po, Pi, Po, and P;
+and the frames be taken at time instants t,,t2, and t3;. We represent three-
+dimensional coordinates of points as (x;;, yi;, Zi; ) and two-dimensional coordi-
+nates as (xj,,yj;), where i and j represent the point number, i = 0,1, 2,3, and
+frame number, 7 = 1, 2,3, respectively. Now we can write the transformation
+of three-dimensional points as
+
+L4,2 Lid | |
+Yio | = fie] Yi | + Lie (14.84)
+24,2 4i,}
+
+and
+Ly 3 wi,2 |
+yi3s | = Ros | yi2 | + Tos. (14.85)
+24,3 24.2 ,
+
+In the above, R,; and T;; are rotation matrices and translation vectors from
+time t; to time t;. We want to determine rotations matrices, translation vec-
+tors, and three-dimensional coordinates of points to determine the motion
+and structure. ‘To solve for these quantities, we have image plane coordi-
+nates of four points in three frames. Now since we are using orthographic
+projections, we know that ,
+
+t= ej and y= yg (14.86)
+Upon substituting this information in the above equations, we see that this
+is an underconstrained situation; we have too few equations to determine the
+
+required variables.
+FURTHER READING _ _ , 453
+
+Many different approaches have been proposed to solve this undercon-
+strained problem. Most of these methods introduce an assumption that al-
+lows the formulation of the problem in such a way that one of the known
+techniques for determining the unknowns may be applied. We do not dis-
+cuss any specific method here. Interested readers may want to study the
+references given in the Further Readings section. ,
+
+Feature-based methods for the recovery of three-dimensional structure or
+for the estimation of motion parameters require two steps: determination
+of the precise location of tokens or points, and the correspondence between
+tokens or points. If interest operators are applied based on small neighbor-
+hoods, then the number of tokens extracted in a real image is very large, mak-
+ing correspondence a, difficult problem. Interest operators based on a large
+neighborhood and higher-order gray-level characteristics result in a more rea-
+sonable number of tokens for determining correspondences, but the location
+of tokens may not be precise. | |
+
+Trajectory-Based Methods
+
+The above methods depend on a set of points in two or three frames. If
+a token is tracked over several frames by solving correspondences, a two-
+dimensional trajectory of the token is obtained. Methods for recovering
+three-dimensional structure and motion from trajectories are more reliable
+than methods based on sets of features in new frames. A trajectory may
+be interpolated to obtain better resolution of the two-dimensional path by
+using curve fitting techniques. Moreover, the correspondence problem may
+be simplified by considering more than two frames and extending relaxation
+across the frames. ,
+
+Further Reading
+
+Nagel [174] proposed the use of the likelihood ratio for motion detection.
+Much of the work presented here on difference and accumulative difference
+pictures was done by Jain with other researchers [129, 130, 122, 125].
+Fennema and Thompson proposed use of the gradient method to com-
+pute optical flow for use in segmentation based on motion [79]. Horn and
+Schunck [114] developed the optical flow determination algorithm. Schunck
+454 | CHAPTER 14. DYNAMIC VISION
+
+{212} developed robust approaches to compute optical flow. Nagel and Enkel-
+mann [176] formulate and evaluate an oriented smoothness constraint for
+computing optical flow. Determination of optical flow has been a very active
+research area. For some recent approaches see [4, 106, 169, 175, 9, 222].
+Clocksin [58] and Longuet-Higgins and Prazdny [157] describe the signifi-
+cance of optical flow and its potential in extracting information about surface
+orientation and structure. Subbarao [229] has presented a rigorous approach
+for recovering information from optical flow.
+
+Barnard and Thompson [21] introduced a feature-based matching algo-
+rithm to estimate geometrical disparity between images. Recovery of three-
+dimensional motion parameters and the three-dimensional structure of ob-
+jects has been an active research area. Ullman published a book containing
+an extensive discussion of the correspondence problem from the viewpoint
+of natural vision [241]. He popularized the structure-from-motion problem.
+Later Huang, with his students, did pioneering research in recovering motion
+characteristics of objects under various conditions [237, 77, 76, 249]. Jerian
+and Jain showed the sensitivity of various approaches to noise and initial
+estimates and provided a polynomial systems solution [134, 133]. Chellappa
+and Broida developed a framework for estimating motion in a sequence of
+frames using Kalman filters [47, 48].
+
+Ego-motion complex logarithmic mapping was developed by Jain [124,
+123, 127]. Schwartz [214, 213, 215, 216] and Cavanaugh [54, 55] have studied
+this mapping in the context of biological vision systems.
+
+Jenkin [132] proposed a novel approach for combining the solution of the
+correspondence problem for stereopsis and motion. Sethi and Jain [219] de-
+veloped a tracking algorithm based on smoothness of motion. The algorithm
+for path coherence in the presence of occlusion was developed by by Salari
+and Sethi [209]. A large number of image frames taken at short intervals
+helps minimize the correspondence problem since the amount of change in
+successive images is expected to be very small. This concept has led to
+the so-called epipolar plane image analysis in which the images are acquired
+using a moving camera. Explicit representation of both the spatial and tem-
+poral structure of such image sequences is captured in a spatiotemporal sur-
+face. ‘Tracking mechanisms that operate locally on these evolving surfaces
+to obtain three-dimensional scene reconstruction are described by Baker and
+Bolles in [15]. In the last few years, there have been several other approaches
+based on the spatiotemporal image solid. Some of these are [106, 247, 156].
+EXERCISES 455
+
+Determination of optical flow and solving the correspondence problem
+have been two difficult problems in dynamic vision. In the last few years,
+several techniques have been proposed for direct computation of motion prop-
+erties, bypassing optical flow and correspondence (126, 7, 6, 184]. These
+approaches appear promising.
+
+Zhang, Faugeras, and Ayache [262] approach the problem of motion de-
+termination as a stereo matching and motion estimation problem. Stereo
+and motion are also used by Grosso, Sandini, and Tistarelli in their system
+described in [94]. However, in their system, the objects remain stationary,
+and multiple views are obtained by moving the cameras around the ob jects
+while maintaining the direction of gaze fixed toward a point in space. A sur-
+vey of many of the methods for dynamic-scene analysis is given by Aggarwal
+and Nandhakumar [2]. A framework for the abstraction of motion concepts
+from image sequences is described by Tsotos et al. [238]. It includes semantic
+nets for knowledge representation and associated algorithms operating in a
+competing and cooperating feedback mode.
+
+Exercises
+
+14.1 What are the three phases in a dynamic-scene analysis system? Con-
+sider the task of a driver on a freeway. What are the operations
+performed in the three phases of dynamic-scene analysis for this task?
+
+14.2 Define a difference picture. How would you select an appropriate
+threshold in a particular application of a difference picture?
+
+14.3 How can you form a difference picture using a statistical approach to
+determine dissimilarity of intensity values in an image? How is this
+approach better than the one based on the straightforward difference
+picture approach?
+
+14.4 What is an accumulative difference picture? What limitations of dif-
+ference pictures does it overcome? Does sign of difference help in
+motion analysis? How?
+
+14.5 What is the difference between a time-varying edge and a moving
+edge? How will you detect moving edges in a dynamic scene? Can
+456
+
+14.6
+
+14.7
+14.8
+14.9
+
+14.10
+
+14.11
+14.12
+
+14.13
+
+14.14
+14.15
+
+14.16
+
+CHAPTER 14. DYNAMIC VISION
+
+you use three-dimensional edge detectors to detect motion in an image
+sequence?
+
+Define the correspondence problem in motion analysis. How can you
+solve this problem? List various approaches to solve this problem.
+What do you think is the problem that makes determination of cor-
+responding points so difficult?
+
+To obtain the feature point locations to subpixel resolution, compute
+the x and y moments from the intermediate image of the minimum
+variance obtained in step 2 of the Moravec interest operator.
+
+What is image flow? Where can it be used?
+
+Derive the motion constraint equation. How can you use this equation
+to segment a dynamic scene into moving and stationary objects?
+
+Define the aperture problem. What problems does it cause in com-
+puting image flow? How can you overcome the aperture problem?
+Suggest at least two different approaches.
+
+Define focus of expansion. Where and how it can be used? Is it
+related to vanishing points?
+
+What is complex logarithmic mapping? What properties of this map-
+ping make it attractive in dynamic-scene analysis?
+
+When a camera is moving, all points in the environment are getting
+displaced in an image. How can you segment a dynamic scene to
+determine moving objects in case of a moving camera?
+
+What is path coherence? How can you use it for tracking objects in
+a scene? ,
+
+What is structure-from-motion? Under what conditions can you re-
+alistically determine the structure of an object using three frames?
+
+The top left corner of a 6 x 8-pixel object is initially located at (0,0). It
+moves to the location (4, 8) after four frames of uniform velocity. Find
+the absolute, positive, and negative accumulative difference pictures.
+COMPUTER PROJECTS 457
+
+14.17 Consider a point object located at world coordinates (10, 0,10) at time
+t= 0. A camera system with a focal length of 2 is located such that
+its lens center is at the origin of the world coordinate system and its
+optical axis is looking directly at the object at time t — 0. The object
+is moving with a uniform velocity of (5,0, 0).
+
+a. What are the coordinates of the point object in the image plane
+at time t = 0?
+
+b. Find the image coordinates of the point at t = 1 if
+
+(i) The camera is stationary.
+(ii) The camera translates with a uniform velocity of (0, 0, 5).
+
+14.18 A family decides to enjoy a nice Spring weekend outdoors along with
+
+bread crumbs. Immediately, Billy decides to chase Cilly. After four
+seconds of running at constant speed, both Billy and Cilly reach their
+destination only to find that the bird just took off in the direction
+(0,0, 200). Initial positions of all animals and the camera are as shown
+in Figure P14.18. The camera height is 5 feet and the focal length of
+its lens is 0.25 feet. Assume that the animals are smal] enough so that
+they can be represented as points on the ground. Also, assume that
+Billy’s instantaneous direction of travel is always toward the current
+
+position of Cilly and that he also travels at constant speed. Find
+the image plane coordinates and the direction of optical flow for all
+animals at time instances t = 0+ (just after start), t = 2 (an estimate
+is enough for Billy’s position), and t = 4- (just before end) seconds.
+Also mark the direction of optical flow for the bird after it starts its
+flight. Mark all distances in the image plane. Note that all distances
+are measured from the center of the lens for convenience.
+
+Computer Projects
+
+14.1 Design a system to count how Many people entered the coffee room
+and what percentage took coffee. Assume that you can use multiple
+458 CHAPTER 14. DYNAMIC VISION
+
+cameras if required and you are free to determine the location and
+orientation of cameras.
+
+14.2 Implement an accumulative difference picture—based approach for mo-
+tion analysis. Use this approach to extract images of all people who
+came to your coffee room and took coffee.
+
+14.3 Develop a program to establish correspondence. Use this to determine
+all corresponding points in a scene containing at least three objects
+moving in different directions.
+
+14.4 Implement a tracking algorithm using path coherence. Test it using a
+basketball sequence to track the ball. Modify this algorithm to work
+with a mobile camera. Assume that you want to design a mobile robot
+that will track a particular moving object (pointed to it interactively).
+Apply your tracking algorithm to this problem.
+
+x'X
+R
+DISTANCES IN FEET
+
+6 Bird
+
+y’ and y axes are
+normal to the paper
+
+-
+rd
+a
+
+z,z
+
+Image plane Billy ——Cilly
+
+Figure P14.18
+-->
 </p>
     </body>
 </html>

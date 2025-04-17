@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>準備中</title>
+        <title>陰影</title>
         <style type="text/css">
             p
             {
@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,8 +75,793 @@
     </style>
     </head>
     <body>
-        <h1><center>準備中</center></h1>
+        <h1><center>９章 陰影(準備中)</center></h1>
 <p>
+この章では、光が表面でどのように反射するかという物理学的考察と、反射特性を用いて表面の形状を推定する照度差ステレオ法と呼ばれる手法について解説する。照度差ステレオ法とシェーディングからの形状推定について説明する前に、画像形成の物理学的側面について説明する必要がある。画像形成とは、シーン内の点からの光強度を画像平面上に写像するプロセスである。本稿は、Horn [109] の先駆的な研究に基づいている。
+<!-- This chapter covers the physics of how light reflects from surfaces and de-
+scribes a method called photometric stereo for estimating the shape of sur-
+faces using the reflectance properties. Before covering photometric stereo
+and shape from shading, we must explain the physics of image formation.
+Imaging is the process that maps light intensities from points in a scene onto
+an image plane. The presentation follows the pioneering work of Horn [109].-->
+<p>
+<h2>9.1 画像放射照度</h2>
+<p>
+セクション1.4で説明した投影法は、シーン点の像面上の位置を決定するが、その点の画像輝度は決定しない。画像輝度は、このセクションで説明する結像の物理的性質によって決定される。画像輝度の正しい用語は画像放射照度であるが、輝度、明度、グレー値などの用語は非常に一般的なので、このテキストでは画像放射照度の同義語として使用されている。
+<!-- The projections explained in Section 1.4 determine the location on the image
+plane of a scene point, but do not determine the image intensity of the point.
+Image intensity is determined by the physics of imaging, covered in this
+section. The proper term for image intensity is image irradiance, but terms
+such as intensity, brightness, or gray value are so common that they have
+been used as synonyms for image irradiance throughout this text.
+</p><p>
+The image irradiance of a point in the image plane is defined to be the
+power per unit area of radiant energy falling on the image plane. Radiance is
+outgoing energy; irradiance is incoming energy. The irradiance at a point in
+the image plane F(z’, y’) is determined by the amount of energy radiated by
+the corresponding point in the scene L(x, y, z) in the direction of the image
+point:
+
+E(z',y') = L(z,y, z). (9.1)
+
+The scene point (z, y, z) lies on the ray from the center of projection through
+
+257
+258 CHAPTER 9. SHADING
+
+image point (z’,y’). To find the source of image irradiance, we have to
+trace the ray back to the surface patch from which the ray was emitted and
+understand how the light from scene illumination is reflected by a surface
+patch.
+
+Two factors determine the radiance reflected by a patch of scene surface:
+
+e The illumination falling on the patch of scene surface
+
+e The fraction of the incident illumination that is reflected by the surface
+patch.
+
+The amount of illumination falling on a particular surface patch is deter-
+mined by the position of the surface patch relative to the distribution of the
+light sources in the scene. The fraction of the incident illumination that is
+reflected by the surface patch in a particular direction depends on the optical
+properties of the surface material.
+
+Consider an infinitesimal patch of surface in a scene that is illuminated
+with a single point light source. Establish a coordinate system on the surface
+patch as shown in Figure 9.1. The coordinate system represents the hemi-
+sphere of possible directions from which energy can arrive or depart from the
+surface. Let (@;,¢;) denote the direction, in polar coordinates relative to the
+surface patch, of the point source of scene illumination and let (6., 4.) denote
+the direction in which energy from the surface patch is emitted. The energy
+arriving at the surface patch from a particular direction is E(6;,0;) and the
+energy radiated in a particular direction from the surface patch is L(8., ¢,).
+The ratio of the amount of energy radiated from the surface patch in some
+direction to the amount of energy arriving at the surface patch from some
+direction is the bidirectional reflectance distribution function. The radiance
+is determined from the irradiance by
+
+L(6e, be) = f (i; b:, Pc; be) H(i, bi), (9.2)
+
+where f(6:,¢:,¢,%e) is the bidirectional reflectance distribution function,
+called the BRDF for short. The BRDF depends on the optical properties
+of the surface material. This is the general formulation and can be very
+complicated, but in most cases of interest in machine vision, the effects are
+fairly simple. For most materials, the BRDF depends only on the difference
+between the incident and emitted angles:
+
+F (is is Pes be) = F(G: — Ges bi — Ge). (9.3)
+9.1. IMAGE IRRADIANCE 259
+
+Figure 9.1: A polar coordinate system is established on an infinitesimal patch
+of surface to describe the directions of illumination and radiance in the hemi-
+sphere of directions visible from the surface patch.
+
+9.1.1 Illumination
+
+The radiance emitted from a surface patch can be calculated given the bidi-
+rectional reflectance distribution function (BRDF) for the surface material
+and the distribution of light sources. Two types of illumination will be cov-
+ered:
+
+e Point light source
+
+e Uniform light source
+
+First, the general formula for computing the total irradiance on a surface
+patch from a general distribution of light sources will be presented. The co-
+ordinate system is the polar coordinate system for the hemisphere of possible
+directions as diagrammed in Figure 9.1. The total irradiance on a surface
+patch is the sum of the contributions arriving at the surface patch from all of
+the directions in the hemisphere. Each small contribution of irradiance pass-
+ing through a patch of the unit hemisphere must be counted in such a way
+that the total area of the hemisphere is used. A given section of the hemi-
+sphere with angular increments 60; and 6¢; covers an area of the hemisphere
+6w called the solid angle:
+260 CHAPTER 9. SHADING
+
+The sin 6; term accounts for the effect that the area of the portion of the
+hemisphere 66; 6¢; is smaller near the top of the hemisphere. The area of a
+sphere of radius r is 4ar?, so the area of a hemisphere with unit radius is 27.
+The area S of the hemisphere can be obtained by adding up the solid angles
+that comprise the hemisphere:
+
+Qn
+
+Cen : dw (9.5)
+m/2 p2m
+
+2 f [ sin 0 dédé (9.6)
+n/a
+
+= an | sin 6 dé (9.7)
+
+= 2n[-coso]r”? (9.8)
+
+= Qn. (9.9)
+
+Without the sin @ factor in Equation 9.4, the individual infinitesimal pieces
+of hemisphere would not add up to the correct total area. The total radiance
+passing through the sphere is the sum of the infinitesimal patches of sphere
+weighted by the amount of radiance per unit solid angle passing through each
+patch. Let I(6;,¢;) be the radiance per unit solid angle passing through the
+hemisphere from the direction (0;,¢;). The total irradiance of the surface
+patch is
+
+Qe pr /2
+i= | f 1(8;, 4;) sin @, cos 6, dB, dé, (9.10)
+0 Jo
+where the additional cos @; term is needed because the surface patch appears
+
+smaller from the direction of illumination due to foreshortening. The amount
+of radiance reflected from the surface patch is
+
+Qn pr/2 :
+L(G, be) = f° f(s 4:s 05 8) 1(0., ds) sin 8, c08 8; dB, dfs. (9-11)
+
+With the assumption that scene radiance is equal to image irradiance, the
+image irradiance at position (z’, y’) in the image plane is equal to the radiance
+from the corresponding surface patch in the scene:
+
+E(z',y') = L(z,y, 2) (9.12)
+L (Be, de); (9.13)
+
+ll
+9.1. IMAGE IRRADIANCE 261
+
+where the angles of emittance of the scene radiance are determined from the
+geometry of the scene surfaces. Note that for each image position (z’, y’),
+the corresponding scene position (2, y,z) can be calculated, as well as the
+surface normal fi for the surface patch and the angle (8, ¢,) of the ray from
+the surface patch to the point (z’, y’) in the image plane, in polar coordinates
+relative to the surface normal or the surface patch.
+
+To determine the irradiance of the entire image from the geometry of
+surfaces in the scene and the arrangement of light sources, it is necessary
+to know the BRDF for the scene surfaces. This is the subject of the next
+section.
+
+9.1.2 Reflectance
+
+Several different types of reflectance will be covered:
+e Lambertian reflectance (also called diffuse reflectance)
+e Specular reflectance
+e Combinations of Lambertian and specular reflectance
+
+e Reflectance in scanning electron microscopy
+
+Lambertian Reflectance
+
+A Lambertian surface appears equally bright from all viewing directions for
+a fixed distribution of illumination and a Lambertian surface does not ab-
+sorb any incident illumination. Lambertian reflectance is also called diffuse
+reflectance since a Lambertian surface takes the incident illumination, what-
+ever the distribution of illumination may be, and distributes all of the incident
+illumination in all surface directions such that the same amount of energy is
+seen from any direction. Note that this is not the same as saying that the
+surface emits energy equally in all directions, as will be explained in Sec-
+tion 9.3.2. Many matte surfaces are approximately Lambertian, and many
+surfaces, with the exceptions noted below, are qualitatively Lambertian.
+The BRDF for a Lambertian surface is a constant:
+
+(Bis ise, be) = =. (9.14)
+262 CHAPTER 9. SHADING
+
+The radiance is independent of the emitted direction and is obtained by
+summing the effect of the BRDF on the incident illumination coming from
+the hemisphere of possible directions:
+
+Qa pr
+L= i [$64.4 60) 6) sin 8,008 8; dB, de (9.15)
+
+ax pn/2 7
+a i ¥ ~1 (64, $4) sin 8; cos 8; d8; de (9.16)
+
+= ti (9.17)
+wT
+
+Il
+
+where Jo is the total incident illumination on the surface patch.
+
+What is the perceived brightness of a Lambertian surface that is illumi-
+nated by a distant point source? The illumination from a point surface in a
+direction (,,¢;) relative to the normal of a surface patch is described by
+
+(6, $2) = Io ee (9.18)
+
+where Jy is the total illumination. Essentially, the 6-functions merely restrict
+the directions from which illumination arrives at the surface patch to the
+single direction (@,,¢,). Equation 9.18 has a sine term in the denominator
+so that when it is plugged into Equation 9.10, the total illumination comes
+out to be Jp.
+
+Now plug the illumination function from Equation 9.18 and the BRDF
+from Equation 9.14 into Equation 9.11 for the radiance from the surface
+patch to get the equation for the perceived brightness:
+
+Qn px /2 :
+L(Be, 42) = f° [$6,080 de) 108i, 6) sin 4, cos 0, dB,
+f fo In 6(0; — 9s) (9; — os)
+
+sin 6;
+
+sin @; cos @; d6; dd;
+
+_ a couse (9.19)
+
+T
+
+This is the Lambert cosine law, which says that the perceived brightness of
+a surface patch illuminated by a point source varies with the incident angle
+relative to the surface normal of the patch. The variation with incident angle
+is due to the foreshortening of the surface patch relative to the direction of
+9.1. IMAGE IRRADIANCE 263
+
+illumination. In other words, a surface patch of a given area captures the
+most illumination if it is oriented so that the surface normal of the patch
+points in the direction of illumination. As the surface normal is pointed
+away from the direction of illumination, the area of the patch as seen from
+the direction of illumination, and hence the brightness of the patch, decreases.
+To see a demonstration of this effect for yourself, take a spherical object such
+as a white ball and turn out all of the lights in the room except for a single
+bulb. You will see that the brightest part of the sphere is the portion with
+the surface normal pointing toward the direction of illumination, regardless
+of where you stand relative to the ball, and the brightness decreases at the
+same rate in all directions from the point on the sphere that corresponds to
+the light source.
+
+Suppose that instead of a point source, the illumination is uniform from
+all directions with total intensity Jg. Then the brightness is given by
+
+Qa px {2 S
+L(0.,4) = f [ $(G;, 4%, Ge, be) 1(A,, 4) sin 6; cos @; dO; dd
+
+Qn px/2 J,
+ee { i sin 6; cos 0; dO; dd;
+0 Jo
+Io.
+
+T
+
+(9.20)
+
+Now the perceived brightness of the Lambertian surface patch is the same
+from all directions because no matter how the surface patch is oriented, it
+receives the same amount of illumination.
+
+Specular Reflectance
+
+A specular surface reflects all incident illumination in a direction that has the
+same angle with respect to the surface normal but is on the opposite side of
+the surface normal. In other words, a ray of light coming from the direction
+
+(9;, ;) is reflected in the direction (6.,¢-) = (0,0; ++ 7). The BRDF for a
+specular surface is
+
+5(8_ — 8) (de ~ 45-7)
+
+sin 6; cos 6;
+
+(i, di, Ge, de) a
+
+(9.21)
+
+The sin 6; and cos 6; factors are needed in the BRDF to cancel the correspond-
+ing factors due to foreshortening and solid angle in Equation 9.11. Plugging
+264 CHAPTER 9. SHADING
+
+Equation 9.21 into Equation 9.11 yields
+
+L(6., de) = I(6e, Pe ae 7), (9.22)
+
+which shows that the incoming rays of light are reflected from the surface
+patch as one would expect for a perfect mirror.
+
+Combinations of Lambertian and Specular Reflectance
+
+In computer graphics, it is common to use a combination of specular and
+diffuse reflectance to model the reflectance properties of objects:
+
+) Slee — 91) 6(¢. — 4: — 7)
+
+sin @; cos ?;
+
+n
+F (Oi, bi, Pe, Ge) = Pes (lq (9.23)
+where the constant 7 controls the mixture of the two reflectance functions.
+The relative proportion of specular and diffuse reflectance varies with the
+surface material of the objects. Objects that are glossy, in other words shiny
+objects, have a greater degree of specular reflectance than matte objects.
+
+Scanning Electron Microscopy
+
+In scanning electron microscopy, a surface emits the same amount of energy in
+all directions. This is not the same as a Lambertian surface, which appears
+equally bright from all directions. The difference is most easily seen by
+comparing the reflectance maps for the two surfaces, as will be done in Section
+9.3.
+
+9.2 Surface Orientation
+
+The material in Section 9.1.2 discussed the relationship between illumination
+and perceived brightness in a coordinate system erected on a hypothetical
+surface patch. In order for this to be useful in vision, the discussion of surface
+reflectance and scene illumination must be reworked in the coordinate system
+of the image plane from Figure 9.2. Surface orientation must be formulated
+in camera coordinates.
+
+Consider a sphere aligned with the optical axis as shown in Figure 9.3.
+Imagine a point on the sphere and suppose that a plane is tangent to the
+9.2. SURFACE ORIENTATION 265
+
+Surface normal
+n
+
+Camera lens
+
+object point
+center ea
+
+Gy, 2)
+
+'
+
+x
+Gy)
+Image plane
+
+Figure 9.2: Projection of a point in the scene onto the image plane. The
+origin of the coordinate system is at the lens center.
+
+Surface normal
+
+Camera lens
+center
+
+Unit Gaussian
+Image plane sphere
+
+Figure 9.3: The Gaussian sphere illustrating the relationship between surface
+orientation and image coordinates.
+266 CHAPTER 9. SHADING
+
+sphere at that point. The surface normal of the plane is also the surface
+normal of the corresponding point on the sphere.
+
+Suppose that the point is a distance z from the image plane and suppose
+that parallel projection is used to map the point onto the image plane. In
+camera coordinates, the point is at position (2,y,z). The following steps
+establish a nomenclature for the orientation of a surface patch in the scene
+in image plane coordinates. Consider a point nearby in the image plane at
+position (7 +éx,y+é6y). The depth of the point will be z+6z. Let the depth
+be a function of image plane coordinates:
+
+2 = 2059): (9.24)
+
+How does the change in depth 6z of the point relate to the change in image
+plane coordinates 6x and éy? The answer is found in considering the Taylor
+series expansion of the function z(z,y) about the point (x, y):
+
+Oz Oz
+
+bz br +
+
+a Bye! (9.25)
+
+The size of the partial derivatives of z with respect to xz and y are related
+to the amount of tilt in the tangent plane on the scene surface at the point
+corresponding to (x, y, z).
+
+The gradient of the surface at (x,y, z) is the vector (p,q) given by
+
+az Oz
+
+p= a and Gg ay (9.26)
+
+The surface normal of a surface patch is related to the gradient by
+
+n=(p,q,1), (9.27)
+
+which simply says that the amount of displacement in x and y corresponding
+to a unit change in depth z is p and q, respectively. The unit surface normal
+is obtained by dividing the surface normal by its length:
+
+Rivage (p,q, 1)
+1= _— FOS. 9.28
+ln] Vit p+? sas
+
+Any point (x,y,z) in the scene can be specified by just the « and y coordi-
+nates, assuming that scene surfaces are opaque and the image is formed by
+9.3. THE REFLECTANCE MAP 267
+
+parallel projection, so the coordinates of a point on a scene surface can just
+be denoted by image plane coordinates r and y with the primes omitted.
+Any function or property of the scene surface can be specified in terms of
+image plane coordinates; in particular, the orientation of a surface patch can
+be specified as functions of x and y, and since p and q have been developed
+to specify surface orientation, the orientation of any surface is specified by ~
+the two functions
+
+p=plt,y) and q=q(z,y). (9.29)
+
+The next step is to combine the ideas presented in this section for de-
+scribing surface orientation in viewer-centered coordinates with the concepts
+of surface reflectance and scene illumination presented in Section 9.1.
+
+9.3. The Reflectance Map
+
+The combination of scene illumination, surface reflectance, and the repre-
+sentation of surface orientation in viewer-centered coordinates is called the
+reflectance map. It specifies the brightness of a patch of surface at a partic-
+ular orientation for a given distribution of illumination and surface material.
+The presentation in this section assumes parallel projection, so the image
+plane coordinates will be denoted by (z, y) with the primes omitted.
+
+9.3.1 Diffuse Reflectance
+
+Consider a surface patch in the scene corresponding to image plane coordi-
+nates x and y with surface orientation p and g. Suppose that the surface
+patch has Lambertian reflectance and is illuminated by a point light source.
+In Section 9.1.2, the radiance of the patch was calculated to be
+
+L(6., be) = * 00s 9s, (9.30)
+
+where 6, is the angle between the surface normal of the patch and the di-
+rection vector to the light source. What is the corresponding representation
+in viewer-centered coordinates? In the viewer-centered coordinate system
+presented in Section 9.2, the surface normal is just (—p,—g,1) and the di-
+rection to the light source is (—p,,—q,,1). The cosine of the angle between
+268 CHAPTER 9. SHADING
+
+any two vectors is the dot product of the two vectors divided by the length
+of each vector, so the cosine of the angle between the surface normal and the
+direction to the point light source is:
+
+(=p,-G1) | (=Per = 9s, 1)
+VIF ee Vitr+@?
+
+= 1+ psp + 969 (9.32)
+
+Vier reylt p+
+
+For a given light source distribution and a given surface material, the
+reflectance for all surface orientations p and q can be cataloged or computed
+to yield the reflectance map R(p,q). Since the precise value for the image
+irradiance depends on a variety of factors such as the strength of the light
+source, the light-gathering ability of the optical system, and many other
+factors that do not affect reflectance qualitatively, the reflectance map is
+normalized so that its maximum value is 1. Combining this normalization
+with the assumption that scene radiance equals image irradiance yields the
+image irradiance equation:
+
+cos@, =
+
+(9.31)
+
+E(z,y) = R(p,q), (9.33)
+
+which says that the irradiance (brightness) at point (2, y) in the image plane
+is equal to the reflectance map value for the surface orientation p and gq of
+the corresponding point on the scene surface. For a Lambertian reflector and
+
+point light source, the reflectance map R(p, q) is given by Equation 9.32 and
+is shown in Figure 9.4.
+
+9.3.2 Scanning Electron Microscopy
+
+In scanning electron microscopy, the reflectance map is given by
+
+R(p,q) = yPrt+etl (9.34)
+
+= secdj. (9.35)
+
+The same energy is emitted in all directions; hence a surface appears to be
+brighter if it is slanted away from the viewer because the viewer is seeing
+more surface within a given angle of viewing direction.
+9.4. SHAPE FROM SHADING 269
+
+3
+2
+1
+q q 0
+-]
+2
+gaia 0 2
+a Pp
+
+Figure 9.4: Typical reflectance map, R(p,q), for a Lambertian surface illu-
+minated by a point light source with p, = 0.2 and g, = 0.4. Left: Gray level
+representation. Right: Contour plot.
+
+9.4 Shape from Shading
+
+Image intensity at a pixel as a function of the surface orientation of the corre-
+sponding scene point is captured in a reflectance map. Thus, for fixed illumi-
+nation and imaging conditions, and for a surface with known reflectance prop-
+erties, changes in surface orientation translate into corresponding changes
+in image intensity. The inverse problem of recovering surface shape from
+changes in image intensity is known as the shape from shading problem.
+We now summarize the procedure for solving this problem using a surface
+smoothness constraint.
+
+From the previous section, the relationship between image irradiance
+E(z,y) and the orientation (p,q) of the corresponding point on the surface
+is given by
+
+E(z,y) = R(p,9), (9.36)
+
+where R(p,q) is the reflectance map of the surface. The goal is to recover
+surface shape by calculating the orientation (p,q) on the surface for each
+point (x,y) in the image. Note that we have only one equation, but there
+are two unknowns, p and q. Thus, this problem cannot be solved unless
+additional constraints are imposed. A commonly imposed constraint is that
+270 CHAPTER 9. SHADING
+
+of surface smoothness. We assume that objects are made up of piecewise
+smooth surfaces which depart from the smoothness constraint only along
+their edges.
+
+A smooth surface is characterized by slowly varying gradients, p and gq.
+Thus, if pz, Py, de, and gy represent the partial derivatives of p and q along
+z and y directions, we can specify the smoothness constraint as minimizing
+the integral of the sum of the squares of these partial derivatives as follows.
+
+es= ff ((e +H) + (+) ardy. aan)
+
+Strictly speaking, we must minimize this integral subject to the constraint
+given in Equation 9.36. However, to account for noise which causes departure
+from the ideal, the problem is posed as that of minimizing total error e given
+by
+
+e =e, + rA€;, (9.38)
+
+where 4 is a parameter which weighs the error in smoothness constraint
+relative to the error in the image irradiance equation given by
+
+be } + (B(c, y) — R(p, q))? de dy. (9.39)
+
+This is a problem in the calculus of variations. An iterative solution for
+updating the value of (p,q) during the (n + 1)th iteration is given by
+
+nv =n en oen OR
+pat? = pit +2 [By - RO a] - (9.40)
+
+OR
+
+— (9.41)
+
+ay = a +A [By — Rept, a)
+where * denotes the average values computed in a 2 x 2 neighborhood, and
+the subscripts 7,7 denote discrete coordinates in the image plane. Note that
+although the computations for a given iteration are local, global consistency
+is achieved by the propagation of constraints over many iterations.
+
+The basic procedure described above has been improved in many ways.
+Details may be found in references at the end of the chapter. Although the
+basic principles of shape from shading are simple, there are many practical
+difficulties which limit its usefulness. In particular, the reflectance properties
+of the surfaces are not always known accurately, and it is difficult to control
+the illumination of the scene.
+9.5. PHOTOMETRIC STEREO 271
+
+9.5 Photometric Stereo
+
+Assume that all surfaces in the scene have Lambertian (diffuse) reflectance.
+For a point light source in a particular direction, the lines of constant re-
+flectance (constant brightness) are defined by second-order polynomials. Each
+point (x,y) in the image will have brightness E(x, y), and the possible sur-
+face orientations (p, q) will be restricted to lie along a curve in the reflectance
+map defined by some second-order polynomial.
+
+Suppose that the same surface is illuminated by a point light source in
+a different location. Although the surface reflectance will be the same, the
+reflectance map will be different since it depends on both reflectance and
+illumination. The surface orientation corresponding to a given point in the
+image will be constrained to a different second-order curve in gradient space.
+
+If a surface is illuminated with one light source and the image irradiance
+is measured, and the same surface is illuminated with a different light source
+and the image irradiance is measured again, then the pairs of image irradi-
+ance measurements will provide two equations for every point in the image
+that constrain the surface orientation. The basic idea is to solve the two
+equations at each point (zx, y) in the image for the surface orientation p(z, y)
+and q(z,y). Since the equations of constraint are second-order polynomi-
+als, three equations will be needed since a pair of second-order equations
+in two unknowns does not have a unique solution. This is the method of
+photometric stereo, illustrated in Figure 9.5.
+
+There is a radiometric effect that has been omitted in the discussion so
+far: all incident light is not radiated from a surface. This effect can be easily
+incorporated into the image irradiance equation with an albedo factor:
+
+E(zx,y) = pR(p, 9), (9.42)
+
+with the albedo factor p such that 0 < » <1. The term albedo comes from
+Latin, meaning whiteness.
+
+For a Lambertian surface with varying albedo, the surface orientation and
+albedo can be recovered simultaneously. Let the surface normal be denoted
+
+by
+(p,q, —1)
+VIF PFE
+
+Assume that there are three point sources of illumination. Let the direction
+
+a=
+
+(9.43)
+272 CHAPTER 9. SHADING
+
+Figure 9.5: A diagram illustrating the principle of photometric stereo. The
+image irradiance measurements are normalized to the unit interval.
+
+of point source 7 be denoted by the unit vector
+
+i (pi, gi, —1)
+
+i
+Vl+tet+a
+
+Recall that the brightness of a diffuse surface illuminated by a point source
+depends on the cosine of the angle between the surface normal and the direc-
+tion of the illumination; hence the brightness is related to the dot product
+of these two vectors. For each point source of illumination, there will be a
+different image irradiance equation since there will be a different reflectance
+map. For point source 7, the image irradiance equation will be
+
+(9.44)
+
+Form a 3 x 3 matrix from the direction vectors for the point sources:
+
+81 Sig Shy Sue
+=| 522 Soy S22 |. (9.46)
+83 S30 §3y $3.2
+
+ie
+Il
+e
+FURTHER READING 273
+
+A vector of three image irradiance measurements is obtained at each point
+in the image:
+Ey
+ree ae (9.47)
+Es
+
+The system of image irradiance equations for each point in the image can be
+written as
+
+E = Sa. (9.48)
+
+Note that E, p, and n depend on the position in the image, but S does not
+depend on position in the image plane and is constant for a given arrange-
+ment of light sources. For each point in the image, solve for the vector that
+represents albedo and surface orientation:
+
+pa = S'E. (9.49)
+
+The albedo p(z,y) is the magnitude of this vector. The unit normal for
+surface orientation is obtained by dividing out the albedo.
+
+For a given distribution of light sources, the S matrix can be inverted
+once using LU decomposition The inverse matrix does not have to be recom-
+puted for every point in the image. In fact, the inverse of the S matrix can be
+determined once for the application and the stored inverse reused for subse-
+quent surface orientation measurements. The values of pn can be determined
+from the vector E of image irradiance values using back-substitution [197,
+pp. 39-45]. The set of image irradiance equations can be solved quickly us-
+ing a lookup table that maps the image irradiance triple (2), H2, E3) into the
+albedo and surface orientation (p, p, q).
+
+Further Reading
+
+The classic paper on the properties of reflectance maps and shading in images
+was written by Horn [108]. Radiometric concepts are also described in detail
+in the book Robot Vision [109]. The first algorithm for shape from shading
+using the method of characteristics was developed by Horn [107]. There
+are several papers on shape from shading algorithms which are compiled
+in book form [112]. Photometric stereo was originally developed by Horn
+and Woodham. A recent reference is the paper by Woodham [256]. Nayar
+274 CHAPTER 9. SHADING
+
+Light direction: perpendicular
+
+ail 2 Radius
+
+(0, 0, 0) of | -Z
+Lens center oe
+
+wa (0, 0, 4)
+
+,
+
+y
+
+Figure 9.6: Diagram of the Lambertian cone for Exercise 9.1.
+
+and Ikeuchi [181] present a photometric stereo algorithm that estimates the
+mixture of Lambertian to specular components in a scene surface.
+
+Exercises
+
+9.1 A Lambertian cone with its axis located along the z axis is illuminated
+by a distant light source as shown in Figure 9.6.
+
+a. Sketch the reflectance map of this illumination condition—in par-
+ticular, the contour with R(p,q) = 0 and R(p,q) = 0.5 (ie., find
+and sketch the equation of the corresponding contours in the (p, g)
+plane).
+
+b. Neglecting off-axis effects, sketch the image projected on the z—
+y plane and identify the contour of maximum brightness in the
+image.
+
+9.2 Equation 9.11 relates the energy emitted in a particular direction to
+the amount of incident energy. Prove that this relationship is a linear
+system. A linear system has the properties of homogeneity and super-
+position. Assume that the incident illumination and the bidirectional
+reflectance distribution function are arbitrary.
+
+a. Show that if the illumination is [ = aJ, for some constant a, then
+the radiance is a£,, where L, is the radiance corresponding to
+illumination J. This property is called homogeneity.
+COMPUTER PROJECTS 275
+
+b. Show that if the illumination is J = J, + Jz, then the radiance
+is L; + Le, where LZ, and Le are the radiances for J, and Io,
+respectively.
+
+These properties show that the radiance for any linear combination of
+light sources is the linear combination of the radiances for the individual
+light sources.
+
+Computer Projects
+9.1 Reflectance map:
+
+a. Consider a camera with the origin of its image plane located at
+(0,0,0). The lens center is located at (0,0,4). Assume that a
+distant Lambertian object is centered around the positive z axis.
+The image plane is limited to (—1, 1) in both a and y directions. A
+distant point source located in the direction (pp, go, ro) illuminates
+the object.
+
+b. Write a program to read the value of po, go, and ro from the key-
+board, calculate the reflectance map, and display it as an image.
+Normalize the values of R(p,q) such that maximum corresponds
+to 255 (for display as white). Locate R(0,0) at the center of the
+display. Note that both p and g are infinite in extent whereas
+the image is 256 x 256. Choose the appropriate truncation and
+scaling.
+
+c. Assume the object is spherical and has a radius of 3. The center
+of the sphere is at (0,0,20). Calculate and display the image of
+the object captured by the camera. Normalize intensity ranges
+so that the image intensity ranges from 0 to 255. To distinguish
+the object from the background, set all background pixels to an
+intensity value of 64. -->
+
 </p>
     </body>
 </html>

@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>準備中</title>
+        <title>曲線と曲面</title>
         <style type="text/css">
             p
             {
@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,8 +75,1619 @@
     </style>
     </head>
     <body>
-        <h1><center>準備中</center></h1>
+        <h1><center>13章 曲線と曲面(準備中)</center></h1>
 <p>
+マシンビジョンにおける表面処理には、再構成とセグメンテーションという2つの根本的な問題がある。表面処理は、外れ値を含む可能性のある疎な深度測定値から再構成する必要がある。表面処理が均一なグリッド上に再構成された後、物体認識と表面推定値の精度向上のため、表面を異なる表面タイプに分割する必要がある。
+<!-- There are two fundamental problems with surfaces in machine vision: re-
+construction and segmentation. Surfaces must be reconstructed from sparse
+depth measurements that may contain outlicrs. Once the surfaces are recon-
+structed onto a uniform grid, the surfaces must be segmented into different
+surface types for object recognition and refinement of the surface estimates.-->
+</p><p>
+この章は、まず曲面の幾何学について解説し、その後、曲面の再構成とセグメンテーションについて解説する。本章では、曲面に関する以下のトピックを扱う。
+<div class="styleBullet">
+<ul>
+<li><strong>曲面表現</strong>　多項式曲面パッチやテンソル積3次スプラインなどの曲面表現</li><br>
+
+<li><strong>補間法</strong>　双線形補間などの補間法</li><br>
+
+<li><strong>近似</strong>　変分法と回帰スプラインを用いた曲面の近似</li><br>
+<li><strong>セグメンテーション</strong>　点計測値から曲面パッチへのセグメンテーション</li><br>
+
+<li><strong>位置合わせ</strong>　点計測値による曲面の位置合わせ</li>
+</ul>
+</div>
+<!-- This chapter begins with a discussion of the geometry of surfaces and
+includes sections on surface reconstruction and segmentation. The chapter
+will cover the following topics on surfaces:
+
+Representations for surfaces such as polynomial surface patches and tensor-
+product cubic splines
+
+Interpolation methods such as bilinear interpolation
+
+Approximation of surfaces using variational methods and regression splines
+Segmentation of point measurements into surface patches
+
+Registration of surfaces with point measurements -->
+</p><p>
+面近似は、モデルが面表現であり、データが面上でサンプリングされた点である回帰問題に似ているため、面フィッティングとも呼ばれる。面再構成とは、点サンプルから面の連続関数を推定することを意味し、補間または近似によって実装できる。
+<!-- Surface approximation is also called surface fitting, since it is like a re-
+gression problem where the model is the surface representation and the data
+are points sampled on the surface. The term surface reconstruction means
+estimating the continuous function for the surface from point samples, which
+can be implemented by interpolation or approximation.-->
+
+</p><p>
+曲線や曲面を扱うマシンビジョンアルゴリズムは数多く存在する。これは広範な分野であり、入門書ですべてを網羅することはできない。本章では、両眼ステレオ、アクティブ三角測量、レンジカメラによる点計測値を単純な曲面表現に変換する基本的な手法について説明する。基本的な手法には、点計測値を三角形の面のメッシュに変換する、距離計測値を単純な曲面パッチに分割する、点計測値に滑らかな曲面を当てはめる、点計測値に曲面モデルをマッチングさせる、などがある。本章の内容を学習することで、読者は曲面モデリングの用語と表記法について十分な理解が得られ、他の資料でこのトピックを継続する準備が整うであろう。
+<!-- There are many machine vision algorithms for working with curves and
+surfaces. This is a large area and cannot be covered completely in an intro-
+ductory text. This chapter will cover the basic methods for converting point
+measurements from binocular stereo, active triangulation, and range cameras
+into simple surface representations. The basic methods include converting
+point measurements into a mesh of triangular facets, segmenting range mea-
+surements into simple surface patches, fitting a smooth surface to the point
+measurements, and matching a surface model to the point measurements.
+Aftcr studying the material in this chapter, the reader should have a good
+introduction to the terminology and notation of surface modcling and be
+prepared to continue the topic in other sources.-->
+</p>
+<h2>13.1 場</h2>
+<p>
+この章では、点サンプルから曲面を再構成すること、および曲面モデルを点の測定値とマッチングさせることに関する問題を扱う。曲線と曲面について議論する前に、座標と測定値の分野に関する用語を説明する必要がある。
+<!--This chapter covers the problems of reconstructing surfaces from point sam-
+ples and matching surface models to point measurements. Before a discussion
+of curves and surfaces, the terminology of ficlds of coordinates and measure-
+ments must be presented.-->
+</p><p>
+測定とは、座標空間からデータ空間への写像である。座標空間は測定が行われた位置を指定し、データ空間は測定値を指定する。データ空間が1次元のみの場合、データ値はスカラー測定値である。データ空間が2次元以上の場合、データ値はベクトル測定値である。例えば、気象データには、経度、緯度、および高度の3次元座標空間における気温と気圧（2次元ベクトル測定値）が含まれる。画像は、画像平面位置の2次元グリッド上に配置されたスカラー測定値（画像輝度）である。
+第14章「動き」では、画像フロー速度場について説明する。これは、画像平面座標の2次元空間で定義された測定値（速度ベクトル）の2次元空間である。
+<!-- Measurements are a mapping from the coordinate space to the data space.
+The coordinate space specifies the locations al. which measurements were
+made, and the data space specifies the measurement values. If the data space
+has only one dimension, then the data values are scalar measurements. If the
+data space has more than one dimension, then the data values are vector mea-
+surements. For example, weather data may include temperature and pressure
+(two-dimensional vector measurements) in the three-dimensional coordinate
+space of longitude, latitude, and clevation. An image is scalar measurements
+(image intensity) located on a two-dimensional grid of image plane positions.
+In Chapter 14 on motion, we will discuss the image flow velocity field, which
+is a two-dimensional space of measurements (velocity vectors) defined in the
+two-dimensonal space of image plane coordinates.-->
+</p><p>
+場には、均一、直線、不規則（散在）の3種類がある。均一場野では、測定点は行と列の間隔が等間隔の矩形格子上に配置される。画像は均一場の例である。第12章の較正で説明したように、格子点の位置は、格子原点の位置、格子の方向、および行と列の間隔によって決まる。
+<!-- There are three types of fields: uniform, rectilinear, and irregular (scat-
+tered). In uniform fields, measurements are located on a rectangular grid
+with equal spacing betwecn the rows and columns. Images are examples of
+uniform fields. As explained in Chapter 12 on calibration, the location of any
+grid point is determined by the position of the grid origin, the orientation of
+the grid, and the spacing between the rows and columns.-->
+
+</p><p>
+直線場は均一場と同様に直交座標軸を持つが、データサンプルは座標軸に沿って等間隔に配置されない。データサンプルは、行と列の間隔がさまざまな矩形の格子上に配置される。例えば、2次元では、直線場は平面上の矩形領域をさまざまなサイズの矩形の集合に分割するが、同じ行にある矩形の高さは同じで、同じ列にある矩形の幅も同じである。座標空間におけるデータサンプルの位置を決定するには、各次元ごとに1つの座標リストが必要である。例えば、座標軸に \(x\) と \(y\) のラベルが付けられた2次元直線格子では、\(m\) 列の格子列に対応する\(x\)座標のリスト
+\(\{x_j\},j= 1,2,...,m\) と、\(n\) 行の格子行に対応する \(y\) 座標のリスト
+\(\{y_i\},i = 1,2,...,n\) が存在する。格子点\([i,j]\)の位置は
+\((x_j, y_i)\)である。
+<!-- Rectilinear fields have orthogonal coordinate axes, like uniform fields,
+but the data samples are not equally spaced along the coordinate axes. The
+data samples are organized on a rectangular grid with various distances be-
+tween the rows and columns. For example, in two dimensions a rectilinear
+field partitions a rectangular region of the plane into a set of rectangles of
+various sizes, but rectangles in the same row have the same height, and rect-
+angles in the same column have the same width. Lists of coordinates, one
+list. for each dimension, are needed to determine the position of the data
+samples in the coordinate space. For example, a two-dimensional rectilinear
+grid with coordinate axes labeled \(x\) and \(y\) will have a list of \(x\) coordinates
+\(\{x_j\},j= 1,2,...,m\) for the m grid columns and a list of \(y\) coordinates
+\(\{y_i\},i = 1,2,...,n\) for the n grid rows. The location of grid point \([i,j]\) is
+\((x_j, y_i)\).
+
+Irregular fields are used for scattered (randomly located) measurements
+or any pattern of measurements that do not correspond to a rectilinear struc-
+ture. The coordinates (x, y,) of each measurement must. be provided explic-
+itly in a list fork =1,...,7.
+
+These concepts are important for understanding how to represent depth
+measurements from binocular stereo and active sensing. Depth measure-
+ments from binocular stereo can be represented as an irregular, scalar ficld
+of depth measurements z; located at scattered locations (xz, y,) in the im-
+age plane or as an irregular field of point measurements located at scattered
+positions (xz, yx, 2%) im the coordinate system of the sterco camera with a
+null data part. Likewise, depth measurements from a range camera can be
+represented as distance measurements 2; on a uniform grid of image plane
+locations (#;,y;) or as an irregular field of point measurements with a null
+data part. In othcr words, point samples of a graph surface z = f(x,y) can
+be treated as displacement measurements from positions in the domain or as
+points in three-dimensional space.
+
+13.2 Geometry of Curves
+
+Before a discussion of surfaces, curves in three dimensions will be covered
+for two reasons: surfaces are described by using certain special curves, and
+representations for curves generalize to represcntations for surfaces. Curves
+can be represented in three forms: implicit, explicit, and paramctric.
+368 CHAPTER 13. CURVES AND SURFACES
+
+The parametric form for curves in space is
+
+p= (z,y, 2) = (e(¢), y(4), 2(4)), (13.1)
+
+for t) <t<t,, where a point along the curve is specified by three functions
+that describe the curve in terms of the parameter ¢. The curve starts at
+the point (x(to), y(to), z(to)) for the initial paramcter value fp and ends at
+(a(t), y(ts), 2(t1)) for the final parameter value t,. The points corresponding
+to the initial and final parameter values are the start and end points of
+the curve, respectively. For example, Chapter 12 makes frequent use of the
+parametric form for a ray in space:
+
+L Un LO
+y f=tl vy |r wo q, (13.2)
+z Uz 20
+
+for 0 < t < co, where the (unit) vector (uz, uy, uz) represents the direction
+of the ray and (zp, yo, 20) is the starting point of the ray.
+
+The parametric equation for the line segment from point py = (x1, ¥1, 21)
+to point py = (x2, yo, 22) is
+
+x Bq — X41 vy
+y }=tl wm J+t mw |. (13.3)
+z 2g — 21 ran
+
+Curves can also be represented implicitly as the set of points («, y, z) that
+satisfy some equation
+f(e,y,2) =0 (13.4)
+
+or set of equations.
+
+13.3. Geometry of Surfaces
+
+Like curves, surfaces can be represented in implicit, explicit, or parametric
+form. The parametric form for a surface in space is
+
+(x, y,2) = (e(u,v), y(u,v), z(u,2)), (13.5)
+
+for uy <u <u and w <v < v,. The domain can be defined more gencrally
+as (u,v) € D.
+13.3. GEOMETRY OF SURFACES 369
+
+The implicit form for a surface is the set of points (x,y,z) that satisfy
+some equation
+
+f(z,y,2) =0. (13.6)
+
+For example, a sphere with radius r centered at (x0, yo, 20) is
+f(e.y.2) = (ea) +(y-wPt(e-a)P—-P=0. (13.7)
+The explicit. (functional) form
+
+2= fle,y) (13.8)
+
+is used in machine vision for range images. It is not as general and widely
+used as the parametric and implicit forms, because the explicit. form is only
+useful for graph surfaces, which arc surfaces that can be represented as dis-
+placements from some coordinate plane.
+
+If a surface is a graph surface, then it can be represented as displacements
+normal to a planc in space. For example, a range image is a rectangular grid
+of samples of a surface
+
+z= F(e,y); (13.9)
+
+where (x, y) are image plane coordinates and z is the distance parallel to the
+z axis in camera coordinates.
+
+13.3.1 Planes
+
+Three points define a plane in space and also define a triangular patch in
+space with corners corresponding to the points. Let py, p,, and p, be three
+points in space. Define the vectors e; = p; — Pg and €2 = py — Py. The
+normal to the plane is n = e; X eg. A point p lies in the plane if
+
+(P — Py) n= 0. (13.10)
+
+Equation 13.10 is one of the implicit forms for a plane and can be written in
+
+the form
+ax + by+ez+d=0, (13.11)
+
+where the coefficients a, 6, and ¢ are the elements of the normal to the plane
+and d is obtained by plugging the coordinates of any point on the plane into
+Equation 13.11 and solving for d.
+370 CHAPTER 13. CURVES AND SURFACES
+
+The parametric form of a plane is created by mapping (u,v) coordinates
+into the plane using two vectors in the plane as the basis vectors for the
+coordinate system in the plane, such as vectors e; and eg above. Suppose
+that point py in the plane corresponds to the origin in u and v coordinates.
+Then the parametric equation for a point in the plane is
+
+xe
+y | = ue, + veg + po. (13.12)
+z
+
+If the coordinate system in the plane must be orthogonal, then force e; and
+e, to be orthogonal by computing eg from the cross product between e; and
+
+the normal vector n,
+@, =n xX e&. (13.13)
+
+The explicit form for the plane is obtained from Equation 13.11 by solving
+for z. Note that if coefficient c is close to zcro, then the plane is close to being
+parallel to the z axis and the explicit form should not be used.
+
+13.3.2 Differential Geometry
+
+Differential geometry is the local analysis of how small changes in position
+(u,v) in the domain affect the position on the surface, p(w, v), the first deriva-
+tives, p,,(w,v) and p,(w,v), and the surface normal, n{u,v). The geometry
+is illustrated in Figure 13.1.
+
+The parameterization of a surface maps points (u,v) in the domain to
+points p in space:
+
+plu, v) = (a(u, v), y(u, v), 2(u, v)). (13.14)
+
+The first derivatives, p,,(u,v) and p, (u,v), are vectors that span the tangent
+plane to the surface at point (z,y,z) = p(u,v). The surface normal n at
+point p is defined as the unit vector normal to the tangent plane at point
+p and is computed using the cross product of the partial derivatives of the
+surface parameterization,
+
+,_ Pu X Ps .
+n(p) = PuXPe (13.15)
+{Pu X Ppl
+13.3. GEOMETRY OF SURFACES 371
+
+(u+du, v+dv)
+
+uv parameter plane
+
+Figure 13.1: A paramotrically defined surface showing the tangent plane and
+surface normal.
+
+The tangent vectors and the surface normal n(w,v) define an orthogonal
+coordinate system at point p(w, v) on the surface, which is the framework for
+describing the local shape of the surface.
+
+The curvature of a surface is defined using the concept of the curvature
+of a planar curve. Suppose thal we wish to know the curvature of the sur-
+face at some point p on the surface. Consider a planc that slices the surface
+at point p and is normal to the surface at point p. In other words, the
+surface normal at point p lies in the slicing plane. The intersection of the
+plane with the surface is a planar curve that includes point p. The normal
+curvature at point p is the curvature of this planar curve of intersection.
+Refer to Figure 13.2. The plane is spanned by the surface normal and a
+vector in the plane tangent to the surface at p. The normal curvature is not
+unique, since it depends on the orientation of the plane about the surface
+normal. The minimum and maximum curvetures, 4; and «zg, are called the
+372 CHAPTER 13. CURVES AND SURFACES
+
+* wy
+
+Figure 13.2: Diagram illustrating the geometry of the normal curvature at a
+point on a surface. The intersecting plane contains the surface normal.
+
+principal curvatures, and the directions in the tangent plane corresponding
+to the minimum and maximum curvatures are the principal directions.
+The Gaussian curvature is the product of the principal curvatures,
+
+K = 1k, (13.16)
+
+and the mean curvature is the average of the principal curvatures,
+
+Ky + Ke
+
+H=
+2
+
+(13.17)
+
+The lines of curvature are curves in the surface obtained by following the
+principal directions. Umbilic points are locations on the surface, such as the
+end of an egg or any point on a sphere, where all normal curvatures (and
+hence the two principal curvatures) are equal.
+13.4. CURVE REPRESENTATIONS 373
+
+13.4 Curve Representations
+
+Curves can be represented in parametric form x(t), y(t), 2(¢) with the position
+of cach point on the curve specified by a function of the parameter t. Many
+functions can be uscd to specify curves in paramctric form. For example, we
+can specify a line segment starting at (v1, y1, 21) and ending at (xo, y2, 22) as
+
+a(t) = teg+(l—t)zi (13.18)
+y(t) = tw +L tu (13.19)
+
+for 0 < ¢ < 1. Cubic polynomials are used in a general representation of
+space curves described in the next section.
+
+13.4.1 Cubic Spline Curves
+
+A cubic spline is a sequence of cubic polynomial curves joined end to end to
+represent a complex curve. Each segment of the cubic spline is a parametric
+
+curve:
+a(t) = agt? + bat? + at + de (13.21)
+y(t) = ayt? + byt? + cyt + dy (13.22)
+2(t) = at? +b,t +e.t + dz, (13.23)
+
+for 0 <¢< 1. Cubic polynomials allow curves to pass through points with a
+specified tangent and are the lowest-order polynomials that allow nonplanar
+curves.
+
+These equations can be represented more compactly by organizing the
+coefficients into vectors. If the coefficient vectors are written as
+
+a = (Gz, Gy, Gz) (13.24)
+b = (Be, By, be) (13.25)
+C = (Cy, Cy, Cz) (13.26)
+d = (dz, dy,d.) (13.27)
+
+and p(t) = (a(é), y(¢), z(¢)), then a cubic polynomial curve can be written as
+
+p(t) = at? +b? +ct+d. (13.28)
+374 CHAPTER 13. CURVES AND SURFACES
+
+More complex curves are represented as sequences of cubic polynomials joined
+at their end points:
+
+pi) = at+btPrat+d
+
+)
+t) = apt? + bot? +eot+d
+Po(t) 2 2 2 2 (13.29)
+
+p(t) = a,f+b,t+¢,¢+d,
+
+for 0 <t <1. Note that a;, b;, ¢;, and d,; are the vectors of coefficients for
+curve segment 7. If we define cubic polynomial segment 7 on the unit interval
+t—-1<t <i, then the entire sequence is defined on the interval O<t<n
+and the sequence of cubic polynomial segments can be treated as a single
+parametric curve starting at point p,(0) and ending at point p,(n). This
+sequence of cubic polynomials is called a cubic spline and is a common way
+of representing arbitrary curves in machine vision and computer graphics.
+
+13.5 Surface Representations
+
+This section will cover some simple surface representations that are used in
+machine vision.
+
+13.5.1 Polygonal Meshes
+
+Planar polygons, also called planar facets or faces, can used to model complex
+objects. Planes were covered in Section 13.3.1. In this section, we will show
+how many planar facets can be combined to model the surface of an object
+using a polygonal mesh.
+
+in Chapter 6, we showed how a polyline can be represented by the list
+of coordinates for the vertices that connect the line sesments. Likewise, a
+polygonal mesh is represented by the list of vertex coordinates for the vertices
+that define the planar polygons in the mesh. Since many polygons may share
+each vertex, we will use an indirect representation that allows each vertex to
+be listed once. Number the vertices from 1 to n and store the coordinates
+13.5, SURFACE REPRESENTATIONS 375
+
+for each vertex once:
+
+vi = 141,41)
+V2 = (x2, ¥p, 22) (13.30)
+Van = (2s Yns Zn)
+
+Represent each face by a list of the vertices in the polygon for the face. To
+ensure the consistency needed for using the vertex information, follow the
+convention of listing the vertices in the order in which they are encountered,
+moving clockwise around the face as seen from the outside of the abject
+or from the same side of the surface (for example, above the surface). For
+outward-facing normals, this means that the vertex order follows the left-
+hand rule: the order of the vertex around the polygon is the same as the
+direction of the fingers of the left hand with the thumb pointing in the di-
+rection of the surface normal. This representation makes it very casy to find
+all of the vertices for a given face, and any change in the coordinates of a
+vertex automatically (indirectly) changes all faces that use the vertex. The
+list of vertices representation docs not explicitly represent the edges between
+adjacent faces and docs not provide an efficient way to find all faces that
+include a given vertex. These problems are resolved by using the winged
+edge data structure.
+
+The winged edge data structure is a network with three types of records:
+vertices, edges, and faces. The data structure includes pointers that can be
+followed to find all neighboring elements without searching the entire mesh or
+storing a list of ucighbors in the record for each element. There is one vertex
+record for every vertex in the polygonal mesh, one edge record for every edge
+in the polygonal mesh, and one face record for every face in the polygonal
+mesh. The size of the face, edge, or vertex record does not change with the
+size of the mesh or the number of neighboring elements. Both vertices at the
+ends of an edge and both faces on either side of an edge can be found directly;
+all of the faces (edges) that use a vertex can be found in time proportional to
+the number of faces (edges) that include the vertex; all of the vertices (edges)
+around a face can be found in time proportional to the number of vertices
+(edges) around the face.
+376 CHAPTER 13. CURVES AND SURFACES
+
+aed
+
+Figure 13.3: Each edge record contains pointers to the two vertices at the
+ends of the edge, the two faces on either side of the edge, and the four wing
+edges that allow the polygonal mesh to be traversed.
+
+The winged edge data structure can handle polygons with many sides (the
+representation is not limited to polygonal meshes with triangular facets), and
+it is not necessary for all polygons in the mesh to have the same number of
+sides. The coordinates of vertices are only stored in the vertex records; the
+position of a face or edge is computed from the vertex coordinates.
+
+Each face record points to the record for one of its edges, and cach vertex
+record points to the record for one of the edges that end at that vertex. The
+edge records contain the pointers that connect the faces and vertices into a
+polygonal mesh and allow the polygonal mesh to be traversed efficiently. Each
+edge record contains a pointer to each of the vertices at its ends, a pointer
+to each of the faces on either side of the edge, and pointers to the four wing
+edges that are neighbors in the polygonal mesh. Figure 13.3 illustrates the
+13.5. SURFACE REPRESENTATIONS 377
+
+information contained in an edge record. The faces, vertices, and wing edges
+are denoted by compass directions. This notation is just a convenience; in
+a polygonal mesh, there is no global sense of direction. Each wing allows
+the faces on either side of the edge to be traversed in either direction. For
+example, follow the northeast wing to continue traversing clockwise around
+the east face.
+
+Whether a given face is cast or west of an edge depends on the order
+in which faces were entered in the winged edge data structure. As a face
+is traversed. it is necessary to check if the face is east or west of each edge
+that is encountered. If the face is east of the edge, follow the northeast wing
+clockwise around the face or the southeast wing counterclockwise around the
+face. Otherwise, if the face is west of the edge, follow the southwest wing
+clockwise around the face or the northwest wing counterclockwisc around the
+face.
+
+Directions like clockwise and counterclockwise are vicwer-centercd; in
+other words, they assume that the polygonal mesh is secn from a partic-
+ular position. When creating and using the polygonal mesh, it is necessary
+to adhere to some convention that provides an orientation for the viewer-
+centered directions relative to the polygonal mesh. Directions around the
+face are given from the side of the face with the surface normal pointing to-
+ward the viewer. Clockwise means the direction around the face indicated by
+how the fingers of the left hand point when the thumb points in the direction
+of the surface normal; counterclockwise means the direction around the face
+indicated by how the fingers of the right hand point when the thumb points
+in the direction of the surface normal. All face normals point to the outside
+if the polygonal mesh represents the boundary of a volume. If the polygonal
+mesh represents a surface, then the normals all point to the same side of
+the surface. If the surface is a graph surface, then the normals point in the
+direction of positive offsets from the domain. For example, if the polygonal
+mesh represents the graph surface z = f(x,y), then the projection of the face
+normals onto the z axis is positive.
+
+The algorithm for adding a face to a polygonal mesh is stated in Algorithm
+13.1 and the algorithm for traversing the edges (or vertices) around a face is
+stated in Algorithm 13.2. Algorithm 13.1 assumes that the verticcs are listed
+in clockwise order around the face, assuming the conventions described above.
+Algorithm 13.2 can be modified to find all edges (or faces} around a given
+vertex.
+378 CHAPTER 13, CURVES AND SURFACES
+
+Algorithm 13.1 Adding a Face to a Winged Edge Data Structure
+The input is a list of successive vertices for the face, including verter numbers
+which are used to uniquely identify each verter and the verter coordinates,
+listed in clockwise order around the face.
+
+1. For each vertex in the list of vertices, add a record for the vertex to
+the winged edge data structure if the vertex is not already in the data
+structure.
+
+2. For each pair of successive vertices (including the last and first vertices),
+add a record for the edge if an edge with those vertices is not currently
+in the data structure.
+
+3. For each of the records for edges around the face, add the wings for
+clockwise and counterclockwise traversal around the face. The wing
+fields in each record that are affected depend on whether the new face
+being inserted in the data structure is the east or west face of each edge
+record,
+
+4. Create a record for the face and add a pointer to one of the edges.
+
+13.5.2 Surface Patches
+
+Portions of curved graph surfaces can be represented as surface patches mod-
+eled using bivariate (two-variable) polynomials. For example, a plane can be
+
+represented as
+Z=ag+ayrt ay, (13.31)
+
+and curved surface patches can be modeled using higher-order polynomials.
+Bilinear patches, so named because anv cross section parallel to a coor-
+dinate axis is a line,
+
+Z=agtart+ agytagzy, (13.32)
+biquadratice patches,
+
+z= a9 + aye + ay + agxy + asx” + asy’, (13.33)
+13.5. SURFACE REPRESENTATIONS 379
+
+bicubic patches,
+
+z= ag tare + ogy + agay + age? + ay?
+
++ aga® + ara? y + agry” + age’, (13.34)
+
+and biquartic patches,
+
+2 = aot aye t agy + agey + age? + asy?
++ asx? + aze*y + agzy? + ayy? (13.35)
++ ayox* + ae?y + aye’y? + agzy? + auy',
+
+are bivariate polynomials that are frequently used in machine vision to rep-
+resent surface patches.
+
+Polynomial surface patches are good for modeling portions of a surface,
+such as the neighborhood around a point, but surface patches arc not conve-
+nient for modeling an entire surface and cannot model surfaces that. are not
+graph surfaces. More complex surfaces can be modeled using cubic spline
+surfaces, presented in the next section.
+
+Algorithm 13.2 Follow the Edges Clockwise Around a Face
+The inputs are a pointer to the record for the face to traverse and a procedure
+to invoke for each edge that is visited.
+
+1. Get the first edge from the face record and make it the current edge.
+
+2. Process the current edge: perform whatever operations must be done as
+each edge is visited. For example, to compile a list of vertices clockwise
+around the face, record the vertex at the end of the edge in the direction
+of traversal.
+
+8. If the west face of the current edge is being circumnavigated, then the
+next edge is the southwest wing.
+
+4. If the east face of the current edge is being circumnavigated, then the
+neat edge is the northeast wing.
+
+5. If the current edge is the first edge, then the traversal is finished.
+
+6. Otherwise, go to step 2 to process the new edge.
+380 CHAPTER 13. CURVES AND SURFACES
+
+13.5.3 Tensor-Product Surfaces
+
+In Section 13.4.1, we showed how a complex curve can be represented para-
+metrically as a sequence of cubic polynomials. This representation can be
+extended to get a parametric representation for complex surfaces.
+
+Write the equation for a parametric cubic polynomial curve in matrix
+
+notation: 3
+
+p(u) = | ay ay a3 a4 (13.36)
+
+u
+we
+u
+1
+Note that each coefficient is actually a three-element column vector.
+
+A tensor-product surface representation is formed from the combination
+of two curve representations, one in each parametric coordinate,
+
+ay vw
+2
+puv)=[u wou l]| | [br be bs bel} ° (13.37)
+ag
+ay 1
+
+where each a, is a three-element row vector, each b; is a three-element column
+vector, and each product a;b; is the pairwise product of the coefficients for
+each coordinate. The parametric surface can be written as
+
+p(u,v) = UTMY, (13.38)
+with
+ue
+pa | © 13.39
+v=|" (13.39)
+1
+and
+we
+y?
+v=|" (13.40)
+1
+
+The elements of the 4 x 4 matrix M are the vectors of cocfficients for each
+coordinate in the parametric surface. In this notation, we can sec that the
+13.6. SURFACE INTERPOLATION 381
+
+tensor-product surface is literally the product of two curves: one curve in
+the u coordinate and another curve in the v coordinate. Any cross section
+through the tensor-product cubic polynomial surface, parallel to a coordinate
+axis in the parametric domain, is a parametric cubic polynomial curve. In
+other words, if one coordinate is fixed, then the result is a parametric cubic
+polynomial curve with the other coordinate as the curve parameter.
+
+13.6 Surface Interpolation
+
+This section shows how some of the surface representations presented above
+can be used to interpolate samples of a graph surface, such as depth mea-
+surements obtained with binocular stereo or active triangulation. Surface
+interpolation may be necessary when depth measurements do not conform to
+the uniform grid format required for image processing. It may be necessary
+to interpolate depth measurements onto a uniform grid before using image
+processing algorithms such as edge detection and segmentation.
+
+13.6.1 Triangular Mesh Interpolation
+
+Suppose that we have obtained samples z, of a graph surface, z = f(z, y),
+at scattered points (2%, y.) for k = 1,...,n using binocular stereo or active
+triangulation and we nced to interpolate the depth mcasurcments at grid
+locations [¢,7] in the image plane. The coordinates (x;, y;) at cach location
+in the n x m grid (image array) are given by
+
+—1 .
+m (13.41)
+
+aj = j-
+
+-1
+y= it. (13.42)
+
+We need to interpolate the z value at each point (a;, %).
+
+Use the scattered point coordinates and depth values (ax, ys, 2%) to create
+a triangular iesh. Since the depth measurements are from a graph surface,
+cach triangle has an explicit planar equation
+
+z= ay tax + azy (13.43)
+
+with coefficients calculated from the formulas presented in Section 13.3.1.
+For cach grid location, find the triangle that encloses point. (a;, y;) and use
+382 CHAPTER 13. CURVES AND SURFACES
+
+the equation corresponding to this triangle to calculate the depth value at
+the grid location:
+24j = ag + aye; + aay. (13.44)
+
+13.6.2 Bilinear Interpolation
+
+Sometimes it is necessary to interpolate values that already lic on a rectilinear
+grid. For example, rectification, discussed in Section 12.3, requires that the
+image intensity at a location between grid coordinates be interpolated from
+the pixel values at the four nearest grid locations. Bilinear interpolation is
+an easy method for interpolating values on a rectilinear grid.
+The function
+fle,y) = a, + agar + agy + avy (13.45)
+
+is called bilinear because if one variable is set to a constant, then the function
+is linear in the other variable. In other words, each cross section of a bilinear
+surface patch taken parallel to a coordinate axis is a line segment. For any
+rectangle in the plane with sides parallel to the coordinate axes, there is a
+unique bilinear polynomial that interpolates the corner values.
+
+Suppose that we need to interpolate the valuc at point (x, y) between four
+values on a rectilinear grid. The point is enclosed by a rectangle with sides
+parallel to the coordinate axes; the corners of the rectangle are the closest
+grid coordinates to the point at. which the value is to be interpolated. The
+corner coordinates are (v1, y1), (v1, y2), (wa, y:), and (a2, yo} with values 211,
+212, Za1, and zg2, respectively, as shown in Figure 13.4.
+
+The coefficients of the bilinear interpolant are determined by the values
+at the four corners of the grid rectangle and are computed by plugging each
+grid coordinate and value into Equation 13.45:
+
+24. = ay + age, + ay, + aariys (13.46)
+21g = A, + GgX1 + agYy + A4k1 Yo (13.47)
+221 = G1 + Gok + agy, + Gatoyi (13.48)
+29 = Gy + Agh2 + agyo + GgL2Y2 (13.49)
+
+and solving the four simultaneous equations for the coefficients of the inter-
+polant:
+
+a= Eqyoz1 — Tayi 212 — C1Y2221 + ©1Y1 222 (13.50)
+1= .
+(2 — 1)(y2 — 41)
+13.6. SURFACE INTERPOLATION 383
+
+Zu 2]
+242
+: Bal
+i / ae Zag
+Le 291)
+ae
+- (%41,¥2)
+(%2, ya)
+x
+
+Figure 13.4: The bilinear interpolant is used to estimate the value between
+samples on a rectilinear grid. The values at the corners are known and
+uniquely determine the coefficients of the bilincar interpolant.
+
+a = —yotir t yiZi2 1 Yazar ~ Yi Za2 (13.51)
+
+(xq — #1)(ye — 1)
+
+ay = 9211 + £o%Z12 + £1201 — £1%29 (13.52)
+(@2 — 21) (ya — 1)
+a = 211 ~ 412 — 221+ 22 (13.53)
+(#2 _ wy) (Yo _ yi)
+
+The bilinear interpolant has a very simple form for the special case where
+the rectilinear grid is a square with unit spacing between the rows and
+columns. Let the point (z,y) at which interpolation is to be performed
+be given as offsets (6x, 6y) from the upper left corner of a grid square. The
+bilinear interpolant is
+
+f (6x, by) = 211 +82 2a1—241) + Oy (212211) + 6 Sy (241 -2a—Zart ene). (13.54)
+
+This formula can be used to interpolate the pixel value at an image plane
+point that is between the pixel locations.
+384 CHAPTER 13. CURVES AND SURFACES
+
+13.6.3 Robust Interpolation
+
+In Section 6.8.3, we presented the least-median-squares algorithm for fitting
+lines to edge points with outliers. Least-median-squares regression can be
+used to fit surface patches to depth measurements with outliers.
+
+Least-median-squares is a robust regression algorithm with a breakdown
+point of 50% like the median on which it is based. The local lcast-median-
+squares estimator uses least-median-squares regression to fit a parametric
+model over local neighborhoods in the data. The algorithm finds the param-
+eters that minimize the median of the squared residuals:
+
+mn | ed, [a — Flew ay} (13.55)
+where a is an estimated parameter vector and f(a, yi; a) is an estimate of
+the actual value of the graph surface at point mcasurement (2;, y;, 2).
+Least-median-squares can be used to grid surface samples that contain
+outliers. For example, binocular stereo depth measurements contain outliers
+due to mismatches, and range cameras may generate outliers at surface dis-
+continuities. If least-median-squares is used to fit surface patches to depth
+measurements in local neighborhoods, then the surface fits will be immune
+to outliers. When the surface patches are used to grid the data, the outliers
+do not influence the grid values. Compare this algorithm with interpolation
+using a triangular mesh, presented in Section 13.6.1, which is very sensitive
+to outliers, Fitting surface patches with least-median-squares is very use-
+ful for processing sparse depth measurcments that may be contaminated by
+outliers. We call this process cleaning and gridding the depth measurements.
+A straightforward expression for least-median-squares is difficult to write,
+but the algorithm for implementing it is easy to explain. Assume that the
+surface patches are fit to the depth measurements in a local neighborhood
+about each grid point. The algorithm can be easily extended to fit higher-
+order surface patches. For cach grid point, select the n depth measurements
+that are closest to the grid point. From this set, try all possible combinations
+of m data points, where m is the number of data points used to fit the surface
+patch. For each of the & subsets of the data points in the local neighborhood,
+
+k= ("). (13.56)
+
+m™m
+13.7, SURFACE APPROXIMATION 385
+
+fit a surface patch to the points in the subset and denote the corresponding
+parameter vector by a,. Compare all data points in the local neighborhood
+with the surface patch by computing the median of the squared residuals:
+
+xE= med (a — fltism, ar))"| . (13.57)
+
+After surface patches have becn fit to all possible subsets, pick the parameter
+vector a, corresponding to the surface patch with the smallest median of
+
+squared residuals.
+
+This procedure is computationally expensive since the model fit is re-
+peated (r) times for cach Jocal neighborhood; however, each surface fit is
+independent, and the procedure is highly parallelizable. Adjacent neighbor-
+hoods share data points and could share intermediate results. In practice, it
+may be necessary to try only a few of the possible combinations so that the
+probability of one of the subscts being free of outliers is close to 1.
+
+13.7 Surface Approximation
+
+Depth measurements are not. free of errors, and it may be desirable to find
+a surface that approximates the data rather than requiring the surface to
+interpolate the data points.
+
+If depth measurements are samples of a graph surface,
+
+z= f(x,y), (13.58)
+
+then it may be desirable to reconstruct this surface from the samples. If we
+have a model for the surface,
+
+z= f(t, y;a1,02,...,am), (13.59)
+
+with m parameters, then the surface reconstruction problem reduces to the
+regression problein of determining the parameters of the surface model that
+best fit the data:
+
+nm
+xX? = a — Fei yi a1,a2,... | Oin))”- (13.60)
+j=l
+
+If we do not have a parametric model for the surface and still need to
+reconstruct the surface from which the depth samples were obtained, then
+386 CHAPTER 13. CURVES AND SURFACES
+
+we must fit a generic (nonparametric) surface model to the data. The task
+is to find the graph surface z = f(x,y) that best fits the data:
+
+t= Dla Flew)’. (13.61)
+
+This is an ill-posed problem since there are many functions that can fit the
+data equally well; indeed, there are an infinite number of functions that
+interpolate the data. The term ill-posed means that. the problem formulation
+does not lead to a clear choice, whereas a well-posed problem leads to a
+solution that is clearly the best from the sct of candidates.
+
+We need to augment the approximation norm in Equation 13.61 to con-
+strain the sclection of the approximating surface function to a single choice.
+There are many criteria for choosing a function to approximate the data. A
+popular criterion is to choose the function that both approximates the data
+aud is a smooth surface. There are many measures of smoothness, but we will
+choose one measure and leave the rest for further reading. For the purposes
+of this discussion, the best approximation to the data points {(2, y;, 2;)} for
+i= 1,...,n is the function z= f(x,y) that minimizes
+
+afa
+v= De F(@i,)) poof [St4 phot ae edy (13.62)
+
+with a > 0. This norm is the same as Equation 13.61 except for the addition
+of a smoothness term, weighted by a. The smoothness term is called the
+regularizing term or stabilizing functional, or stabilizer for short. The weight
+a is called the regularizing paramcter and specifies the trade-off between
+achicving a close approximation to the data (small a) and forcing a smooth
+solution (large a). The first term in Eqnation 13.62 is called the problem
+constraint. The process of augmenting a problem constraint by adding a sta-
+bilizing functional to change an ill-posed problem into a well-posed problem
+is called regularization.
+
+The notion of a well-posed problem is stronger than just requiring a
+unique solution. An approximation problem such as Equation 13.61 may
+have a unique solution, but the shape of the solution space is such that many
+other, very different solutions may be almost as good. A well-posed problem
+has a solution space where the solution corresponding to the minimum of the
+norm is not only unique, but is definitely better than the other solutions.
+13.7, SURFACE APPROXIMATION 387
+
+The solution to the regularized surface approximation problem in Equa-
+tion 13.62 is obtained by using variational calculus to transform Equation
+13.62 into a partial differential equation. Numerical methods are used to
+change the partial differential cquation into a numerical algorithm for com-
+puting samples of the approximating surface from the depth measurements.
+
+The partial differential equation for this problem in the variational cal-
+
+culus is
+a V4 f(a,y) + flay) — (zy) =0, (13.63)
+
+which may be solved using finite difference methods as explained in Section
+AA,
+
+Another approach is to replace the partial derivatives in Equation 13.62
+with finite difference approximations and differentiate with respect to the so-
+lution f to get a system of linear equations that can be solved using numerical
+methods.
+
+13.7.1 Regression Splines
+
+Another approach to surface approximation is to change Equation 13.61 into
+a regression problem by substituting a surface modcl for the approximating
+function. Of course, if we knew the surface model, then we would have for-
+mulated the regression problem rather than starting from Equation 13.61. If
+we do not know the surface model, we can still start with Equation 13.61 and
+substitute a gencric surface representation, such as tensor-producl splines, for
+the approximating function and solve the regression problem for the parame-
+ters of the generic surface representation. This technique is called regression
+splines.
+
+Many surface representations, including tensor-product splines, can be
+represented as a linear combination of basis functions:
+
+f(a, Y5 0,01; 2, ..., Gm) = >" a:B;(2,y) (13.64)
+i=
+
+where a; are the scalar coefficicnts and B,; are the basis functions. With
+tensor-product splines, the basis functions (and their coefficients) arc orga-
+
+nized into a grid: nom
+
+f(2z,y) = OV ay Biy(z,y). (13.65)
+
+i=0 j=0
+388 CHAPTER 13. CURVES AND SURFACES
+
+Figure 13.5: The B-spline curve in one dimension is a linear combination of
+basis functions located at integer positions in the interval [0, m].
+
+With either of these two equations, if we substitute the generic surface model
+into Equation 13.61, the result is a system of linear equations that can be
+solved for the regression parameters. Since the system of equations is sparse,
+it is better to use sparse matrix techniques, rather than singular value de-
+composition, for solving this regression problem.
+
+The methods for calculating regression splines will be presented in detail,
+starting with the one-dimensional case. The B-spline in one dimension is a
+linear combination of basis functions,
+
+5 a:Bi(e). (13.66)
+
+i=0
+
+Assume that. the B-spline basis fictions are spaced uniformly at integer
+locations. The B-spline basis function B,(x) is nonzero over the interval
+[i,i +4). The basis functions are located at positions 0 through m, so there
+arc m+1 coefficients that define the shape of the B-spline basis curve. (Refer
+to Figure 13.5.)
+
+The B-spline curve is defined on the interval from « = 3 tog =m+1.
+The basis function at « = 0 extends three intervals to the left of the curve
+and the basis function at e = m + 1 extends three intervals to the right of
+the curve. The extra intervals beyond the ends of the curve establish the
+boundary conditions for the ends of the curve and must be included so that
+the first and last curve segments on the intervals [0,1) and [m,m +1) are
+defined correctly.
+
+Each B-spline basis function is nonzero over four integer intervals (seg-
+ments). Since the basis functions overlap, each interval is covered by four
+basis functions. Each segment ;(x) of the basis function B;(x) is a cubic
+polynomial that is defined only on its integer interval, as illustrated in Fig-
+ure 13.6. ‘The cubic polynomials for the individual segments of the B-spline
+13.7. SURFACE APPROXIMATION 389
+
+0 1 204 3 4
+
+\
+Figure 13.6: Each B-spline basis function consists of four cubic polynomials
+that are nonzero on adjacent integer intervals.
+
+are
+bo(z) = = (13.67)
+bi(z) = ie tes see (13.68)
+bo(z) = coer (13.69)
+baz) = ote (13.70)
+
+It is not correct to simply add these cubic polynomials together to get a B-
+spline basis function since each segment is restricted to its interval; that is,
+each segment must be treated as nonzero outside of the interval over which
+it is intended to be used. To evaluate a particular B-spline basis function at
+a particular location z, it is necessary to determine in which segment z lies
+(in which piece of the B-spline basis function x is located) and evaluate the
+corresponding cubic polynomial.
+
+Suppose that z is located in the interval [7,7 + 1). The B-spline curve is
+the linear combination of m+ 1 B-spline basis functions:
+
+m
+
+> aBi(e). (13.71)
+390 CHAPTER 13. CURVES AND SURFACES
+
+Since each B-spline basis function covers four intervals, the interval (¢,7+ 1}
+is covered by B-spline basis function B;(x) and the three basis functions to
+the left: B;1(x), By_o(z), and B,_3(x). So to cvaluate the B-spline curve at
+z in the interval [2,7 + 1), it is only necessary to evaluate the portion of the
+linear combination that corresponds to the four B-spline basis functions that
+cover the interval:
+
+Since each B-spline basis function consists of four cubic polynomial segments,
+with each segment defined over its own interval, it is only necessary to evalu-
+ate the cubic polynomial segments from cach basis function that correspond
+to the interval containing the location at which the cubic spline curve is being
+evaluated. The value of the B-spline curve at location z in interval [2,4 + 1)
+is
+(1-324 32?—a)a;-3 (4-627? + 32%)aj_2
+5 +
+6 6
+(1+ 3a 4 3a? —327)a;4  x%a;
++ .
+6 6
+To evaluate a B-spline curve at any location, it is necessary to determine the
+interval in which the location 2 lies and apply the formula in Equation 13.73,
+with the index i for the starting point of the interval, so that the correct
+coefficients for the four B-spline basis functions that cover the interval are
+used.
+
+The formula for evaluating a B-spline curve in Equation 13.73 can be
+uscd for linear regression since the model is linear in the coefficients. It does
+not matter that the equation contains terms with powers of x. This model
+can be used to develop a regression algorithm for determining the coefficients
+of the B-spline from a set of data points (2;,2;). Each data point yiclds one
+equation that constrains four of the B-spline cocfficients:
+
+(1 — 3a; + 8a? — x3 Jai n (4 — 6x? + 3x? )ai_2
+6 6
+. (1 + 8x; + 32? — 32?)ai—-1 ; raj
+6 6
+These equations are used to form a system of linear equations,
+
+Ma =b, (13.75)
+
+(13.73)
+
+=x. (13.74)
+13.7. SURFACE APPROXIMATION 391
+
+where the solution a is the column vector of B-spline cocfficients a;, the
+column vector on the right-hand side is the vector of data values z;, and each
+row of the matrix M is zcro except at the four elements corresponding to
+the coefficients of the B-spline basis functions that cover the interval that
+contains 2;. The system of linear equations can be solved using singular
+value decomposition, but since the system of equations is sparse, it is better
+to use sparse matrix techniques [197].
+
+For surface approximation in threc dimensions, the model is a tensor-
+product B-spline surface:
+
+m.
+
+Fl@y) = Ly a,B Bi (ey) = So aj By(2) By). (13.76)
+
+#=0 J=0 i=0 j=0
+The surface approximation problem is solved by minimizing the norm
+N
+
+x = V(e(k) — fle,y)?. (13.77)
+k=l
+Replace the general surface model with the expression for the tensor-product
+B-spline surface:
+
+N mom 2
+=> : (k) — (ES asB.ton) . (13.78)
+kal =0 j=0
+
+The data values range over a single index since the data can occur at scattered
+points in the plane. Each data value zy is located at point (xp, yx) in the z-y
+plane.
+
+The formulation of the regression problem for determining the coefficients
+of the tensor-product B-spline surface is similar to the one-dimensional case
+presented above. Each basis function B,;(x,y) covers 16 grid rectangles in
+(t,i +4) x [7,7 +4). Since the basis functions overlap, each grid rectangle
+is covered by 16 basis functions. Each basis function consists of 16 bicubic
+polynomial patches. Each patch is defined on a grid rectangle and is nonzero
+outside of its grid rectangle.
+
+Assume that the grid is uniform, so all grid rectangles are squares of the
+same size. The formulas for the bicubic patches in the B-spline basis functions
+are the same for each grid square. Each tensor-product basis function can
+be separated into the product of one-dimensional basis functions
+
+Bij(2,y) = B;(w)Bily), (13.79)
+392 CHAPTER 13. CURVES AND SURFACES
+
+and each of the one-dimensional basis functions consists of four cubic poly-
+nomials. Each of the 16 polynomial patches defined on a grid rectangle is
+the product of two cubic polynomials, one in x and the other in y. The four
+cubic polynomials in x are
+
+3
+
+boa) = 7 (13.80)
+bi(e) = oie tier (13.81)
+bo(z) = cote se (13.82)
+
+The four cubic polynomials in y arc identical except for the change of variable:
+
+boy) = u (13.84)
+bi(y) < LSet sy = 8y" ve —3y (13.85)
+boy) = soty sy (13.86)
+bs(y) = osu oy (13.87)
+
+The 16 polynomial patches in a B-spline basis function are formed from the
+pairwise products of the polynomials given above. The formula for evaluating
+the B-spline surface at point (x, y) in the grid is
+
+YY aijbs(@)di(y). (13.88)
+
+i=0 j=0
+
+Substituting the formulas for the onc-dimensional cubic polynomials yields
+the formula for evaluating the B-spline surface. The terms for each of the 16
+coefficients are listed in the following tahle.
+
+Qi 5-1 2/18 + (a®y + ay? — ay’) /6
+13.7. SURFACE APPROXIMATION 393
+
+5,3 ~2 20° /9 — a? y?/3 + a8 y? /6
+Qj ~3 (x? — 32%y + 32° y? — ay?) /18
+ai-1j (1+ 32 + 32? — 32%)y°/18
+Qj-1,5-1 (1 + 3x + 3x? — 32°)/18 + (1 + 3x 4 32? — 327)y/6
++ (1+ 3a + 3a? — 824)y?/6 — (14 3x + 327 — 32°)y?/6
+ai-1j—2 Q(1 + 3x + 3x? — 3x3) /9 — (1 + 3x + 3a? — 3x%)y?/3
++ (1+ 3e + 3x? ~ 327)y?/6
+i153 (1+ 3a + 32? — 32°)/18 — (1 + 3a + 32° — 32*)y/6
++ (1 + 8a + 8a? — 32%)y?/6 — (1 + 3a + 327 — 3a*)y3/18
+a2; (4 — 62? + 3e*)y*/18
+s—2,5-1 (4 — 6a" + 8a) /18 + (4 — 6a? + 327) y/6
++ (4 — 6a? + 327)y"/6 — (4 — 6a? + 307) y3 /6
+32,5-2 2(4 — 6x? + 3x3) /9 — (4 — Gr? + 3z°)y?/3
++ (4 6a? + 327)y?/6
+G;-25-3 (4 ~ 6x? + 3x7) /18 — (4 — 62? + 327)y/6
++ (4— 62? + 3z°)y?/6 — (4 — 6x? + 3a) y3/18
+Qi-3.5 (1 — 3a + 32? — 2°)y*/18
+Qj3,j—1 (1 — 8a + 3a? ~ 23)/18 + (1 — 3a + 82? — 2 }y/6
++ (1 — 3a + 3a? — a )y?/6 — (1 — 3a + 3a? — 27 )\y°/6
+Q;-3,3-2 2(1 — 8x + 3a* — a?) /9 — (1-32 + 8a? — a )y?/3
++ (1-32 + 32? — 2*)y?/6
+Qi-3,5-8 (1 — 32 + 3x? — 29) /18 — (1 ~ 3¢ +32? — 2? )\y/6
++ (1 — 3a + 32? — #8 )y?/6 — (1 — 3a + 32? — 2 )y?/18
+
+These expressions are evaluated at the desired location (x, y), multiplied by
+the corresponding coefficient a,;, and summed together to get the value of
+the B-spline surface at (x, y).
+
+The formula for evaluating a B-spline surface is also the model used in
+the regression problem for determining the coetticients of the B-spline surface.
+There are (n +1) x (2 +1) coefficients in the B-spline surface. Each data
+point (xz, ¥, 2%) yields one equation that constrains 16 of the coefficicnts.
+As in the one-dimensional case, the regression problem leads to a system of
+394 CHAPTER 13. CURVES AND SURFACES
+
+linear equations,
+Ma=b, (13.89)
+
+where the solution a is the vector of B-spline coefficients (the two-dimensional
+grid of coefficients is unfolded into a column vector), the column vector b
+on the right-hand side is the vector of data values z; for k =1,...,N, and
+each row of the matrix is zero except for the 16 elements corresponding to
+the coefficients of the basis functions that cover the grid square containing
+(2k. Yn):
+
+This method can be used to smooth images by fitting a B-spline surface
+to the uniform grid of pixels and sampling the spline surface. It is not nec-
+essary for the B-spline grid to correspond to the image grid; in fact, more
+smoothing is achieved if the B-spline grid has greater spacing. The B-spline
+basis function is like the Gaussian smoothing filter, covered in Chapter 4,
+and the widths of the B-spline basis functions are determined by the spacing
+of the B-spline grid. When using the formulas presented above for the B-
+spline regression problem, the image locations (x;,y,} for the pixel values 2;
+in the image must be mapped into the grid coordinate system of the B-spline
+surface. After the B-spline coefficients have been determined, the B-spline
+surface can be sampled as needed, taking samples at the grid coordinates
+of the original image or at other coordinates, to calculate the pixels of the
+smoothed image.
+
+The development of the equation for the B-spline surface shows that a B-
+spline is just a scl of bicubic surface patches, which were presented in Section
+13.5.2. The difference between a set of bicubic patches and the B-spline
+surface is that the bicubic patches in the B-spline surface are continuous up
+to second order, where the patches jom, whereas an arbitrary collection of
+bicubic patches need not be continuous at all. The tensor-product. B-spline
+surface is smooth, in the sense of having C® continuity, and can be used to
+model objects such as human bodies and organs, automobile body panels,
+and the skin of aircraft.
+
+In many practical applications, the tensor-product B-spline surface must
+be in parametric form: (2, y,z) = (z(u,v), y(u, v), 2(u, v)). As with the no-
+tation presented in Section 13.5.3, the cocflicients for the spline surface in
+the regression problem will be three-element vectors, one element for cach
+of the x, y, and z coordinates. The u-v domain is rectangular and is subdi-
+13.7. SURFACE APPROXIMATION 395
+
+vided into a uniform grid (equal spacing between the basis functions). The
+most difficult part is constructing a formula for mapping (z, y, z) point mea-
+surements into the u-v domain so that the point measurements are correctly
+associated with the bicubic patches that make up the B-spline surface.
+
+13.7.2 Variational Methods
+
+The surface approximation problem can also be cast as a problem in vari-
+ational calculus. The problem is to determine the surface z = f(x,y) that
+approximates the set of depth measurements 2, at locations (x, y,) in the
+image plane.
+
+There are an infinite number of surfaces that will closely fit any set of
+depth measurements, but the best approximation can be defined as the sur-
+face that comes closc to the depth measurements and is a smooth surface.
+The best approximation is obtained by minimizing the functional
+
+: ” 2 a ofa a .
+
+v= dl — flee, ye) +f / Ee +2 + a dxdy. (13.90)
+This minimization problem is solved using variational calculus to obtain the
+partial differential equation
+
+n
+
+ViF(2,¥) = So (ee — flees ye): (13.91)
+
+k=l
+Appropriate boundary conditions must be chosen for the edges of the graph
+surtace.
+
+13.7.3. Weighted Spline Approximation
+
+The problem with the surface approximation mcthods presented so far is
+that the solutions are smooth surfaces, even across discontinuities in the data
+that most likely correspond to surface boundaries in the scene. Smoothness
+is explicit in the smoothness functional used for the variational methods in
+Section 13.7.2 and is implicit in the choice of a smooth gencric function for the
+regression splines presented in Section 13.7.1. If the approximating surface
+could be formulated as a set of piecewise smooth functions,
+
+Ag
+f(e.y) = U fila.y), (13.92)
+396 CHAPTER 13. CURVES AND SURFACES
+
+and the depth measurements could be segmented into regions with one region
+for each piecewise smooth function, then the solution would more accurately
+reflect the structure of the surfaces in the scenc. However, this leads to al-
+gorithms for manipulating surfaces that are beyond the scope of this book.
+Some aspects of surface segmentation will be discussed in Section 13.8. We
+can avoid some difficult topics in surface representation and still achieve a
+good surface approximation that conforms to discontinuities by changing the
+smoothness functional in Equation 13.62 to reduce smoothing across discon-
+tinuities in the depth data. This approach leads to weighted regularization.
+In one dimension, the weighted regularization norm is
+
+tw — fla) + [ @)Ufeol@)? dz. (13.93)
+
+If the weight function w(z) is choosen to be small at discontinuities in the
+data and large elsewhere, then the weight fumction cancels the smoothness
+criterion at discontinuities.
+
+In two dimensions, the norm for weighted splinc surface approximation is
+
+af  .ofaf  &
+=D F (xs. ye) yf fu y) Fez +07 f dx dy (13.94)
+
+with the weight function given by
+
+a?
+
+1+ le@ vie’ (13.95)
+
+w(2,y) =
+where p(z,y) is the gradient of the surface from which the samples were
+taken. Note that the regularizing parameter a from Equation 13.62 has been
+absorbed into the weight function.
+
+Variational methods can be used to transform Equation 13.94 into a par-
+tial differential equation, as shown in Section 13.7.2 and Appendix A.3, or
+the method of regression splines can be used to replace Equation 13.94 with
+a linear regression problem. The weight function in Equation 13.94 is com-
+puted from an approximation to the gradient by assuming that the weights
+are constant over the span of the grid on which the tensor-product. basis
+functions are defined.
+13.8. SURFACE SEGMENTATION 397
+
+13.8 Surface Segmentation
+
+A range image is a uniform grid of samples of a piccewisc smooth graph
+surface
+z= f(x,y). (13.96)
+
+This section will describe how a set of range samples, defined on a uniform
+grid, can be segmented into regions that have similar curvature and how to
+approximate each region with low-order bivariate polynomials. The variable-
+order surface segmentation algorithm, which is like the region-growing tech-
+niques described in Section 3.5, will be presented. Surface curvature prop-
+erties are used to estimate core regions, which are grown to cover additional
+range samples. The regions are modeled by bivariate surface patches (see
+Section 13.5.2). The segmentation algorithm grows the regions by extending
+the surface patches to cover range samples that are neighbors of the region
+if the residual between the new range samples and the surface patch is low.
+
+The surface segmentation problem is formally stated as follows. A piecc-
+wise smooth graph surface z = f(z, y) can be partitioned into smooth surface
+primitives
+
+[=1
+with one surface primitive for each region R;. The characteristic function
+
+1 if (e,y) € R;
+
+0 otherwise (13.98)
+
+eon) ={
+
+represents the segmentation of the range data into surface patches (regions).
+‘The surface for cach region is approximated by a polynomial patch
+
+f@y= SD ayaiy’ (13.99)
+
+itj<m
+
+for points (x,y) € R;. The surface model includes planar, bilinear bi-
+quadratic, bicubic, and biquartic polynomial patches, which provide a nested
+hierarchy of surface representations.
+
+The characteristic function €(z, y,/) can be implemented as a list of the
+locations [i,j] of the pixcls that are in each region. Other representations
+such as bit masks or quad trees, described in Section 3.3, can be used.
+398 CHAPTER 13, CURVES AND SURFACES
+
+Kiig]
++ 0 _
+~ Peak Ridge —
+Saddle
++ Pit Valley oe
+
+Table 13.1: The eight surface types defined by the signs of the mean and
+Gaussian curvatures.
+
+13.8.1 Initial Segmentation
+
+The core regions for the initial segmentation are estimated by computing the
+mean and Gaussian curvatures and using the signs of the mean and Gaussian
+curvatures to form initial region hypotheses. The portion of the regions near
+the region boundaries can include samples that do not belong in the regions
+since it can be difficult to accurately estimate the curvature in the vicinity of
+the transitions between regions. The regions are shrunk to core regions (see
+Section 2.5.12) to cnsure that the initial region hypotheses do not include
+any falsely labeled samples. There are cight surface types corresponding to
+the sigus of the mean and Gaussian curvatures, listed in Table 13.1. These
+surface types are used 10 form core regions.
+
+Assume that the range data are a square grid of range samples that may
+be processed like an image. The first and second partial derivatives of the
+range image, fr, fy, fea, fay, fy, are estimated by convolving the range
+image with separable filters to estimate the partial derivatives. Compute the
+13.8. SURFACE SEGMENTATION 399
+
+mean curvature
+
+(13.100)
+and the Gaussian curvature
+
+_ Feali, J] Fuylt, J] _ ryt J
+(1+ Pld) + Rl)
+using the estimates of the first and sccond partial derivatives of the range
+
+image. Compute an integer label that encodes the signs of the mean and
+Gaussian curvatures using the formula
+
+Ali, j]
+
+Tii, j] = 1+ 3(1 + sgn(A[i, J) + CL + sen(K (i, 3). (13.101)
+
+Use the sequential connected components algorithm (Section 2.5.2) to group
+range samples with identical labels into connected regions and reduce the
+size of the regions to a conscrvative core of range samples using a shrink or
+erosion operator. A size filter can be used to discard regions that arc too
+small to correspond to scene surfaces. The regions that remain form the
+seeds that initialize the region-growing process.
+
+13.8.2. Extending Surface Patches
+
+Bivariate polynomials are fit to the range samples in the core regions. The
+surface fit starts with a planar patch, m = 1, and the order of the surface
+patch is increased until a good fit (root-mean-square error below a threshold)
+is achieved. If a good fit is not achieved, then the region is discarded.
+
+The rest of the segmentation algorithm trics to extend the regions to cover
+neighboring range samples. Unassigned range samples are added to regions
+using a region-growing process. The similarity predicate for deciding if a
+range sample should be added to a region is based on comparing the value
+of the range sample to the bivariate surface patch evaluated at the same
+location as the range sample. If the residual between the surface patch and
+range sample is below a threshold, then the range sample is included in the set
+of candidates for inclusion in the region; otherwise, the range sample is not
+added to the region. The bivariate surface patch is refit to all range samples
+400 CHAPTER 13. CURVES AND SURFACES
+
+in the region, including the samples that are currently in the region and the
+set of candidates, increasing the order of the surface patch if necessary, up
+to the maximum order. If the fitting error is below a threshold, then the
+candidates are permanently added to the region; otherwise, the entire set
+of candidates is discarded. Region growing continues until no regions are
+enlarged. The segmentation algorithm is summarized in Algorithm 13.3.
+
+Algorithm 13.3 Surface Segmentation
+Segment a range image into regions represented as a surface patches.
+
+1. Compute the first and second partial derivatives of the range image
+using separable filters.
+
+2. Compute the mean and Gaussian curvature at each image location.
+3. Label each range pixel with the surface type.
+4. Shrink the regions to eliminate false labels near the region boundaries.
+
+5. Identify core regions using the sequential connected components algo-
+rithm.
+
+6. Remove core regions that are too small.
+7. Fit a bivariate patch to each region.
+
+8. For each region, determine the set of neighboring pixels with values that
+are close to the value of the surface patch evaluated at the location of the
+neighbor. This set of pixels are candidates for inclusion in the region.
+
+9. Refit the surface patch to the union of the set of pixels in the region and
+the set of candidates. If the fit is acceptable, add the set of candidates
+to the region; otherwise, discard the set of candidates.
+
+10. Repeat steps 8 through 9 until no region is changed.
+
+Note that. it is possible for a set of candidates to be discarded because
+some of the candidates should be included in another region. Later, some of
+the candidates may be retested and included in the region. Once a pixel is
+assigned to a region, the assignment cannot be reversed.
+13.9. SURFACE REGISTRATION 401
+
+13.9 Surface Registration
+
+The transformation between corresponding points in a set of conjugate pairs
+can be determined by solving the absolute orientation problem (Section 12.3),
+but there are applications where it is necessary to align two shapes without
+point correspondences. For example, it may be necessary to align a set of
+range samples to an object model without advance knowledge of how the
+point samples correspond to points on the object. This section describes the
+iterative closest point algorithm for determining the rigid body transforma-
+tion between two views of an object without using point correspondences.
+
+The iterative closest point algorithm can be adapted to a wide variety of
+object models including sets of points, curves in two or three dimensions, and
+various surface representations. The curves may be represented as polylines,
+implicit curves, or parametric curves, and the surfaces may be represented
+as faceted surfaces (polygonal meshes), implicit or parametric surfaces, or
+tensor-product B-splines. It is not necessary for both views of an object
+to have the same representation. For cxample, one view could be a set of
+space curves obtaincd with active triangulation, and the other view could be
+a tensor-product cubic spline surface. The key idea is that points sampled
+from the representation for one view can be mapped to the closest points
+on the representation for the other view to approximate a set of conjugate
+pairs. Solving the absolute orientation problem with these correspondences
+will improve the alignment between views. The process of finding closest
+point correspondences and solving the absolute orientation problem with
+these approximate conjugate pairs can be repeated until the two views are
+aligned.
+
+The iterative closest point algorithm will be presented for the case of
+registering a set of points with a surface model. Given a set of points P
+sampled over the surface of an object and a model M for the object, determine
+the set of points on the model that arc the closest points to each sample point.
+The distance between a point p in the sample set and the model M is
+
+d(p,M) = mii a — Pl (13.102)
+
+Compute Q = {q1,42,--+;@n}, the sect of points q € M that are the closest
+points to each point in the sample set P = {p1,po,..., pn}. Pair each sample
+point p with its closest point g in the model to form a set of conjugate
+402 CHAPTER 13. CURVES AND SURFACES
+
+pairs {(pi, g1), (pa, d2),---; (Pn; @n)}. Solve the absolute orientation problem
+using this set of conjugate pairs. Even though the point sets are not true
+conjugate pairs, an approximate solution to the transformation between the
+views will be obtained. Apply the transformation to the point set P and
+recompute the set of closest points Q@. Now the point set is closcr to the
+model and the pairs of points in P and @ will be closer to correct conjugate
+pairs. The absolute orientation problem can be solved again and the new
+transformation applied to point set P. This procedure is repeated until the
+sum of the squared distances between closest points (the root-mean-square
+closest point distance) is below a threshold.
+
+In the carly itcrations, the closest point pairs may be very poor approxi-
+mations to true conjugate pairs, but applying the rigid body transformation
+obtained by solving the absolute orientation problem with these approximate
+conjugate pairs brings the point set closer to the model. As the iterations
+continue, the closest point pairs become more like valid conjugate pairs. For
+example, if the point set is initially very far from the model, then all points
+may be mapped to the same point on the model. Clearly, such a many-to-one
+mapping cannot be a valid set of conjugate pairs, but the first iteration pulls
+the point set to the model so that the points are centcred on the matching
+model point and subsequent iterations align the center of the point sct with
+the center of the model. The final iterations rotate the point sct and adjust
+its position so that the point set is aligned with the modcl. The steps of
+iterative closest point registration are listed in Algorithm 13.4.
+
+Algorithm 13.4 Iterative Closest Point Registration
+Register a set of points to a surface modeled as a polygonal mesh.
+
+1. Compute the set of closest points.
+2. Compute the registration between the point sets.
+3. Apply the transform to register the point sets.
+
+4. Return to step 1 unless the registration error is within tolerance.
+FURTHER READING 403
+
+Further Reading
+
+An execllent introduction to the differential geometry of curves and surfaces
+is the book by do Carmo 67]. Bartels, Beatty, and Barsky [22] have written
+an excellent introduction to spline curves and surfaces. The scries of books,
+called Graphics Gems, contains much useful information on geometry, curves,
+and surfaces [89]. The most recent volume includes a disk with code for all
+of the algorithms presented in the series.
+
+Surface reconstruction is a common problem in computer vision [92, 232,
+233, 35]. Surface reconstruction is required for fitting a surface to sparse
+depth values from binocular stereo and range sensors [28, 92, 232]. Sinha
+and Schunck [223] have proposed a two-stage algorithm for surface recon-
+struction. The first stage removes outliers from the depth measurements and
+interpolates the sparse depth values onto a uniform grid. The second stage
+fits weighted bicubic splines to the output from the second stage.
+
+The section on surface segmentation is based on the work of Besl and
+Jain [28]. The iterative closest point algorithm was developed by Besl and
+McKay [29].
+
+Exercises
+
+13.1 Define implicit, explicit, and parametric representations of a surface.
+When we consider an image as a two-dimensional mathematical func-
+tion, can we consider the image as a surface? If so, which of the three
+representations above corresponds to an image?
+
+13.2 Given four points in space, how will you determine whcther they are
+coplanar?
+
+13.3 Define principal curvature, Gaussian curvature, and mean curvature
+for a surface. What information about the nature of a surface do
+you get by knowing these curvature valucs at a point? Do you get
+local information or global information about the surface from these
+curvature valucs?
+
+13.4 What is a spline curve? Why are cubic splincs frequently used to
+represent curves?
+404
+
+13.5
+
+13.6
+
+13.7
+
+13.8
+
+13.9
+
+CHAPTER 13. CURVES AND SURFACES
+
+Polygonal meshes are commonly used to represent surfaces. What are
+polygonal meshes? Why are they used to represent arbitrary curved
+surfaces? How closcly can you represent an arbitrary curved surface
+using a polygonal mesh?
+
+What is a winged edge data structure? Where and why is one used?
+
+What is a graph surface? Show that a graph surface can be mod-
+eled using a bivariate polynomial surface representation. Discuss the
+limitations of polynomial patch representations for surfaces.
+
+Define tensor product surface. Compare it with the polynomial sur-
+face representation for applications m machine vision. You should
+consider three concrete applications in inspection, measurement, and
+object recognition and study the requirements of these applications.
+Then compare these representations for the specific task requirements.
+
+What is the difference between surface approximation and surface in-
+terpolation? What is segmentation: approximation or interpolation?
+Explain your answer.
+
+13.10 What is regularization? When should it be used in computer vision?
+
+Explain your answer using an example where regularization may be
+used to solve a problem effectively.
+
+13.11 Give the mathematical formulation of a B-spline surface. How do you
+
+evaluate the quality of fit for these surfaces?
+
+13.12 How can you use B-splines for smoothing imges? Which type of ap-
+
+plications will be suitable for spline smoothing?
+
+13.13 Using differential geometric characteristics, it is possible to classify
+
+the local nature of a surface as one of the eight. surface types. Which
+characteristics are used and what are the classes?
+
+Computer Projects
+
+13.1
+
+Write a program to segment images, including range images, starting
+with a seod that contains local regions of similar type based on the
+COMPUTER PROJECTS 405
+
+differential geometric characteristics. Use a region growing method
+to fit biquadratic and bicubic surfaces in an image. Sclect suitable
+region growing and region termination criterion. Apply this program to
+several images. Study the error characteristics of surfaces approximated
+by your program.
+
+13.2 Implement an algorithm to take scattered three-dimensional points and
+convert them to a uniform grid representation using an interpolation
+algorithm. Test the algorithm using the output of a stereo algorithm.
+-->
 </p>
     </body>
 </html>

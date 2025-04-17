@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>準備中</title>
+        <title>輪郭</title>
         <style type="text/css">
             p
             {
@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,8 +75,1676 @@
     </style>
     </head>
     <body>
-        <h1><center>準備中</center></h1>
+        <h1><center>６章 輪郭(準備中)</center></h1>
+<p>エッジは、領域境界の表現にリンクされている必要がある。この表現は輪郭と呼ばれる。輪郭は開いている場合もあるし閉じている場合もある。閉じた輪郭は領域境界に対応し、領域内のピクセルは塗りつぶしアルゴリズムによって検出される。開いた輪郭は、領域境界の一部である場合がある。領域間のコントラストが十分でないため、エッジ検出器が境界に沿ったエッジを検出できないことがあるため、領域境界にギャップが生じることがある。エッジ検出のしきい値が高すぎるか、境界のある部分に沿ったコントラストが画像の他の領域に比べて弱すぎて、画像内のどこでも機能する単一のしきい値がない可能性がある。開いた輪郭は、線分が互いにつながっているいる場合にも発生する。たとえば、描画や手書きのサンプルで、線分がストロークに沿ってつながる場合などである。
+</p><p>
+輪郭線は、エッジの順序付きリスト、または曲線で表現される。曲線は輪郭線の数学的モデルである。曲線の例には、線分や3次スプラインなどがある。輪郭線を適切に表現するには、いくつかの基準がある:
+<div class="styleBullet">
+<ul>
+<li><strong>効率性</strong>　　輪郭はシンプルで簡潔な表現でなければならない。</li>
+<li><strong>精度</strong>　　　輪郭は画像の特徴に正確に適合する必要がある。</li>
+<li><strong>有効性</strong>　　輪郭は、アプリケーションの後続の段階で実行される操作に適したものでなければならない。</li>
+</ul>
+</div>
+</p><p>
+輪郭表現の精度は、輪郭をモデル化するために使用される曲線の形状、曲線フィッティングアルゴリズムの性能、そしてエッジ位置の推定精度によって決まる。輪郭の最も単純な表現は、エッジの順序付きリストである。この表現はエッジの位置推定と同等の精度であるが、最も簡潔な表現ではないため、後続の画像解析に効果的な表現を提供できない可能性がある。適切な曲線モデルをエッジにフィッティングすると、平均化によってエッジ位置の誤差が低減されるため精度が向上し、後続の操作により適切かつ簡潔な表現を提供することで効率が向上する。例えば、直線に沿ったエッジの集合は、エッジに直線をフィッティングすることで最も効率的に表現できる。この表現は、直線の方向や長さの決定などの後続の計算を簡素化し、推定された直線と実際の直線との間の平均二乗誤差が、実際の直線と任意のエッジとの間の誤差よりも小さくなるため、精度が向上する。
+<!-- The accuracy of the contour representation is detcrmined by the form of curve used to model the contour, by the performance of the curve fitting algorithm, and by the accuracy of the estimates of edge location. The simplest representation of a contour is an ordered list of its edges. This representation is as accurate as the location estimates for the edges, but is the least compact representation and may not provide an effective representation for subsequent image analysis. Fitting the appropriate curve model to the edges increases accuracy, since errors in cdge location are reduced through averaging, and if increases efficiency by providing a more appropriate and more compact representation for subsequent operations. For example, a set of edges that lie along a line can be represented most efficiently by fitting a line to the edges. This representation simplifies later calculations, such as determining the orientation or length of the line, and increases the accuracy, since the mean squared error between the estimated line and the true line will be smaller than the error between the true line and any of the edges. -->
+</p><p>
+この章の最初のセクションでは、平面曲線の初等微分幾何学について解説する。第2セクションでは、曲線モデルを辺に当てはめることなく、辺のリストから長さ、接線、曲率といった等高線特性を計算する手法を紹介する。残りのセクションでは、曲線モデルと、そのモデルを等高線に当てはめる手法について説明する。
+<!-- The first section in this chapter presents the elementary differential geometry of curves in the plane. The second section gives a collection of techniques for calculating coutour properties such as length, tangent, and curvature from the list of edges, without fitting a curve model to the edges. The remaining sections cover curve models and techniques for fitting the models to contours. -->
+</p><p>
+先に進む前に、いくつかの用語を定義する必要がある。曲線は、点のリストを通過する場合、点のリストを補間する。近似とは、曲線が点の近くを通過するものの、必ずしも点を正確に通過するわけではない、点のリストに曲線をフィッティングすることです。以下のセクションでは、エッジ検出アルゴリズムによって提供されるエッジが正確であると仮定し、補間法を用いて曲線をエッジ点にフィッティングさせる。実際の画像にエッジ検出を適用して提供されるエッジは正確ではない。エッジの推定位置には多少の誤差が生じる。後のセクションでは、曲線近似の方法について説明する。
+<!-- Before proceeding, some terms must be defined. A curve interpolates a list of points if the curve passes through the points. Approzimation is fitting a curve to a list of points with the curve passing close to the points, but uot necessarily passing exactly through the points. In the lollowing sections, we will begin by assuming that the edges provided by an edge detection algorithm are exact and will fit curves to the cdge points using interpolation methods. The edges provided by edge detection applied to real images will not be exact. There will be some error in the estimated location of the edge. Later sections will present methods for curve approximation. -->
+<div class="styleBullet">
+<ul>
+<li><strong>定義 6.1</strong>　エッジリストとは、エッジ点またはエッジフラグメントの順序付き集合である。</li>
+
+<li><strong>定義 6.2</strong>　輪郭とは、エッジリスト、またはエッジリストを表すために使用された曲線である。</li>
+
+<li><strong>定義 6.3</strong>　境界とは、領域を囲む閉じた輪郭である。</li>
+</ul>
+</div>
+<!-- Definition 6.1 An edge list is an ordered set of edge points or fragments.
+Definition 6.2 A contour is an edge list or the curve that has been used to
+represent the edge list.
+Definition 6.3 A boundary is the closed contour that surrounds a region.-->
+</p><p>
+この章では、「エッジ」という用語は通常、エッジポイントを指す。エッジの方向は、ほとんどのカーブフィッティングアルゴリズムでは使用されない。アルゴリズムがエッジの方向を使用する少数のケースでは、「エッジ」という用語はエッジフラグメントを指していることが文脈から明らかになる。
+<!-- In this chapter, the term edges will usually refer to edge points. The edge orientation is not used by most curve fitting algorithms. In the few cases where the algorithm does use the edge orientation, it will be clear from the context that the term edges refers to edge fragments. -->
+</p>
+<h2>6.1 曲線の幾何学</h2>
 <p>
+平面曲線は、明示的な形式 \(y = f(x)\)、暗黙的な形式 \(f(x,y) = 0\)、あるいはパラメータ \(u\) に対するパラメトリック形式 \((x(u), y(u))\) の3つの方法で表現できる。明示的な形式は、マシンビジョンではほとんど使用されない。これは、\(Z-Y\)平面上の曲線がねじれることで、与えられた \(x\) に対して曲線上に複数の点が存在する可能性があるためである。
+<!-- Planar curves can be represented in three different ways: the explicit form y = f(x), the implicit form f(x,y) = 0, or the parametric form (x(u), y(u)) for some parameter u. The explicit form is rarely used in machine vision since a curve in the z-y planc can twist around in such a way that there can be more than one point on the curve for a given x. -->
+</p><p>
+曲線のパラメトリック形式は、パラメータuの2つの関数 \(x(u)\) と \(y(u)\) を用いて、曲線の始点 \(p_1 = (x(u_1), y(u_1))\) から終点 \(p_2 = (x(u_2), y(u_2))\) までの曲線上の点を指定する。曲線の長さは円弧長で表される。
+<!-- The parametric form of a curve uscs two functions, x(u) and y(u), of a parameter u to specify the point along the curve from the starting point of the curve at p, = (x(u1), y(w)) to the ond point py = (x(a), y(ua)). The length of a curve is given by the arc length: -->
+\[
+\int_{u_1}^{u_2}\sqrt{\left(\frac{dx}{du}\right)^2+\left(\frac{dy}{du}\right)^2}du \tag{6.1}
+\]
+ 単位接ベクトルは
+<!-- The unit tangent vector is -->
+\[
+\mathbf{t}(u)=\frac{\mathbf{p}^\prime(u)}{|\mathbf{p}^\prime(u)|} \tag{6.2}
+\]
+ここで \(\mathbf p(u)=\left(x(u),y(u)\right)\)。曲線の曲率は接線の微分：\(\mathbf n(u)=\mathbf p^{\prime\prime}(u)\)。
+
+<!-- where p(w) = (x(u), y(w)). The curvature of the curve is the derivative of
+the tangent: n(u) = p’(u). -->
+</p><p>
+曲線上の3点、\(p(u+\Delta), p(u)\)、\(p(u-\Delta)\)を考えよう。これらの3点を通る円を想像してもらいたい。円はこれらの点によって一意に決定される。\(\Delta\to 0\) の極限において、この円は接触円である。接触円は曲線に \(p(u)\) で接し、円の中心は曲線の法線を含む直線上にある。曲率は接触円の半径の逆数である。
+<!-- Consider three points along the curve: \(p(u+\Delta), p(u)\), and \(p(u-\Delta)\). Imagine a circle passing through these three points, which uniquely determine the circle. In the limit as \(|delta\to 0\), this circle is the osculating circle. The osculating circle touches the curve at \(p(u)\), and the center of the circle lies along the line containing the normal to the curve. The curvature is the inverse of the radius of the osculating circle. -->
+</p>
+<h2>6.2 デジタル曲線</h2>
+<p>
+このセクションでは、輪郭線の長さ、接線の向き、曲率といった曲線形状の要素をエッジ点のリストから計算するための一連のアルゴリズムを紹介する。隣接するピクセル間の角度は45°単位に量子化されるため、傾きと曲率はデジタル領域で正確に計算することが困難である。
+<!-- In this section, we present a set of algorithms for computing the elements of curve geometry, such as contour length, tangent orientation, and curvature, from the list of edge points. Slope and curvature are difficult to compute precisely in the digital domain, since the angle between neighboring pixels is quantized to 45° increments.-->
+</p><p>
+基本的な考え方は、エッジリスト内で隣接していないエッジ点を用いて接線方向を推定することである。これにより、可能な接線方向の集合がより広くなる。エッジリスト内のエッジ \(i\) の座標を \(\mathbf p_i = (x_i, y_i)\) とする。\(k\)-スロープは、\(k\) エッジ離れた点間の（角度）方向ベクトルである。左の \(k\)-スロープは、\(\mathbf{p}_{i-k}\) から \(\mathbf{p}_i\) への方向であり、右の \(k\)-スロープは、\(\mathbf{p}_i\) から \(\mathbf{p}_{i+k}\) への方向である。\(k\)-曲率は、左と右の \(k\)-スロープの差である。
+<!-- The basic idea is to estimate the tangent oricntation using edge points that are not adjacent in the edge list. This allows a larger set of possible tangent orientations. Let \(\mathbf p_i = (x_i, y_i)\) be the coordinates of edge \(i\) in the edge list. The \(k\)-slope is the (angle) direction vector between points that are \(k\) edges apart. The left \(k\)-slope is the direction from \(\mathbf p_{i-k}\), to \(\matbf p_i\), and the right \(k\)-slope is the direction from \(\matbf p_i\) to \(\mathbf p_{i+k}\). The \(k\)-curvature is the difference between the left and right \(k\)-slopes. -->
+</p><p>
+エッジリストに \(n\) 個のエッジ点 \((x_1,y_1), ..., (x_n,y_n)\) があるとする。デジタル曲線の長さは、ピクセル間の個々の線分の長さを足し合わせることで近似できる。
+<!-- Suppose that there are n edge points \((x\1,y_1), ..., (x_n,y_n)\) in the edge list. The length of a digital curve can be approximated by adding the lengths of the individual segments between pixels: -->
+\[
+S=\sum_{i=2}^n\sqrt{(x_i-x_{i-1})^2+(y_i-y_{i-1})^2} \tag{6.3}
+\]
+ エッジリストを走査し、辺に沿って2、対角線に沿って3を加え、最終的な合計を2で割ることで、良好な近似値が得られる(???)。輪郭の端点間の距離は
+<!-- A good approximation is obtained by traversing the edge list and adding 2 along sides and 3 along diagonals, and dividing the final sum by 2. The distance between end points of a contour is -->
+\[
+D=\sqrt{(y_n-y_1)^2+(x_n-x_1)^2} \tag{6.4}
+\]
+</p>
+<h3>6.2.1 チェーンコード</h3>
+<p>
+チェーンコードは、輪郭線に沿ったエッジポイントのリストを記録するための表記法である。チェーンコードは、エッジリスト内の各エッジにおける輪郭線の方向を指定するす。方向は、図6.1に示すように、8つの方向のいずれかに量子化される。リストの最初のエッジから始めて、輪郭線を時計回りに回り、次のエッジへの方向は、8つのチェーンコードのいずれかを使用して指定される。方向は、エッジの8次元のチェーンコードである。チェーンコードは、最初のエッジの座標と、後続のエッジにつながるチェーンコードのリストによってエッジリストを表す。曲線とそのチェーンコードを図6.2に示す。
+<!-- Chain codes are a notation for recording the list of edge points along a contour. The chain code specifies the direction of a contour at each edge in the edge list. Directions are quantized into one of eight directions, as shown in Figure 6.1. Starting at. the first edge in the list and gomg clockwise around the contour, the direction to the next edge is specified using one of the eight chain codes. The direction is the chain code for the 8-netghbor of the edge. The chain code represents an edge list by the coordinates of the first edge and the list of chain codes leading to subsequent edges. A curve and its chain code are shown in Figure 6.2. -->
+</p>
+<p>
+<center>図6.1: リンクされたエッジポイント間の方向を表すチェーンコード</center>
+</p>
+<p>
+<center>図 6.2: 曲線とそのチェーンコード</center>
+</p><p>
+チェーンコードには、魅力的な特性がある。物体を 45° 回転させる処理は簡単に実装できる。物体を n×45° 回転させると、回転後の物体のコードは元のコードに n mod 8 を加算することで得られる。チェーンコードの導関数 (差分コードとも呼ばれる) は、第一差分を使用して得られ、回転不変の境界記述である。領域の面積や角などの他の特性も、チェーンコードを使用して直接計算できる。この表現の制限は、ある点における接線を表現するのに使用される方向のセットが限られていることである。この制限は、次のセクションで説明する曲線表現のいずれかを使用することで解消できる。曲線をエッジのリストにフィッティングすると、セクション 6.1 で示した幾何学的量はすべて、曲線の数式から計算できる。
+<!-- The chain code has some attractive properties. Rotation of an object by 45° can be easily implemented. If an object is rotated by n×45°, then the code for the rotated object is obtained by adding n mod 8 to the original code. The derivative of the chain code, also called difference code, obtained by using first difference, is a rotation-invariant boundary description. Some other characteristics of a region, such as area and corners, may be directly computed using the chain code. The limitation of this representation is the limited set of directions used to represent the tangent at a point. This limitation can be removed by using one of the curve representations presented in the following sections. Once a curve has been fitted to the list of edges, any of the geometric quantities presented in Section 6.1 can be computed from the mathematical formula for the curve. -->
+</p>
+<h3>6.2.2 傾斜の表現</h3>
+<p>
+輪郭の傾きの表現は \(\Psi-s\) プロットとも呼ばれ、チェーンコードの連続バージョンのようなものである。チェーンコードで許可されている限られた接線方向ではなく、任意の接線方向を使用して等高線を表現する。エッジリストの先頭から始めて、デジタル曲線の式を使用して接線と円弧長を計算するものとする。接線 \(\Psi\) と円弧長 \(s\) をプロットして、\(\Psi-s\) 空間での輪郭の表現を取得する。\(\Psi-s\) プロットは、輪郭の形状の表現である。たとえば、線分と円弧で構成される等高線は、\(\Psi-s\) プロットでは線分の連続のように見える。\(\Psi-s\) プロットの水平線分は、輪郭の線分に対応する。 \(\Psi-s\) プロット内の他の方向の線分は円弧に対応する。\(\Psi-s\) プロット内の直線ではない部分は、他の曲線プリミティブに対応する。
+<!-- The slope representation of a contour, also called the \(Psi-s\) plot, is like a continuous version of the chain code. We want to represent a contour using arbitrary tangent directions, rather than the limited set of tangent directions allowed by the chain code. Suppose that we start at the beginning of the edge list and compute the tangent and arc length using the formulas presented for digital curves. We may plot the tangent \(\Psi\) versus arc length \(s\) to obtain a representation for the contour in the \(\Psi-s\) space. The \(\Psi-s\) plot. is a representation of the shape of the contour. For example, a contour that consists of line scgments and circular arcs will look like a sequence of line segments in the \(\Psi-s\) plot. Horizontal line segments in the \(\Psi-s\) plot correspond to line segments in the coutour; line segments at other orientations in the \(\Psi-s\) plot correspond to circular arcs. Portions of the \(\Psi-s\) plot that are not straight lines correspond to other curve primitives. -->
+</p><p>
+\(\Psi-s\) プロットを直線に分割することで、輪郭を直線と円弧に分割することができる。この手法は多くの研究者によって使用されており、輪郭を線分に分割するこの手法にはいくつかのバージョンがある。
+<!-- The contour may be split into straight lines and circular arcs by segmenting the \(\Psi-s\) plot into straight lines. This method has heen used by many researchers, and there are several versions of this approach for splitting a contour into segments. -->
+</p><p>
+\(\Psi-s\) プロットは、元の輪郭の形状を簡潔に記述するために使用できる。図6.3は、輪郭とその \(\Psi-s\) プロットを示している。閉じた輪郭の場合、\(\Psi-s\) プロットは周期的である。
+<!-- One may use the \(\Psi-s\) plot as a compact description of the shape of the original contour. In Figure 6.3, we show a contour and its \(\Psi-s\) plot. For a closed contour, the \(\Psi-s\) plot is periodic. -->
+</p>
+<p>
+<center>図 6.3: 輪郭の傾斜の表現</center>
+</p>
+<h3>6.2.3 傾斜密度関数</h3>
+<p>
+傾斜密度関数は、輪郭に沿った傾斜（接線角）のヒストグラムである。これは認識のための有用な記述子となり得る。モデル輪郭の傾斜密度関数と画像から抽出した輪郭の傾斜密度関数を相関させることで、物体の向きを特定することができる。これは物体認識の手段にもなる。
+<!-- The slope density function is the histogram of the slopes (tangent angles) along a contour. This can be a uscful descriptor for recognition. Correlating the slope density function of a model contour with the slope density function for a contour extracted from an image allows the orientation of the object. to be determined. This also provides a means for object recognition. -->
+</p>
+<h2>6.3 曲線フィッティング</h2>
+<p>
+この章の残りの部分では、4つの曲線モデルと、それらをエッジ点にフィッティングする手法について説明する。これらのモデルには以下のものがある。
+<div class="styleBullet">
+<ul>
+<li>● 線分</li>
+<li>● 円弧</li>
+<li>● 円錐曲線</li>
+<li>● 3次スプライン</li>
+</ul>
+</div>
+<!-- The rest. of this chapter will cover four curve models and the methods for fitting the models to edge points. The models include:
+
+・Line segments
+・Circular arcs
+・Conic sections
+・Cubic splines -->
+</p><p>
+あらゆるフィッティングアルゴリズムは、次の2つの質問に答える必要がある。
+<div class="styleBullet">
+<ul>
+<li>1. 曲線をカーブにフィッティングするためにどのような手法が用いられるか？</li>
+<li>2. フィッティングの近似度はどのように測定されるか？</li>
+</ul>
+</div>
+<!-- Any fitting algorithm must address two questions:
+1. What method is used to fit the curve to the cdges?
+2. How is the closeness of the fit measured? -->
+</p><p>
+セクション6.4から6.7では、エッジの位置が十分に正確であり、選択されたエッジ点を用いてフィッティングを決定できるという仮定のもと、曲線モデルをエッジにフィッティングする手法について説明する。セクション6.8では、エッジの位置の誤差を処理できる、より強力な手法を順に紹介する。
+<!-- Sections 6.4 through 6.7 will cover techniques for fitting curve models to edges with the assumption that the edge locations are sufficiently accurate that selected edge points can be used to determine the fit. Section 6.8 will present successively more powerful methods that can handle errors in the edge locations. -->
+</p><p>
+<!-- Let \(d_i\) be the distance of edge point \(i\) from a line. There are several measures of the goodness of fit of a curve to the candidate edge points. All of them depend on the error between the fitted curve and the candidate points forming the curve. Some commonly used methods follow.
+
+Maximum absolute error measures how much the points deviate from
+
+the curve in the worst case:
+MAE = max |d,| (6.5)
+
+Mean squared error gives an overall measure of the deviation of the curve
+from the edge points:
+
+LQ y
+MSE = — Sod? (6.6)
+i=1
+
+Normalized maximum error is the ratio of the maximum absolute error
+
+to the length of the curve:
+
+_ max; |d,| -
+c= (6.7)
+
+Number of sign changes in the error is a good indicator of the appropri-
+ateness of the curve as a model for the edges in the contour.
+
+Ratio of curve length to end point distance is a good measure of the
+complexity of the curve.
+
+</p><p>
+The normalized maximum error provides a unitless measure of error in-
+dependent of the length of the curve. In other words, a given amount of
+deviation from a curve may be equally significant, in some applications, as
+twice as much deviation from a curve that is twice as long. If the curve
+model is a line segment, then it is not necessary to compute the arc length;
+the distance D between the end points can be used:
+
+D= Vn _ yy? + (1 _ #1). (6.8)
+
+</p><p>
+Sign changes are a very useful indication of goodness of fit. Fit a list of
+edge points with a straight line and examine the number of sign changes. One
+sign change indicates that the list of edges may be modeled by a linc segment,
+two sign changes indicate that the edges should be modeled by a quadratic
+curve, three sign changes indicate a cubic curve, and so on. Numerous sign
+changes indicate that a small increase in the complexity of the curve will
+not improve the fit significantly. A good fit has a random pattern to the
+sign changes. Runs of errors of the same sign indicate a systematic error in
+fitting; possibly due to the wrong curve model.
+</p><p>
+In the following sections, we will use simple curve fitting methods to iL
+lustrate the use of the polyline, circular arc, conic section, and cubic spline
+models. Section 6.8 will present more powerful curve fitting methods, using
+polylines as the primary example; but, in principle, any of the models pre-
+sented in the following sections could be used with any of the curve fitting
+methods presented in Section 6.8.
+</p><p>
+The choice of curve fitting model must be guided by the application. The
+use of straight line segments (polylines) is appropriate if the scene consists
+of straight lines and is the starting point for fitting other models. Circular
+arcs are a useful representation for estimating curvature, since the curve is
+segmented into sections with piecewise constant curvature. Conic sections
+provide a convenient way to represent sequences of linc segments and circular
+arcs, as well as elliptic and hyperbolic arcs, and explicitly represent inflection
+points. Cubic splines are good for modcling smooth curves and do not force
+estimates of tangent vectors and curvature to be piecewise constant.
+</p>
+<h2>6.4 Polyline Representation</h2>
+<p>
+A polyline is a sequence of line segments joined end to end. The polyline
+representation for a contour fits the edge list with a sequence of line segments.
+The polyline interpolates a selected subset of the edge points in the edge list.
+The ends of each line segment are edge points in the original edge list. Each
+line segment models the run of contiguous cdges between its end points.
+The points where linc segments are joined are called vertices. Note that
+polylines are two-dimensional curves in the image plane, as are all of the
+curves discussed in this chapter, and the vertices are points in the image
+plane.
+</p><p>
+The polyline algorithm takes as input an ordered list of edge points
+{(21, 91), (22, y2},..+,(2n,¥n)}. The edge point coordinates may be com-
+puted to subpixel resolution (sce Section 5.7). Since line segments are fit
+
+between two edge points selected as vertices, Only the coordinated of the
+edges that are selected as vertices need to be computed precisely.
+
+
+</p><p>
+
+Figure 6.4: Diagram showing the perpendicular distance of a point from a
+line segment. The value -y is computed by plugging the coordinates (2;, y;)
+of the point into the equation for the line segment.
+</p><p>
+The formula for a line segment that approximates a list of edge points
+and joins the first and last edge points (#1, yi) and (%,, y,) can be derived
+by noting that the slope of the line between the end points is the same as
+the slope of the line between the first point and an arbitrary point along the
+line:
+
+YT Ye TY (6.9)
+
+Lo Ly) Lp — YL
+
+Multiplying out and rearranging terms gives the implicit form for a line
+segment, parameterized by the coordinates of the end points:
+
+2(y1 — Ye) + yen — @1) + yner — ye, = 0. (6.10)
+
+The distance of any point («;,y;) from the line is d = r/D, where r is
+computed by. plugging the coordinates of the point into the equation for the
+line segment,
+
+r= aly — ye) + vile ~ 21) + yeti — yer, (6.11)
+
+and D is the distance between the end points. (Refer to Figure 6.4.) The sign
+of r can be used to compute the number of sign changes C’. The normalized
+
+
+distance is d/D. The normalized maximum absolute crror is
+
+max; |d,|
+D a)
+
+é= (6.12)
+where d; is the distance between the line and the position of the ith edge
+in the edge list. The normalized maximum crror is frequently used as the
+measure for the goodness of fit of a line segment to a set of edges. All of
+these formulas assume that the perpendicular projection of a point onto a
+line is wilhin the line segment; that is, both on the line and between the end
+points of the lie segment. This is the case for the situations throughout this
+chapter, but in other cases the formulas may need to be modified to compute
+the distance of the point from the nearest end point of the line segment.
+</p><p>
+There are two approaches to fitting polylines: top-down splitting and
+bottom-up merging.
+</p>
+<h3>6.4.1 Polyline Splitting</h3>
+<p>
+The top-down splitting algorithm recursively adds vertices, starting with an
+initial curve. Consider the curve shown in Figure 6.5. The initial curve is the
+line segment between the first and last edge points, labeled A and B. The
+point in the edge list that is farthest from the straight line is found. If the
+normalized maximum error is above a threshold, then a vertex is inserted at.
+the edge point farthest from the line segment, labeled as point C in Figure 6.5.
+The splitting algorithm is recursively applied to the two new linc segments
+and the edge list. The edge list is partitioned into two lists corresponding
+to the two line segments. The edge points in the list that are farthest from
+each segment. arc found, and new vertices are introduced if the points are
+too far from the line segments. The polyline splitting algorithm terminates
+when the normalized maximum error, for all cdge points along the polyline,
+is below the threshold. This recursive procedure is very efficient. Segment
+splitting is also called recursive subdivision.
+</p>
+<h3>6.4.2 Segment Merging</h3>
+<p>
+In segment merging edge points are added to line segments as the edge list
+is traversed. New segments are started when the edge points deviale too
+far from the line segment. The merge approach is also called the bottom-up
+approach to polyline fitting.
+
+</p><p>
+
+
+Figure 6.5: Splitting method for polylines.
+</p><p>
+
+There are several measures that can be used to determine if an edge
+point is too far from the line segment that is being formed. One methad is
+to use sequential least-squares, which performs a least-squares fit of the line
+segment to the edge points and updates the parameters of the line segment
+incrementally as each new edge point is processed. The fitting algorithm
+calculates the squared residual between the line segment and the edge points.
+When the error exceeds a threshold, a vertex is introduced and a new segment
+is started from the end poiut of the last segment.
+</p><p>
+The tolerance band algorithm uses a different method for determining
+the placement of vertices. Two line segments that are parallel to the line
+segment approximating the edge points at a distance ¢ from the center line
+segment are computed. (See Figure 6.6.) The value of « represents the
+absolute amount of deviation from the fitted line that is tolerated. Edges
+are added to the current line segment as long as the new edges are inside the
+tolerance band. The parameters of the line segment may be recomputed as
+new edges are added to the segment. The approximating line segment does
+not have to remain parallel to the sides of the tolerance band. The vertex
+at the end of the segment is the starting point for the next segment. This
+approach usually results in too many segments. Corner locations and angles
+are not accurately estimated since a vertex is not created until the algorithm
+has processed edges up to the boundary of the tolerance band.
+</p><p>
+Figure 6.6: Tolerance band for fitting line segments.
+</p>
+
+
+<h3>6.4.3 Split and Merge</h3>
+<p>
+
+The top-down method of recursive subdivision and the bottom-up method
+of merging can be combined as the split and merge algorithm. Splitting
+and merging methods are only partially successful when used by themselves,
+but the accuracy of line segment approximations to a list of edges can be
+improved by interleaving merge and split operations. Figure 6.7 shows an
+example where a split followed by a merge can repair a badly placed vertex.
+</p><p>
+The basic idea is to interleave split and merge passes. After recursive
+subdivision, allow adjacent segments to be replaced by a single segment be-
+tween the first and last end points if the new segment fits the edges with
+less normalized error. Note that it is necessary to use normalized error since
+multiple lime segments will always fit a list of edges with less error than for
+a single line segment. After segment merging, the new segment may be split
+at a different point. Alternate applications of split and merge continuc until
+no segments are merged or split.
+
+
+Figure 6.7: A bad corner estimate produced by a bottom-up edge merge that
+missed the true corner location can be repaired by split and merge passes
+that split the first segment at a point closer to the true corner and then
+merge the two segments into a single line segment.
+</p>
+<h3>6.4.4 Hop-Along Algorithm</h3>
+<p>
+The hop-along algorithm approximates a contour by a sequence of line seg-
+ments, like the split and merge method described above, but works on short
+sublists of edges. The algorithin starts at one end of a list of edge points,
+grabs some fixed number of edges, and fits a line segment between the first
+ancl last edge points. If the fit is bad, the algorithm does a split at the point
+of maximum error and repeats with the seement closest to the beginning of
+the run. In other words, the algorithm falls back until it finds a good line
+segment approximation to some initial sequence of edges. The algorithm
+makes the current scgment the previous segment, and continues with the re-
+maining cdge points. The algorithm also checks to see if the current segment
+can be merged with the previous segment. The algorithm is like a split and
+merge algorithm, but it does not start with the entire list of edges and does
+not waste time doing lots of splits. The algorithm hops along, working on
+modest-sized runs of edges. The algorithm is given as Algorithm 6.1.
+
+</p><p>
+Algorithm 6.1 Hop-Along Algorithm for Polyline Fitting
+1. Start with the first k edges from the list.
+2. Fit a line segment between the first and last edges in the sublist.
+
+3. If the normalized maximum. error is too large, shorten the sublist to the
+point of maximum error. Return to step 2.
+
+4. If the line fit succeeds, compare the orientation of the current line seg-
+ment with that of the previous line segment. If the lines have similar
+orientations, replace the two line segments with a single line segment.
+
+5. Make the current line segment the previous line segment and advance
+the window of edges so that there are k edges in the sublist. Return to
+
+step 2.
+</p><p>
+The algorithm hops along, advancing the window of edges by a constant
+k. If the fit of a line segment to the edges is not good enough, the algorithm
+falls back to the point of maximum error. Since the algorithm considers only
+a short run of edges, it is more efficient than pure recursive subdivision or
+the split and merge algorithm, which would start with the entire list of edges
+and waste a lot of time splitting the edge list into manageable pieces.
+</p>
+<h2>6.5 Circular Arcs</h2>
+<p>
+After a list of edges is approximated by line segments, subsequences of the line
+segments can be replaced by circular ares if desired. Replacing line segments
+by circular ares involves fitting circular arcs through the end points of two or
+more line segments. In other words, circular are fitting is done on the vertices
+in the polyline. Representing the contour as a scquence of line segments
+and circular arcs breaks the contour into sections with piccewise constant
+curvature. Many image analysis algorithms use curvature information.
+</p><p>
+Just as we derived the implicit formula for the line segment between two
+points, we need to derive the implicit formula for a circle through three
+points. The implicit equation for a circle with radius r and center (29, yo) is
+
+(2 — ap)? + (y — yo)? = 7°. (6.13)
+
+
+Consider three points py = (1,41), Po = (2, ye), and pz = (23, ys). Trans-
+form the origin of the coordinate system to point p,. In the new coodinate
+system,
+
+goi= 2-2 (6.14)
+yo =y-m (6.15)
+
+and the equation for the circle is
+(a! — 6)? + (y' ~ yy)? =r? (6.16)
+
+Substitute the coordinates in the 2’-y’ space for the points p1, po, and ps in
+the implicit equation for a circle:
+
+zy + yy 7? = 0 (6.17)
+ay — 2ayey + ay + yy — 2yy¥y + yy — 7? = 0 (6.18)
+ay — ese, + oy + yf — yey tus 7 = 0 (6.19)
+
+This yields three nonlinear equations for the three unknowns x0', y0', and r.
+
+</p><p>
+Subtract the first equation from the second and third equations:
+
+Qxhat + Quy, = af + yf (6.20)
+Qeyey + yyy = af + yf (6.21)
+
+This yields two linear equations in the two unknowns zj and yj, which are
+the coordinates of the center of the circle in the 2’-y’ space. Add (x1, 41)
+to (x, yh) to get the center of the circle in the original coordinate system.
+Compute the radius of the circle from r? = af + y@.
+</p><p>
+To calculate the error in fitting a circular arc, define the distance of point
+Q from the circle as the distance of @ from the circle along a line passing
+through the center of the circle. Let the radius of the circle be r. Compute
+the distance g with coordinates (2x;, y;) from point @ to the center (xo, yo) of
+
+the circle:
+q = (ai — 20)? + (vi = Yo)? (6.22)
+
+The distance from point Q to the circular arc is
+
+d=q-r (6.23)
+
+</p><p>
+Now that we have a formula for fitting a circular arc to three points, we
+need a method for evaluating the goodness of fit so we can determine whether
+or not the circular arc is a better approximation to the edges than the linc
+segments. If the ratio of the length of the contour to the distance between the
+first and last end points is more than a threshold, then it may be possible to
+replace the line segments with a circular are. The circular arc is fit between
+the first and last end points and one other point. There are several methods
+for fitting a circular arc to a sequence of polylines, depending on how the
+middle point is chosen:
+
+1. Use the polyline vertex that is farthest from the line joining the first
+and last end points.
+
+2. Use the edge point that is farthest from the linc joining the first and
+last end points.
+
+3. Use the polyline vertex that is in the middle of the sequence of vertices
+between the first and last end points.
+
+4. Use the edge point that is in the middle of the list of edges between
+the first and last end points.
+
+Calculate the signed distance between all edge points and the circular arc.
+Compute the maximum absolute error and the number of sign changes. If
+the normalized maximum error is below a threshold and the number of sign
+changes is large, then accept the circular arc; otherwise, retain the polyline
+approximation. The algorithm for replacing linc segments with circular arcs
+is outlined in Algorithin 6.2.
+</p><p>
+Algorithm 6.2 Replacing Line Segments with Circular Arcs
+
+1. Initialize the window of vertices to the three end points of the first two
+Line segments in the polyline.
+
+2. Compute the ratio of the length of the part of the contour corresponding
+to the two line segments to the distance between the end points. If the
+ratio is small, then leave the first line segment unchanged, advance the
+
+WINONA TILEY OC ETE, CCUG A ey,
+
+3. Fit a circle through the three vertices.
+
+4. Calculate the normalized maximum error and number of sign changes.
+
+5. If the normalized mazrimum error is too large or the number of sign
+changes is too small, then leave the first line segment unchanged, ad-
+vance the window of vertices, and return to step 2.
+
+6. If the circle fit succeeds, then try to include the next line segment in
+the circular arc. Repeat this step until no more line segments can be
+subsumed by this circular arc.
+
+7. Advance the window to the nezt three polyline vertices after the end of
+the circular are and return to step 2.
+</p><p>
+After running Algorithm 6.2 over the polyline, the contour will be rep-
+rescnted by a sequence of line segments and circular ares. It may be incon-
+venient to have two different curve primitives in the representation. In the
+next section, we will present conic sections, which allow line segments, cir-
+cular ares, and other primitives to coexist in the same representation. Conic
+sections also provide smooth transitions between sections, if desired, as well
+as the explicit representation of corners.
+</p>
+<h2>6.6 Conic Sections</h2>
+<p>
+This section describes how to approximate lists of edge points with conic
+sections. As with circular arcs, the method assumes that the edge points are
+first approximated by a polyline and replaces subsequences of line segments
+by conics.
+</p><p>
+The implicit (algebraic) form of a conic is
+
+fla,y) = ax? + Qhay + by" + 2ex + 2gy+e= 0. (6.24)
+
+There are three types of conic sections: hyperbolas, parabolas, and ellipses.
+Circles are a special case of ellipses. Geometrically, conic sections are defined
+by intersecting a cone with a plane as shown in Figure 6.8.
+</p><p>
+Conic sections can be fit between three vertices in the polyline approxi-
+mation to a contour. The locations where conic sections are joined are called
+knots. Conic splines are a sequence of conic sections that are joined end to
+end, with equal tangents at the knots to provide a smooth transition be-
+tween adjacent sections of the curve. Let the polyline vertices be V;. The
+conic approximation is shown in Figure 6.9.
+</p><p>
+Figure 6.8: Conic sections are defined by intersecting a cone with a plane.
+
+
+</p><p>
+Each conic section in a conic spline is defined by two end points, two
+tangents, and one additional point. The knots A; can be located between
+the vertices of the polyline:
+
+where v; is between 0 and 1. The tangents arc defined by the triangle with
+vertices Vj, Viei, and Vj42. The additional point is
+
+A= WVini + 1 — ne (6.26)
+as shown in Figure 6.10.
+</p><p>
+There are several special cases of the conic section that can be handled
+in a uniform way by this representation. If y,4, = 0, then the ith section of
+the conic spline is the line segment from A; to Viai. lf = 1 and 421 = 0,
+then Aj, Ay41, and ¥j41 collapse to the same point and there is a corner in
+the sequence of conic sections. These special properties allow line segments
+and corners to be represented explicitly in a conic spline, without resorting
+
+to different primitives or special flags.
+</p><p>
+The algorithm presented here for computing conic splines uses the guided
+form of a conic section, which represents a conic section using three lincs that
+
+
+
+</p><p>
+Figure 6.9: Conic sections are approximations defined between three points.
+</p><p>
+
+Figure 6.10: A conic section is defined by the two end points and tangents ob-
+tained from three vertices of the polyline approximation, plus one additional
+point.
+</p><p>
+Figure 6.11: The guided form for a conic.
+
+bound the conic. (See Figure 6.11.) The equation of a line is
+ag + ayx + agy = 0. (6.27)
+
+Let the first and last vertices in a polyline be A and B, and let point C be
+an intermediate vertex in the polyline. The first and last vertices are joined
+by the chord AB. The guided form of conic is the family of conics with end
+points al A and B and tangents AC’ and BC defined by the equation
+
+(ap + aya + agy) (bo + bie + boy) = plug + me + uy)’, (6.28)
+
+where
+ay + ax + agy = 0 (6.29)
+
+is the linc containing the line segment AC,
+bo + bye + boy =0 (6.30)
+is the line containing the line segment BC’, and
+
+ug tue tuy =0 (6.31)
+
+is the line containing the chord AB. The family of conic sections is parame-
+terized by \(\rho\)
+
+</p><p>
+The algorithm for fitting a conic section to a list of edge points starts
+with a polyline and classifies the vertices as corners, soft vertices, or knots.
+Soft vertices have angles near 180°, and the adjaccut linc seginents are nearly
+collinear and may be replaced with a conic section. A sequence of soft. vertices
+corresponds to a sequence of line segments with gradually changing orien-
+tation that most likely were fitted to cdge points sampled along a smooth
+curve. Corners have vertex angles above 180° + 7) or below 180° — T,, where
+T, is a threshold, and are unlikely to be part of the conic. Knots are placed
+along a line segment that has soft vertices at either end that are angled in
+opposite directions. A conic section cannot have an inflection, so two conic
+sections must be joined at the knot. The placement of the knot along the
+line segment is determined by the relative angles of the soft vertices at the
+ends of the line segment. Let the angles of the two soft vertices V¥; and Vi+i
+be A; and Aj;.1, respectively. If A; = Ajit, then the knot is placed halfway
+between the vertices, which means that y = 1/2 in Equation 6.25. If the an-
+gles are not the same, then the knot location should be biased away from the
+vertex with the larger angle, since the conic may not bend away from the line
+segment fast enough to follow the corner. The value for v in Equation 6.25
+can be set using the formula
+= At
+~ Ay + Ag’
+
+</p><p>
+Each sequence of line segments joined by soft vertices is replaced by a
+guided conic through the first and last vertices (or knots). The tangents are
+defined by the orientation of the first and last line segments. The tangents
+and end points determine four of the five degrees of freedom for the conic.
+The conic is fully specified by having it pass through the soft vertex in the
+middle of the sequence.
+
+(6.32)
+
+</p>
+<h2>6.7 Spline Curves</h2>
+<p>
+The term spline refers to a function represented using piecewise polynomials.
+Splines occur in many applications. In data analysis, splines are used to fit
+a set of data points when no function model is available [245]. In computer
+graphics and computer-aided design, splines are used to represent free-form
+curves. In machine vision, splines provide a general-purpose representation
+for curves when no simpler model is adequate.
+</p><p>
+
+A spline can be made from any class of functions joined end to end.
+The most common form of spline is the cubic spline, which is a sequence of
+piecewise cubic polynomials. The curve representations presented in previous
+sections, such as sequences of line segments, circular arcs, and conic sections,
+are other examples of splines. Cubic splines allow more complex curves
+to be represented using fewer spline segments. Cubic splines are widely
+used in computer drawing programs for frec-form curves aud for representing
+character outlines in fonts. Since cubic splines are so widely used, it may be
+necessary for a machine vision program. to fit this curve modcl to an edge list.
+Since interactive graphics interfaces for manipulating cubic spline curves are
+well known, a contour represented as a cubic spline can be modified manually
+by the user if necessary. This is a very important consideration, since the
+results of fitting a curve to edges may never be perfect.
+</p><p>
+One point to make clear is the difference between geometric and para-
+metric equivalence. Two curves are geometrically equivalent if they trace
+the same set of points. In other words, the two curves are geometrically
+equivalent if they correspond to the same shape (or set of points) in space.
+Two curves are parametrically equivalent if their equations are identical. In
+other words, two curves are parametrically equivalent if their representation
+uses the same formula with the same parameters. Parametric equivalence is
+stronger than geometric equivalence.
+</p><p>
+Two curves can be geometrically equivalent but have different parametric
+representations. This is an important concept for fitting curves in machine
+vision. A machine vision system might produce a representation bascd on
+cubic splines thal is very close (geometrically) ta the true representation of
+an object boundary, but the representation may not be at all similar in a
+parametric sensc. Tn applications such as object recognition or comparing
+the image of an industrial part with its model, it is not possible to compare
+the parametric forms of the cubic spline curves. The comparison must be
+based on geometric equivalence.
+</p><p>
+Cubic splines have cnough degrees of freedom to allow the orientation of
+edge fragments to be used in the approximation. Recall that most edge de-
+tection algorithms can provide estimates of edge orientation (gradient angle)
+as well the position of the edge. Only the positions of edges were used in the
+algorithms for fitting line seginents, circular arcs, and conic sections. With
+
+cubic splines, we can introduce an example of how to use the orientation
+information produced by an edge detector.
+
+
+The equation for a cubic curve in the plane is
+P(t) = (e(u), y(u)) = ao + aut agu’ + age’, (6.33)
+
+where the coefficients ag, a1, a2, and az are two-element vectors (points in the
+image plane} and the parameter u covers the interval [0,1]. The cubic curve
+begins at point p(0) = (#(0}, y(0)) and ends at point p(1) = (z{1), y(1)}). The
+cubic spline is a sequence of cubic curves p,(w), po(u),...,p,(z), defined over
+successive intervals [0,1], [1,2],...,[m%—1,n] and joined at the end points so
+that p,(¢) = p,,,(¢). Each of the cubic curves in the spline is called a spline
+segment, and the edge points where the segments are joined are called knots.
+</p><p>
+As with the curve fitting algorithms prescnted in previous scctions, the
+sequence of edge points is partitioned into subsequences and a spline segment
+is fit to each subsequence. Each cubic curve segment in the spline requires
+eight parameters. The positions of the first and last edge points in the
+subsequence provide four constraints. First-order continuity (equal tangent
+vectors) at the knots provides two more constraints. The orientation of the
+edges at the knots provides only one additional constraint on each segment,
+since the edge is shared by adjacent segments. Second-order continuity (equal
+curvature) at the knots would provide two more constraints, but then there
+would be too many equations for the eight parameters of each cubic spline
+segment.
+</p><p>
+It is important for the spline segments to be joined smoothly at the knots,
+and this is achieved in computer graphics by requiring second-order conti-
+nuity. Requiring second-order continuity would overconstrain each spline
+segment, since the segments are already constrained to pass through selected
+edges with the orientation (tangent angle} constrained by the orientation of
+the edge; but one additional constraint can be provided by minimizing the
+magnitude of the second-order discontinuity at the knot. In other words,
+minimize the difference in curvature at the knots.
+</p><p>
+For the entire cubic spline curve, minimize the sum of the squared mag-
+nitude of the difference in the second derivative at the n — 1 knots:
+
+nal
+
+x= YO (AB), (6.34)
+
+i=1
+
+where the difference in the second derivatives of two spline segments at their
+common knot is
+210 CHAPTER 6. CONTOURS
+
+Ap = B_1(1) — B,(0) (6.35)
+=2 (tia + dt; + tia + 30; — P,)) . (6.36)
+
+The variable t; is the tangent vector at knot i. The tangent vector has an
+orientation t; given by the edge orientation (gradient angle) and a signed
+magnitude +; which is unknown:
+
+ty = ti. (6.37)
+
+In other words, the orientation of an edge at the knot is modeled as a unit
+tangent vector, but the cubic spline requires a tangent with sign and magni-
+tude to indicate from which direction the curve should pass through the knot
+and at what speed. The algorithm solves a system of linear cquations for the
+n unknowns y; which provide the missing information for constructing the
+cubic spline segments between the knots.
+
+This algorithm docs not have any additional parameters or thresholds,
+but, as with the algorithms for fitting polylines, circular arcs, and conics
+presented in previous sections, the knots must be chosen from the edge list.
+The knot locations can be determined by using any of the polyline algorithms
+described above to compute a polyline approximation to the contour. The
+polyline vertices can be used as the knot Jocations. The number and place-
+ment of knots can be adjusted to improve the fit of the cubic spline to the
+entire set of edge points.
+
+The cubic spline fitting algorithm is very efficient, since the solution only
+requires solving a small system of linear equations for the tangent sigus and
+magnitudes. There are many interactive graphics interfaces that allow the
+user to easily adjust the cubic spline curve, if necessary.
+
+6.8 Curve Approximation
+
+The curve fitting methods described in previous sections interpolated the
+curve through a subset of the edges. Higher accuracy can be obtained by
+computing an approximation that is not forced to pass through particular
+
+ll
+6.8. CURVE APPROXIMATION 211
+
+This section presents methods for approximating a curve. There are sev-
+eral ways to approximate curves, depending on the reliability with which
+edge points can be grouped into contours. If it is certain that all of the
+edge points linked into a contour actually belong to the contour, then total
+least-squares regression can be used to fit a curve to the edge points. If some
+grouping errors are present, then robust regression methods can be used for
+computing the curve approximation. Finally, if the grouping of edges into
+contours is very unreliable, or if the edges are so scattcred that grouping
+cannot be easily done using the edge linking or following methods discussed
+previously, then cluster analysis techniques must be used to perform group-
+ing and curve fitting simultaneously. An cxcellent cxample of an algorithm
+for grouping and fitting scattercd edge points is the Hough transform. All of
+these methods will be presented in the following sections.
+
+The methods for fitting line segments, circular arcs, conic sections, and
+cubic splines to edge points presented in Sections 6.4 through 6.7 are trivial
+regression problems that fit curve segments between end points. These algo-
+rithms assume that the edge locations can be accurately computed, possibly
+using subpixel methods, Edge points in between the end points were not used
+in the regression. The accuracy of the curve approximation is determined by
+the accuracy of the location of the edge points chosen as the segment end
+points. The methods presented in this section will use all of the edge points
+to calculate the best approximation of the curve to the edge points.
+
+The general curve fitting problem is a regression problem with the curve
+modeled by the implicit equation
+
+F(@,Y; G1, @2,..- Ap) = 0 (6.38)
+
+with p parameters. The curve estimation problem is to fit the curve model
+to a set of edge points {(a1, yi), (©2, y2),-+ +) (fn, Yn) fe
+
+In the noise-free case, one can use p observations to formulate p equations
+for the p unknown curve parameters. Unfortunately, in most applications this
+direct approach is not suitable due to noise. Real applications usually require
+the best estimate of the parameter values using all of the information in the
+edge list.
+
+The next section will cover least-squares regression as it is used for curve
+fitting in machine vision. Least-squares methods are appropriate when the
+errors are normally distributed. Section 6.8.3 will present robust methods
+212 CHAPTER 6. CONTOURS
+
+for curve fitting that are useful when somc of the cdge points have been
+incorrectly linked into the contour. These incorrectly assigned points are
+called outliers.
+
+6.8.1 Total Regression
+
+Classical linear regression minimizes the difference between a data point and
+the model in only one dimension, the dimension of the dependent variable.
+For example, a functional model of the form
+
+y = f(x,aq,..., a) (6.39)
+
+relating the dependent variable y to the independent variable zx, with the
+p model parameters a; through @,, assumes that there are no errors in the
+independent variable x. In machine vision, crrors in the x and y coordinates
+of location are equally likely and the curve model may be a vertical line, for
+instance, which cannot be represented in functional form. In machine vision,
+lines and other curve models are fitted to edges using total regression, which
+minimizes the sum of the squares of the perpendicular distances of the data
+points from the regression model. The advantage of this technique is that it
+compensates for errors in both the ¢ and y directions. Total regression has
+actually already been presented in Chapter 2 where it was used to derive the
+equations for determining the orientation of a blob, although the term total
+regression was not used at the time.
+
+To avoid problems when the line is vertical, represent the equation for a
+line by using polar coordinates:
+
+xcos@+ysinéd —p=0. (6.40)
+
+Minimize the sum of the squared perpendicular distances of points (2;, y,)
+from the line:
+x° = So (a; cos # + y, sin O — p)?. (6.41)
+
+a
+
+The solution to the total regression problem is
+
+p= #cosé + ysind (6.42)
+6.8. CURVE APPROXIMATION 213
+
+with
+zaty 6.43
+as ea
+1 nr
+y= nh (6.44)
+
+The orientation of the total regression line is #, given by
+
+tan 20 = i (6.45)
+
+with
+a= 25> ay (6.46)
+
+i=l
+b= Sah - Sy? (6.47)
+i=l i=L
+
+and
+
+Y=u-$. (6.49)
+
+Total regression uses a least-squares error norm that is optimal if the
+errors are from a normal distribution, but is not suitable if there are outliers
+present in the data. In the case of fitting a curve model to edge data, outliers
+would occur if the edge linking procedure incorporated one or more edges
+from other contours into the edge list for a contour. Outlicrs can occur even
+if the edge linking procedure performs flawlessly. For example, consider a
+list of edges from two adjacent sides of a rectangle. The corner must be
+identified in order to segment the edges into the two sides before fitting a
+line to the edges. If the corner point is not identified correctly, some edges
+may be assigned to the wrong side, and these edges are outliers.
+
+In general, errors in classification introduce errors into the regression
+problem that are not normally distributed. In such a case, the errors may
+be modeled by a mixture distribution that combincs a Gaussian distribution
+for modeling the normal errors with a broad-tailed distribution for modeling
+the outliers due to imperfect classification.
+214 CHAPTER 6. CONTOURS
+
+6.8.2 Estimating Corners
+
+The best method for estimating corners is to use onc of the methods for fitting
+a line to edge points and then compute the intersection of the lincs. This
+method compensates for the crror introduced by cdge detection opcrators
+that round off the corners and is more accurate than using a corner detector
+which only uses local information.
+
+Given the implicit equations for two lines,
+
+axrthyt+ea = 0 (6.50)
+aga + boy ten = 0, (6.51)
+the location of the intersection is
+cya — CaQy
+= 6.52
+¥ abo _ agby, ( ° )
+Coby — ede
+= ——. 6.53
+* ay bg _ agby ( )
+
+If ayb. — aod, is close to zero, then the lines are nearly parallel and cannot
+be intersected.
+
+A good method for detecting corners is to try to fit pairs of lines over suc-
+cessive sublists of 2n +m edge points along the contour. The parameter n is
+the number of edge points required for an accurate line fit, and the parameter
+m is the number of edge points to skip between the sides of the corner. The
+gap skips over the edge points in the rounded part of the corner. A corner is
+detected by testing the magnitude of aib, — agb, against a threshold.
+
+6.8.3 Robust Regression
+
+If the errors are not from a normal distribution, then least-squares is not
+the best fitting criterion. Figure 6.12 shows an example of the problems
+encountered by least-squares regression when the data set contains outliers.
+Even a single outlier is enough to pull the regression line far away from its
+correct. location. Robust regression methods try various subsets of the data
+points and choose the subset that provides the best fit.
+
+Thc sll ATIVE NTE
+
+clear. Imagine that you want to find the center of mass of a sct of points
+6.8. CURVE APPROXIMATION
+
+215
+
+Least-squares regression
+
+Least-median-squares
+
+Figure 6.12: Hlustration of the difference between fitting a curve using least-
+squares regression and fitting a curve using robust methods to a data set that
+
+contains outliers.
+
+Figure 6.13: A physical analogy that illustrates the sensitivity of least-squares
+methods to outliers. Even a single outlier renders a least-squares solution
+
+useless.
+216 CHAPTER 6. CONTOURS
+
+in the plane. Attach springs with equal spring constants to the fixed points
+and to a small object that can move freely. The object will be pulled to
+the average of the locations of the points. The springs implement a lcast-
+squares norm through the spring equation for potential energy. This physical
+analogy corresponds to the derivation of the calculation of an average from
+the criterion that the sum of the squares of the residuals, the differences
+between each point and the average, should be minimized. Now suppose
+that one of the points can be moved. Call this point a leverage point. It is
+possible to force the location of the average to be shifted to any arbitrary
+point by pulling the leverage point far enough away. This illustrates the
+extreme sensitivity of estimators based on least-squares criteria to outliers.
+Even a single outlier can ruin an estimate. Ideally, one would like to break
+the spring connected to an outlier so that the estimate remains unharmed.
+Changing the spring constants so that points that are far away exert little
+influence on the estimate corresponds to the implementation of robust estima-
+tors based on influence functions. Breaking the springs attached to outliers
+corresponds to resampling schemes where a consistet subset of samples is
+determined. Resampling plans repeatedly draw random subsets and choose
+the subset that yields the best estimate. Examples of resampling algorithms
+include random sample consensus, least-median-squares regression, and other
+computer-intensive methods in regression.
+
+The spring analogy also extends to linear regression with the same con-
+clusions: even a single outlier will distort the regression estimate. A linear,
+multivariate model of order n is represented by the equation
+
+for the ¢th data point, where 6; are the estimates of the model parameters 6;.
+The residual for cach data point (the deviation of the data point from the
+estimated model) is 7; = y; — y%;. In least-squares regression, the estimates of
+the modcl paramcters are given by minimizing the sum of the squares of the
+residuals:
+
+min Sor}. (6.55)
+@ Gel
+As demonstrated by the spring analogy described above, the model parame-
+
+ters can be arbitrary if only one of the data points is an outlier.
+
+| ture deere
+Often, the noise and outlicrs can be modeled as a mixture distri ato: a
+linear combination of a normal distribution to model the noise and a broad-
+6.8. CURVE APPROXIMATION 217
+
+tailed distribution to account for outliers. In this case, it makes sense to
+formulate an estimator with a norm that resembles a lcast-squares norm for
+small errors but is insensitive to large errors so that outliers are ignored. This
+is called the influcnce function approach.
+
+The breakdown point is the smallest percentage of data points that can
+be incorrect to an arbitrary degree and not cause the estimation algorithm
+to produce an arbitrarily wrong estimate [207]. Let Z be a sct of n data
+points. Suppose that the sct Z’ is a version of sct Z with m points replaced
+with arbitrary values. Let a regression estimator be denoted by @ = T(Z).
+The bias in an estimate due to outliers is given by
+
+Bias = sup || T(Z') — T{(Z) || . (6.56)
+zi
+
+The idea behind the breakdown point is to consider what happens to the bias
+as the number of outlicrs m as a percentage of the number of data points
+n is increased. Since the data points can be replaced with arbitrary values,
+for some ratio of m to n the bias can potentially be unbounded. This is the
+breakdown point. Below the breakdown point, the regression estimator may
+be ablc to totally reject outliers, or the outliers may have only some small
+effect on the estimate. Beyond the breakdown point, the outliers can drive
+the estimator to produce an arbitrary answer in the sense that the answer
+will depend on the outliers and not on the legitimate data. In other words,
+the result provided by the estimator is unpredictable. The breakdown point
+is defined as
+e = min {m : Bias(m;T, Z) is infinite} . (6.57)
+
+For least-squares regression, ¢~ = 1/n, and in the limit as the number of data
+points becomes large, «&, = 0. In other words, least-squares regression has
+uo immunity to outliers; a single outlier can completely ruin the result.
+
+Least-median-squares regression is a very simple technique to implement
+and has proven to be very powerful in solving regression problems when there
+is a large percentage of outliers. Least-median-squares regression can tolerate
+up to 50 percent outliers in a data set. What this means is that up to half of
+the data points in a data set can be arbitrary without significantly affecting
+the regression result.
+
+In least-median-squares regression, the estimates of the model parameters
+218 CHAPTER 6. CONTOURS
+
+Algorithm 6.3 Least-Median-Squares Regression
+Assume that there are n data points and p parameters in the linear model.
+
+1. Choose p points at random from the set of n data points.
+2. Compute the fit of the model to the p points.
+3. Compute the median of the square of the residuals.
+
+The fitting procedure is repeated until a fit is found with sufficiently small me-
+dian of squared residuals or up to some predetermined number of resampling
+steps.
+
+are given by minimizing the median of the squares of the residuals:
+
+min med rp. (6.58)
+8
+The least-median-squares algorithm is described in Algorithm 6.3.
+
+The median has a 50 percent breakdown point, and this property carries
+over to least-median-squares regression [207]. In other words, cven if as many
+as half of the data points are outlicrs, the regression estimate is not seriously
+affected. If more than 50 percent of the data points are outliers, then least-
+median-squares regression may not work well, and more powerful techniques,
+such as the Hough transform, must be used.
+
+6.8.4 Hough Transform
+
+The last few years have seen increasing use of parameter estimation tech-
+niques that use a voting mechanism. One of the most popular voting meth-
+ods is the Hough transform. In the Hough transform, each point on a curve
+votes for several combinations of parameters; the parameters that win a ma-
+jority of votes are declared the winners. Let us consider this approach for
+fitting a straight line to data. Consider the equation of a straight line:
+
+y=met+e. (8.59)
+
+In the above equation, x and y are observed values, and m and ¢ represent
+
+the parameters. | (, d. | |, parametcrs are given, |, ttl
+6.8. CURVE APPROXIMATION 219
+
+0 a 0 a
+
+Figure 6.14: Image-to-parameter space mapping of a point in the Hough
+transform.
+
+between the coordinates of the point is clearly specified. Let us rewrite the
+
+above equation as
+c=—rmty. (6.60)
+
+Now, in the above equation, Ict us assume that m and c are variables of
+interest, and x and y are constants. The equation above represents a straight
+line in the m-e space. The slope and intercept of this line are determined
+by 2 and y. A point (x, y) corresponds to a straight line in m-c space. This
+mapping is shown in Figure 6.14, It should be mentioned here that the shape
+of the curve in the parameter space depends on the original function used to
+represent the curve. In practice, the polar form of the line
+
+p= xcos@+ ysin@ (6.61)
+
+is used rather than the explicit form to avoid problems with lines that are
+nearly vertical. Edge points (x,y) are mapped into the (p,@) parameter
+space.
+
+In the case of a straight line, as represented above, if there are n points
+lying on this straight line, then these points will correspond to a family of
+straight lines in the parameter space, as shown in Figure 6.14. All these lines
+will pass through the point (m,c} in the parameter space. ‘This point gives
+the parameters of the original straight line.
+220 CHAPTER 6. CONTOURS
+
+Algorithm 6.4 Hough Transform Algorithm
+1. Quantize the parameter space appropriately.
+
+2. Assume that each cell in the parameter space is an accumulator. Ini-
+tialize all cells to sera.
+
+3. For each point (x,y) in the image space, increment by 1 each of the
+accumulators that satisfy the equation.
+
+4. Maaima in the accumulator array correspond to the parameters of model
+instances.
+
+If we are interested in finding the straight line that best fits n points in
+an image, then we can use the above mapping from the image space to the
+parameter space. In this approach, called the Hough transform, we repre-
+sent the parameter space as an array of accumulators, representing discrete
+parameter values. Each point in the image votes for several parameters, ac-
+cording to the transformation equation. ‘lo find parameters that characterize
+the line, we should detect peaks in the parameter space. This general idea is
+highlighted in Algorithm 6.4.
+
+The Hough transform does not require prior grouping or linking of the
+edge points, and the edge points that lie along the curve of interest may
+constitute a small fraction of the edges in the image. In particular, the
+number of edges that actually lie along the curve could be less than half of
+the number of edges in the scene, which would rule out most robust regression
+methods. The assumption behind the Hough transform is that in the presence
+of large amounts of noise, the best that can be donc is to find the point in the
+parameter space that satisfies the maximum number of cdges in the image.
+If the peak in the parameter space covers more than one accumulator, then
+the centroid of the region that contains the peak provides an estimate of the
+parameters.
+
+ff there are several curves in the image that are matched by the model,
+then there will be several peaks in the parameter space. It is possible to detect
+each peak, remove the edges associated with the curve instance corresponding
+
+to the peak, and continue to detect the remaining curves, until the peaks are
+1
+
+not doatteant Vlowever. IK can ke 1 ealt to determine vibelher a peak is
+
+significant.
+6.8. CURVE APPROXIMATION 221
+
+Another problem with the Hough transform is that the size of the discrete
+paramcter space increases very quickly as the number of parameters increases.
+For a circular arc, the parameter space has three dimensions; for other curves
+the dimensionality may be even higher. Since the number of accumulators
+increases exponentially with the dimension of the space, the Hough transform
+may be computationally very inefficient for complex models. Several methods
+have been suggested to improve the performance of the Hough transform.
+One method uses gradient information for boundaries to reduce work in the
+parameter space. Suppose that the curve model is a circle. This model
+has three parameters: two parameters for the center of the circle and one
+parameter for the radius of the circle. If the gradient angle for edges is
+available, then this provides a constraint that reduces the number of degrees
+of freedom and hence the required size of the parameter space. The direction
+of the vector from the center of the circle to cach edge is determined by
+the gradicnt angle, leaving the value of the radius as the only unknown
+parameter. There are othcr methods that may be used to reduce the size of
+the paramcter space.
+
+The details of using the gradient angle to reduce the size of the parameter
+space are explained for circle fitting. The algorithm is detailed in Algorithm
+6.5. The implicit equation for a circle is
+
+(2 —a)? +(y— bY =7". (6.62)
+
+The parametric equations for a circle in polar coordinates are
+z = at+rcosd (6.63)
+y = b+rsind. (6.64)
+
+Solve for the parameters of the circle to obtain the equations:
+
+a= e—rcosé (6.65)
+b = y—rsiné. (6.66)
+Given the gradient angle @ at an edge point (x, y), compute cos@ and sin é.
+
+Note that these quantities may already be availabic as a by-product of edge
+detection. Eliminate the radius from the pair of equations above to yield
+
+b=atané6—xtanOt+y. (6.67)
+222 CHAPTER 6. CONTOURS
+
+Algorithm 6.5 Circle Fitting Algorithm
+
+1. Quantize the parameter space for the parameters a and b.
+2. Zero the accumulator array M(a, 6).
+8. Compute the gradient magnitude G(x, y) and angle 6(z,y).
+
+4. For each edge point in G(z, y), increment all poinis in the accumulator
+array M(a,b) along the line
+
+b=atané —xrtand+ y. (6.68)
+
+5. Local maxima in the accumulator array correspond to centers of circles
+in the image.
+
+This is the equation for updating the accumulators in the parameter space.
+For each edge point at position (x, y) with edge oricntation 8, increment the
+accumulators along the linc given by Equation 6.67 in the (a, 8) parameter
+space.
+
+If the radius is known, then it is only necessary to increment the accu-
+mulator for the point {a, b) given by
+
+a= x2—rcosé (6.69)
+b = y—rsiné. (6.70)
+
+It is not necessary that the curves to be detected by the Hough transform
+be described by a parametric equation. The Hough transform can be gener-
+alized into a voting algorithm (see Algorithm 6.6) that implements template
+matching efficiently.
+
+Algorithm 6.6 encodes the shape of the object boundary in a table for
+efficient access. One point on the object is chosen as the reference point. By
+definition, the location of the reference point in the image is the location of
+the object. For each image gradient point at (x, y) with gradient angle 6, the
+possible locations of the reference point are given by
+
+a = x—7(8)cos(a(6)) (6.71)
+b = y—r(9)sin(a(6)). (6.72)
+6.9. FOURIER DESCRIPTORS 223
+
+Algorithm 6.6 Generalized Hough Transform
+1. Pick a reference point on the object.
+2. Compute the gradient angles 6; along the object boundary.
+
+8, For each gradient point 6;, store the distance r; and angle a; from the
+reference point,
+
+Each possible reference point location is incremented. The location of the
+peak in the parameter space is the estimate for the location of the object.
+It is not easy to generalize this technique to incorporate changes in scale or
+rotation.
+
+6.9 Fourier Descriptors
+
+Since the position along a closed contour is a periodic function, Fourier series
+may be used to approximate the contour. The resolution of the contour
+approximation is determined by the number of terms in the Fourier series.
+
+Suppose that the boundary of an object is expressed as a sequence of
+coordinates u(n) = [z(n), y(n)}], for n = 0,1,2,..., N — 1. We can represent
+each coordinate pair as a complex number so that
+
+u(n) = a(n) + J u(r) (6.73)
+
+for n = 0,1,2,...,N —1. In other words, the x axis is treated as the real
+axis, and the y axis is treated as the imaginary axis of a serics of complex
+uumbers. Note that for a closed boundary, this sequence is periodic with
+period N and that now the boundary is represented in one dimension.
+
+The diserete Fouricr transform (DFT) representation of a one-dimensional
+sequence u(n) is defined as
+
+uln) = > a(k)eoF*, O<n<N-1 (6.74)
+k=0
+1 N=1 —j3ekn r
+
+alk) = 53 Dou(nje*™, O<k<N-1. (6.75)
+224 CHAPTER 6. CONTOURS
+
+The complex coefficients a(k) are called the Fourier descriptors of the bound-
+ary.
+
+Fourier descriptors are compact representations for closed contours. How-
+ever, low-resolution approximations, using only the low-order terms in the
+series, can be used as an even more compact representation. If only the first
+M coefficients are used, which is equivalent to setting a(k) = 0 fork > M—1,
+the following approximation to u(n)} is obtained:
+
+M-1 omhn
+Bln) = SD ake ¥", O<n<N-1 (6.76)
+k=0
+
+Although only M terms are used to obtain cach component of the boundary
+u{n), n still ranges from 0 to N — 1. In other words, the same number of
+points are in the approximated boundary, but not as many terms are used
+in reconstructing each point.
+
+Simple geometric transformations of a boundary, such as translation, ro-
+tation, and scale, are related to simple operations of the boundary’s Fourier
+descriptors (sec Exercise 6.18). This makes the use of Fourier descriptors at-
+tractive for boundary matching. However, Fourier descriptors do have prob-
+lems with occluded shapes. There are other methods for obtaining similar
+descriptors, using other boundary representations.
+
+Further Reading
+
+The Hough transform is an efficient method for detecting lines and other
+features from imperfect edges. A discussion of generalized Hough transform
+methods is given in the paper by Ballard [18]. Generalizing the Hough trans-
+form to detect arbitrary shapes, Stockman used Hough transform techniques
+for pose clustering in 2-D and 3-D problems in object recognition and localiza-
+tion [228]. Asada and Brady [45, 10] present a rigorous approach to contour
+and region descriptors. Work on measuring the deviation from roundness of
+a circle has been reported by Van-Ban and Lee [243].
+
+The hop-along algorithm approximates a coutour by a sequence of line
+segments but works on short subsequences of edges and is given in [193].
+Curve fitting using line segments (polylines) and circular arcs is adapted
+
+Lon atl Uh sda A
+
+orientation was published by Tehrani, Weymouth, and Schunck [231).
+EXERCISES 225
+
+Algorithms for fitting a circle to three points have been developed in
+computer graphics [204].
+
+A discussion of robust regression using M-estimators is provided in nu-
+merical recipes [197, pp. 558-565]. Another robust regression technique is
+least-median-squares regression {207|. The influence function approach was
+pioneered by Huber [115, 97]. For resampling algorithms including random
+sample consensus, see [38, 80]. Least-median squares regression is discussed
+by Rousseeuw and Leroy [207], and another good source for information on
+computer-intensive methods in regression is a review article by Efron [71].
+
+The Fourier descriptor technique has becn applied to medical imagery by
+Staib and Duncan [227].
+
+Exercises
+
+6.1 What is a contour? How is it related to a region’? What does an open
+coutour represent?
+
+6.2 List the criterion you will consider in selecting a contour representation.
+Discuss the implications of these factors for object recognition.
+
+6.3 What is the difference between interpolation and approximation meth-
+ods? Which one is better?
+
+6.4 To implement rotation by n x 22.5°, one may use a chain code using 16
+directions. How can you implement such a code? Why is the 8-direction
+chain code almost always used?
+
+6.5 Theo Dg distance with respect to the origin is defined as max(z, y). Us-
+ing this measure, find the signature of the contour in Figure 6.15 by
+plotting the Dg distance as a function of pixel number. In addition, find
+the 8-dircetion chain code and difference code measured in the coun-
+terclockwise direction for the following object. Note that the starting
+point is an empty circle as opposed to a solid dot.
+
+6.6 What are the criteria for choosing the threshold for normalized max-
+imum error? (Hint: Consider the variance in the estimate of edge
+location.)
+226
+
+6.7
+
+6.8
+
+6.9
+
+6.10
+
+6.11
+
+6.12
+
+Ould
+
+CHAPTER 6. CONTOURS
+
+y
+
+8
+
+7 oe |
+
+6 = r
+
+5 ° ‘
+
+4 —e
+
+gl-t o4 4
+
+9 r’
+
+1 a o +
+
+—o— ~x
+
+(0,0) 123 45 678
+
+Figure 6.15: Contour for Exercise 6.5,
+
+Consider the method for estimating the location of a corner presented
+in Section 6.8.2. What is the valuc of ab. — ag6, when the lines are
+at right angles? What is the value when the lines mect at an angle @?
+This is the formula to use for sctting the threshold for corner detection.
+
+Consider the method for estimating the location of a corner presented
+in Section 6.8.2. Assume that the error in the x and y coordinates of
+the edge locations has a normal distribution with variance c?. What is
+the error distribution for the location of the corner? How is the error
+affected by the angle of the corner?
+
+Why is the W-s representation considered a continuous chain code?
+What are its most attractive features?
+
+How can you compare two objects using their U-s representations?
+
+Discuss different error measures that you can use in approximation.
+What is the role of an error measure in an approximation technique?
+
+What is a conic section? How many types of conic sections are possible?
+Are there mathematical conditions that define types of a conic section?
+
+YUL OpLinc YU G1 er Wo YY a0 biG pi ii
+
+ered more powerful representations than polylines and conic sections?
+EXERCISES 227
+
+6.14 Discuss the difference betwcen geometric equivalence and parametric
+equivalence.
+
+6.15 Why is the least-squares measure used in total regression? List its
+advantages and disadvantages.
+
+6.16 How docs robust regression overcome limitations of the total regres-
+sion’? Why is robust regression not very popular in approximation?
+
+6.17 What are the strengths and weaknesses of Fourier descriptors for ap-
+proximating aud representing closed contours?
+
+6.18 Several geometric transformations of object boundaries are related to
+simple operations on the Fourier descriptors as follows:
+
+Transformation Boundary Fourier descriptor
+Identity u(n) alk)
+
+Translation ti(n) = u(n) + uo a(k) = afk) + upd(k)
+Scaling or zooming = ti(n) = au(n) a(k) = aa(k)
+
+Starting point fi(n) = uln — 10) a(k) = a(kje
+Rotation a(n) = ul(njei a(k) = a(k)e%%
+
+Reflection a(n) = u(nei? +24 G(k) = a*(—k)e?? + 2y6(k)
+
+Consider a simple square object with coordinates of boundary points
+A= (0,0), B = (0,1),C = (1,1), and D = (1,0).
+
+a. Find its Fourier descriptors when the starting point is A and the
+boundary is traversed in the order A, B,C, D.
+
+b. Find the descriptors when the object translates such that A is at
+(2,3).
+
+c. Find the descriptors of the translated object if the length of the
+sides of the square is changed to 2.
+
+d. Find the descriptors of the translated and scaled object if the
+starting point is changed to B.
+228 CHAPTER 6. CONTOURS
+
+6.19 The Fourier descriptors of a simple square object with coordinates
+of boundary points given by A = (—0.5,—0.5),B = (—0.5,0.5),C =
+(0.5, 0.5), D = (0.5, —0.5) are given by
+
+a(0) = a(1) = a(2) = 0 (6.77)
+a(3) = -0.5—j 0.5. (6.78)
+
+Starting with this data and using the properties of the Fourier descrip-
+tors given in the above problem, find the Fourier descriptors for the
+
+object given by P = (0,1),Q = (-1,2), R = (0,3), S = (1,2).
+6.20 What is the Hough transform? Is it related to robust regression? How?
+
+6.21 Can you extend the Hough transform to detect an arbitrary shape?
+How will you develop a Hough transform that detects an object in its
+rotated and scaled versions?
+
+6.22 Find the Hough transform of the lines cnclosing an object with vertices
+A = (2,0),B = (2,2), and C = (0,2). Sketch the modified object
+enclosed by lines obtained by replacing (p,@) of the object lines by
+(p*, 8+ 90°). Calculate the arca of the modified object.
+
+6.23 The two-dimensional Hough transform for line detection can be gener-
+alized to the 3-D case to detect planes. The Hough domain parameters
+are then specified by the three variables p, 6, and ¢, where the angles
+are measured as shown in Figure 6.16. Consider a unit cube whose di-
+agonal corners, A and G, are located at (1,1, 1) and (2, 2,2) as shown.
+Find the Hough transform of the plane passing through the vertices
+C”,H, and F.
+
+Computer Projects
+
+6.1 Develop an algorithm to find the chain code of a given curve. Can you
+determine corners using chain code? If so, implement this algorithm
+and test it on several images.
+
+6.2 Develop a program to start with an image and find the slope—arclength
+
+plot of the largest rect tn the nage. Levent ilk dled I, I. Waco
+and circular segments.
+COMPUTER PROJECTS 229
+
+6.3
+
+6.4
+
+6.5
+
+6.6
+
+6.7
+
+Figure 6.16: Diagram for Exercise 6.23.
+
+Develop an algorithm to accept given points and provide a cubic spline.
+Apply this algorithm to the output of an edge detector.
+
+Develop a Hough transform algorithm to detect straight lines in images.
+Use this to approximate an image by finding all lines that are above a
+fixed size, say 20 points.
+
+Four binary objects are shown in Figure 6.17(a). Scaled versions of
+the same objects are shown in Figure 6.17(b), and scaled and rotated
+versions are shown in Figure 6.17(c). Consider various contour repre-
+sentation methods and comment on their suitability for matching scaled
+and scaled-rotated versions of objects with their corresponding original
+images. Implement one of the methods as a computer program.
+
+Create a synthetic image of a rectangle with uniform intensity against a
+uniform background. Compute the edges using any edge detector from
+Chapter 5. Fit polylines to the edges. How close are the vertices to the
+true corner locations? Is the error consistently biased in one direction?
+
+Create a synthetic image of a rectangle with rounded corners, modeled
+as quarter circles. Use edge detection and polyline fitting, and then re-
+place runs of polylines with circular arcs using the algorithm presented
+230 CHAPTER 6. CONTOURS
+
+(c)
+
+Figure 6.17: Binary objects used in Computer Project 6.5. (a) Four reference
+binary objects. (b) Scaled versions of the objects in (a). (c) Scaled and
+
+rotated versions of the objects in (a).
+COMPUTER PROJECTS 231
+
+6.8
+
+6.9
+
+6.10
+
+6.11
+
+6.12
+
+in this chapter for fitting circular arcs. Measure the crror in the com-
+puted end points of the circles. Are the errors symmetrical, or are the
+corners unevenly distorted so that the rectangle appears skewed?
+
+Experiment with the corner fitting algorithm described in Section 6.8.2.
+Create a synthetic image of a rectangle, adding noise from a normal
+distribution and scattered edges to simulate false positives in edge de-
+tection. Plot the error in the corner estimates versus the noise level.
+
+Implement least-median-squares regression for fitting a line to a list of
+edge points. Add false edges to the list to simulate grouping crrors.
+Plot the maximum distance of the estimated line from the truce lme
+versus the number of false edges.
+
+Consider an object that is symmetrical about a vertical axis. Suppose
+that two lists of edge fragments along the left and right sides of the
+object are available. Adapt the algorithm for fitting cubic splines to
+edges to enforce the symmetry constraint. Gcneralize the algorithm so
+that the axis can be at any oricntation.
+
+Suppose that the list of edge points along the contour of an object is
+available and that the object is symmetric about some axis. Process the
+edge list into a sequence of linc segments and circular arcs. Develop an
+algorithm for matching line scgments and circular arcs to detect that
+the object is symmetric and estimate the axis of symmetry. After the
+axis of symmetry has been detcrmined, this information can be used
+to improve the estimates of the line segments and circular arcs. De-
+velop an algorithm for refining the contour representation. Experiment
+with an iterative algorithm that detccts the axis of symmetry, uses
+this information to refine the contour representation, and then uses the
+improved contour representation to refine the axis estimate, repeating
+these steps until the axis and contour representations converge.
+
+Consider an image of two rectangles. The task is to measure the gap
+between the two rectangles. The facing sides of the two rectangles are
+parallel, so the width of the gap is constant along its length. Explore
+different algorithms for measuring the gap.
+232
+
+6.13
+
+CHAPTER 6. CONTOURS
+
+a. Develop a formula for the average distance between two line seg-
+ments that are nearly parallel and approximately of the same
+length. (Hint: Represent each line segment in parametric form
+on the interval (0, 1].)
+
+b. Compute the polyline representation for the rectangles, Are the
+line segments that bound the gap skewed due to poor estimates
+of the corner locations? Use the formula from part a to estimate
+the width of the gap.
+
+c. Modify the algorithm to use improved techniques for estimating
+the locations of the corners. Measure the improvement in the
+estimate of the gap width.
+
+d. Implement least-median-squares regression and repeat the mea-
+surements of the gap width, comparing the results using least
+median squares regression with the previous techniques.
+
+e. Repeat the experiment using lines estimated with the Hough trans-
+form.
+
+Synthetic noise, including noise from a normal distribution and scat-
+tered edges that model false positives in edge detection, can be added
+to the image to test the accuracy of gap measurement at various noise
+levels. Prepare a plot of the crror in gap width measurement versus
+the noise level for each of the techniques.
+
+Consider a line of text on a printed page that has been scanned into
+the computer. The task is to fit a line through the bascline of the text.
+The estimated baseline can guide algorithms for charactcr recognition.
+Note that the baseline is not necessarily horizontal since the page may
+not be exactly vertical when scanned.
+
+a. Suppose that edge detection has reduced the line of text to a
+list of edge points. Compare line fitting with least-squares, least-
+median-squares, and the Hough transform.
+
+b. Consider multiple lines of text, reduced to multiple cdge lists. As-
+sume that the baseline separation is constant and that the base-
+
+he are veal ll. ae sandra | let & more accu-
+
+rate algorithin for determining the baselines.
+COMPUTER PROJECTS 233
+
+c. Suppose that the baselines are parallel, but the baseline separation
+varies between lines. How does this change the algorithm?
+
+6.14 Consider a list of edge points that form a circle. The task is to esti-
+mate the position and radius of the circle. Use nonlinear regression to
+fit a cirele to the edge points, assuming that the radius of the circle
+is known. Modify the algorithm to determine both the position and
+radius. Finally, modify the algorithm to determine both the position
+and radius of the circle, but include a penalty term for variation in the
+estimated radius from a nominal valuc. -->
 </p>
     </body>
 </html>

@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>準備中</title>
+        <title>光学</title>
         <style type="text/css">
             p
             {
@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,8 +75,204 @@
     </style>
     </head>
     <body>
-        <h1><center>準備中</center></h1>
+        <h1><center>８章 光学</center></h1>
 <p>
+この章では、幾何光学の基礎を解説する。放射測定については第9章で説明する。マシンビジョンはピンホールカメラモデルに基づいている。このモデルは透視投影の幾何学をモデル化するが、被写界深度の影響は考慮しない。これは、画像平面上で焦点が合うのは特定の深度範囲内の点のみであるという事実に基づいている。透視投影では、視野体積は無限のピラミッドであり、画像平面上の表示可能な長方形の上下左右によってのみ制限されると想定される。被写界深度や光の減衰などの光学的効果は、表示可能な物体までの距離に制限を設けることで、視野体積を制限する。物体が近すぎたり遠すぎたりすると、はっきりと見えない場合がある。
+<!-- This chapter covers the essentials of geometrical optics. Radiometry is covered in Chapter 9. Machine vision relies on the pinhole camera model, which models the geometry of perspective projection but omits the effects of depth of field, based on the fact that only those points within a certain depth range are in focus on the image plane. Perspective projection assumes that the view volume is an infinite pyramid, limited only by the top, bottom, and sides of the viewable rectangle on the image plane. Optical effects such as depth of field and light attenuation limit the view volume by introducing limits on the distances to viewable objects. Objects may not be seen clearly if they are too close or too far away. -->
+</p><p>
+ピンホールカメラモデルでは、透視光線がカメラ前面の微小な開口部を通過すると仮定している。実際には、より多くの光を取り込むためには、開口部を大きくする必要がある。レンズは開口部に配置され、シーン内の各点からの光線束を、透視投影の幾何学的形状で示されるように、画像平面内の対応する点に焦点を合わせる。シーンの点、画像平面への投影点、および開口部の中心は、透視投影における視線の光線上にある。レンズはより多くの光を集めるため、カメラは周囲光が少ない場合でも、シャッター速度が速い場合でも動作できるが、被写界深度は制限される。被写界深度の制限と、セクション 12.9 で説明したカメラのキャリブレーションの問題を除けば、レンズは理想的な透視投影の仮定に反する効果をもたらさず、ほとんどのマシンビジョンアルゴリズムは画像形成のための光学系の設計に依存しない。
+<!-- The pinhole camera model assumes that the perspective rays pass through an infinitesimal aperture at the front of the camera. In practice, the aperture must be larger to admit more light. Lenses are placed in the aperture to focus the bundle of rays from each point in the scene onto the corresponding point in the image plane as indicated by the geometry of perspective projection. The scene point, the projected point on the image plane, and the center of the aperture are on the ray for the line of sight in perspective projection. A lens gathers more light, allowing the camera to work with less ambient illumination or with a faster shutter speed, but the depth of field is limited. With the exception of limited depth of field and the camera calibration problems discussed in Section 12.9, lenses do not introduce any effects that violate the assumptions of ideal perspective projection, and most machine vision algorithms do not depend on the design of the optical system for image formation. -->
+</p><p>
+特定のマシンビジョンアプリケーションに適したカメラレンズを選択するには、被写界深度を計算する必要がある場合がある。この章では、レンズ方程式と被写界深度を計算するための式を紹介する。
+<!-- It may be necessary to calculate the depth of field in order to select a camera lens for a particular machine vision application. This chapter will cover the lens equation and present the equations for calculating the depth of field. -->
+</p>
+<h2>8.1 レンズ方程式</h2>
+<p>
+レンズ方程式は、レンズの中心 (光学原点) からの像面までの距離 \(z^\prime\)、シーン内の点までの距離 \(z\)、およびレンズの焦点距離 \(f\) を関連付ける。
+<!-- The lens equation relates the distance \(z^\prime\) of the image plane from the center of the lens (optical origin), the distance z to the point in the scene, and the focal length f of the lens: -->
+\[
+\frac{1}{z^\prime}-\frac{1}{z}=\frac{1}{f} \tag{8.1}
+\]
+\(z\to\infty\) の場合、光学原点から像面までの距離 \(z^\prime\) は焦点距離 \(f\) に等しくなる。焦点距離とは、平行光線が像面内の一点に焦点を結んだときの、光学原点から像面までの距離である。写真測量では、光学原点は投影中心と呼ばれ、\(z^\prime\) はカメラ定数と呼ばれる（カメラのキャリブレーションについては第 12 章を参照）。レンズの焦点が無限遠ではない点（近距離の点）に結ばれている場合、\(z^\prime\lt f\) となるため、\(f\) を使用して \(z^\prime\) を近似すると、カメラ定数を過大評価することになる。カメラの焦点がシーン内のより遠方の点に合わせて変更されると、光学原点から像面までの距離 \(z^\prime\) は \(f\) に近づく。
+<!-- When \(z\to\infty\), the distance \(z^\prime\) of the image plane from the optical origin is equal to the focal length \(f\). The focal length is the distance of the image
+plane from the optical origin when parallel rays are focused to a single point
+in the image plane. In photogrammetry, the optical origin is called the center
+of projection and \(z^\prime\) is called the camera constant (see Chapter 12 on camera calibration). When the lens is focused on points that are not at infinity
+(points at close range), \(z^\prime\lt f\), so using \(f\) to approximate \(z^\prime\) overestimates the camera constant. The distance \(z^\prine\) of the image plane from the optical origin approaches \(f\) as the camera focus is changed to accommodate points in the scene that are farther away. -->
+</p>
+<h2>8.2 画像解像度</h2>
+<p>
+空間解像度は、ピクセル間隔、レンズ収差、回折、被写界深度によって決まる。ほとんどのマシンビジョンアプリケーションでは、レンズの歪みや回折は制限要因にはならない。空間解像度は、ピクセル間隔と被写界深度の相互作用によって決まる。
+<!-- Spatial resolution is determined by pixel spacing, lens aberrations, diffraction, and depth of field. For most machine vision applications, lens distortions and diffraction are not the limiting effects. Spatial resolution is determined by the interplay between pixel spacing and depth of field. -->
+</p><p>
+像面におけるピクセル間隔が \(\Delta\) であると仮定する。解像度の限界は \(2\Delta\) である。これは、2つの特徴を区別して認識できる特徴間の距離だからである。言い換えれば、特徴間の距離を認識するには、特徴間に少なくとも1つの撮像素子が必要である。解像度は、1インチあたりの線数または1ミリメートルあたりの線数という単位で表される分解能 (Resolving Power) として表されることが多い。
+<!-- Suppose that the spacing between pixels in the image plane is \(\Delta\). The resolution limit is \(2\Delta\) because that is the separation between features that allows two features to be perceived as distinct. In other words, perceiving some separation between features requires at least one imaging element between the features. Resolution is often listed as resolving power in units of lines per inch or lines per millimeter: -->
+\[
+RP=\frac{1}{RL} lines/mm=\frac{1}{2\Delta} lines/mm \tag{8.2}
+\]
+</p><p>
+フォトダイオードを使用する電子カメラでは、画像の解像度は電荷結合撮像素子内の撮像素子（ピクセル）間の間隔によって制限される。
+<!-- In electronic cameras using photodiodes, the resolution of an image is limited by the spacing between the imaging elements (pixels) in a charge-coupled imaging device. -->
+</p><p>
+写真フィルムは、透明なゼラチン中に懸濁したハロゲン化銀の粒子（結晶）を含んでいる。光線がハロゲン化銀の粒子に当たると、銀は金属銀に変化する。露光されなかった粒子は現像過程で洗い流される。フィルムの解像度は、ハロゲン化銀の粒子間の平均間隔によって制限される。典型的な粒子間隔は5μmで、各粒子の断面積は約 \(0.5 \mu m^2\) である。感度（フィルム感度）は粒子サイズに応じて増加する。
+<!-- Photographic film has grains (crystals) of silver halide suspended in clear gelatin. When a ray of light hits a grain of silver halide, it changes to metallic silver. The unexposed grains are washed away during the developing process. The resolution of film is limited by the average spacing between grains of silver halide. A typical spacing between grains is 5 wm, with each grain about \(0.5 \mu m^2\) in cross section. The sensitivity (film speed) increases with grain size. -->
+</p><p>
+人間の視覚システムでは、空間分解能は中心窩における錐体細胞の間隔によって決まる。典型的な間隔は30秒角、つまり1/120°である。これは、1分角、つまり1/60°、つまり\(0.3\times 10^{-3}\) ラジアンの分解能限界を示している。この視角は小さいため、目からの距離にラジアン単位の分解能限界を掛け合わせることで、人間の視覚の分解能限界に対応する特徴間の間隔を計算できる。例えば、腕の長さは約40cmである。この距離における分解能限界は
+<!-- In the human vision system, the spatial resolution is determined by the spacing between cones in the fovea. A typical spacing is 30 seconds of arc or 1/120°. This provides a resolution limit of one minute of arc, or 1/60°, or \(0.3 x 10^{-3}\) radians. Since this visual angle is small, the distance from the eye can be multiplied by the resolution limit in radians to calculate the spacing  between features that corresponds to the resolution limit of human vision.  For example, the length of your arm is around 40 cm. At this distance the  resolution limit is -->
+\[
+0.3\times 10^{-3}\times40,cm=120\,\mu m \tag{8.3}
+\]
+レーザープリンタでページ上に印刷されるドットの間隔は、1インチあたり300ドット、つまり85μmでである。人間の視覚システムは、特徴の位置をサブピクセル解像度に補間することで、解像度の限界以下の分離を認識することができる。そのため、腕を伸ばしてページを読んだ場合、印刷されたテキストや線画のギザギザはほとんど目立たない。
+<!-- The spacing between dots placed on a page by a laser printer is 300 dots per inch or \(85 \mu m\). The human vision system can perceive seperations below the resolution limit by interpolating feature locations to subpixel resolution, so the jaggedness of printed text and line drawings is just barely noticeable when reading a page held at arm’s length.-->
+</p>
+<h2>8.3 被写界深度</h2>
+<p>
+レンズの目的は、カメラの構造においてより大きな絞り値を採用し、より多くの光をカメラに取り込めるようにすることである。これにより、周囲の光が少ない環境やより速いシャッタースピードでもカメラが作動できるようになる。絞り値を大きくすると、被写界深度が浅くなる。絞り値と被写界深度にはトレードオフの関係がある。絞り値が小さいほど被写界深度は深くなるが、取り込める光量は少なくなる。絞り値が大きいほど、取り込める光量は多くなるが、被写界深度は浅くなる。
+<!-- The purpose of a lens is to allow a larger aperture to be used in the construction of the camera so more light can enter the camera, allowing the camera to function with less ambient illumination or a faster shutter speed. A larger aperture comes with the penalty of reduced depth of field. There is a trade-off between aperture size and depth of field: a smaller aperture provides more depth of field but admits less light; a larger aperture admits more light but reduces the depth of field. -->
+</p><p>
+レンズ中心から像面までの距離 \(z^\prime\) を特定の設定とした場合、レンズ方程式 8.1 を解くことで得られる距離 \(z\) にある平面上の点のみが完全に焦点が合う。実際には、被写界深度は撮像素子の空間解像度によって決まる。撮像素子の解像度を下回る程度の焦点ずれは許容される。像面距離 \(z^\prime\) には、焦点ずれが許容できる範囲があり、それに対応するシーン距離 z の範囲（被写界深度）では、シーン上の点が許容できる程度に焦点が合う。
+<!-- For a particular setting of the distance \(z^\prime\) of the image plane from the center of the lens, only points on a plane at distance \(z\), obtained by solving the lens Equation 8.1, are in perfect focus. In practice, the depth of field is determined by the spatial resolution of the imaging device. Some amount of defocusing below the resolution of the imaging device can be tolerated. There is a range of image plane distances \(z^\prime\) with an acceptable level of  defocusing and a corresponding range of scene distances z, called the depth of field,  with scene points that are in focus to an acceptable degree. -->
+</p><p>
+シーン上の点が焦点から外れると、像面上に一点ではなく、像の強度の円が描かれる。この円の直径が撮像素子の解像度以下であれば、焦点ずれの量はそれほど大きくない。円の直径を \(b\)、レンズの絞り径を \(d\)、焦点距離を \(f\)、レンズ中心からの像面距離の正しい設定を \(z^\prime\) とする。像面をレンズに近づけて \(z_1^\prime\) の距離まで移動させた場合、ぼかし量は次のように表される。
+<!-- When a scene point is out of focus, it creates a circle of image intensity on the image plane instead of a single point. If the diameter of this circle is below the resolution of the imaging device, then the amount of defocusing is not significant. Suppose that the diameter of the circle is \(b\), the diameter of the lens aperture is \(d\), the focal length is \(f\), and the correct setting of the image plane distance from the center of the lens is \(z^\prime\). If the image plane is moved closer to the lens, to a distance \(z_1^\prime\), then the amount of blur is given by -->
+\[
+b=\frac{d(z^\prime-z_1^\prime)}{z^\prime} \tag{8.4}
+\]
+\(b/2\) と \((z^\prime - z_1^\prime)\) の比は、相似三角形によって \(d/2\) と \(z^\prime\) の比と等しくなければならないからである。レンズ方程式 8.1を \(z^\prime\) と \(z_1^\prime\) について解き、それぞれ \(z\) と \(z_1\) に対応させる。そして、これらの式を方程式 8.4 に代入することで、ぼかしの量とシーン内の距離を関連付ける式が得られる。
+<!-- since the ratio of \(b/2\) to \((z^\prime - z_1^\prime)\) must be equal to the ratio of \(d/2\) to \(z^\prime\) by similar triangles. We can solve the lens Equation 8.1 for \(z^\prime\) and \(z_1^\prime\), corresponding to \(z\) and \(z_1\), respectively, and substitute these expressions in Equation 8.4
+to obtain an expression that relates the amount of blur to distances in the scene: -->
+\[
+b=\frac{d\,f\,(z-z_1)}{z\,(f+z_1)} \tag{8.5}
+\]
+
+Suppose that b is the maximum diameter of the blur circle for acceptable
+defocusing. Solve Equation 8.5 for z; to obtain an expression for the distance
+to the near plane that bounds the view volume:
+
+_ fz(d—>)
+A= “df-tbz” (8.6)
+
+b (8.5)
+</p><p>
+To calculate the distance zp to the far plane that bounds the view volume,
+
+let
+_ d= 2)
+
+2
+
+b , (8.7)
+8.4. VIEW VOLUME 253
+
+where z% is the setting of the image plane distance (beyond the correct setting
+z') that corresponds to the maximum amount of blur. Solve the lens equation
+for z' and zj and substitute into the equation for the blur diameter:
+
+d f (22-2)
+
+b= —_—_.. 8.8
+
+“f+ a) “
+Solve this equation for the far plane distance:
+_ fz(d+d)
+
+2 = df ba" (8.9)
+</p><p>
+These equations provide the positions of the near and far planes for a
+particular setting of the nominal plane of focus z and the aperture diameter
+d, focal length f, and maximum acceptable blur diameter b. There is a
+distance z = df/b, called the hyperfocal distance, at which the far plane
+distance and the depth of field become infinite.
+</p><p>
+The depth of field D is the difference between the near and far plane
+distances, z2 — 21, given by
+
+2bd
+</p>
+<h2>8.4. 視野体積</h2>
+<p>
+Consider the perspective model for image formation, introduced in Chapter 1,
+with the image plane in front of the center of projection. Let the center
+of projection be located at point (xo, yo, 20) and the view vector from the
+center of projection to the origin of the image plane (the principal point) be
+(Vz, Uy, vz). Assume that the image plane is perpendicular to the view vector.
+Note that the view vector defines both the direction in which the camera is
+pointed and the distance from the center of projection to the image plane (the
+camera constant). The view vector defines the orientation of the camera in
+space, except for the twist about the optical axis. Let the vector (uz, Uy, uz)
+from the origin in the image plane define the direction that corresponds to
+up. The projection of the up vector onto the image plane, normalized to unit
+length, defines the y’ axis in the image plane. The z’ axis is the unit vector
+perpendicular to y’ and the view vector.
+
+</p><p>
+Assume that the viewable area on the image plane is a rectangle with
+height A and width w centered about the principal point. The corners of
+the rectangle and the location of the center of projection define four planes
+(top, bottom, left, and right) that bound the view volume. The near and far
+planes are perpendicular to the image plane at distances determined by the
+depth of field. By convention, the plane normals point to the outside of the
+view volume.
+</p><p>
+The six bounding planes can be calculated from the position and orien-
+tation of the camera, the dimensions of the imaging element, and the lens
+optics. The plane coordinates are in the same coordinate system used to
+define the position and orientation of the camera, typically the absolute co-
+ordinate system for the scene. The bounding planes can be used to determine
+if all scene points that should be within the view of the camera are inside
+the view volume. The position and orientation of the camera, the nominal
+focus, the aperture diameter, and the focal length can be adjusted to change
+the view volume until all scene points that should be viewable are within
+the view volume. The minumum aperture diameter is constrained by the
+ambient illumination and the shutter speed necessary to minimize motion
+blur.
+</p>
+<h2>8.5 露出</h2>
+<p>
+The amount of light collected by the camera depends on the intensity of
+light falling on the image plane (the image irradiance) and the duration of
+
+the exposure (shutter speed):
+&= Et. (8.11)
+
+Exposure is in units of joules (energy) per square meter while image irradi-
+ance is in units of watts (power) per square meter. Multiplying power by
+time gives energy, so the units work out correctly.
+</p><p>
+The F-number or F-stop is proportional to the ratio of the focal length f
+to the diameter d of the aperture:
+
+F-number = 4. (8.12)
+
+The lens aperture on cameras is designated in units of F-number because
+image intensity (or film exposure for constant shutter speed) is the same for
+EXERCISES 255
+
+different lenses at the same F-stop:
+
+1
+F- v= 8.13
+number E (8.13)
+
+1
+~ = for constant shutter speed t. (8.14)
+
+In other words, the F-stop is the aperture diameter provided in a system of
+units that factors out the different light gathering capabilities of lenses with
+different focal lengths.
+
+The F-number on camera lenses is marked with numbers that are multi-
+ples of /2 because doubling the aperture area is equivalent to increasing the
+aperture diameter by V2,
+
+2 x aperture area ~ V2d & 1.4d. (8.15)
+
+The F-stops are numbered 2.8, 4, 5.6, 8, 11, and so on, so each F-stop changes
+the aperture diameter by a factor of 1.4 and increases the amount of light on
+the image plane by a factor of 2.
+
+
+
 </p>
     </body>
 </html>

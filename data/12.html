@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>準備中</title>
+        <title>較正</title>
         <style type="text/css">
             p
             {
@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,8 +75,2317 @@
     </style>
     </head>
     <body>
-        <h1><center>準備中</center></h1>
+        <h1><center>12章 較正(準備中)</center></h1>
 <p>
+両眼ステレオカメラやレンジカメラなどの計測システムにおいて、マシンビジョンアルゴリズムは重要な役割を果たす。前章で開発したマシンビジョンアルゴリズムは、画像平面内の計測値の抽出を伴う。エッジの位置や領域の重心などの計測は、画像配列の座標系で行われた。画像平面における投影中心軸の位置（主点）が画像の中心にあるという前提に基づき、画像平面座標は画像の位置から簡単な式で決定できると仮定した。また、投影中心から画像平面までの距離（カメラ定数）は既知であると仮定した。本章では、これらの仮定に関連する較正の問題について解説する。前章で想定した単純な画像幾何学に基づく計測値は、12.9節で説明する内部標定問題の解を用いて真の画像平面座標に補正できる。シーン内のカメラの位置と向きは、12.8節で説明する外部標定問題を解くことによって決定できる。内部標定問題と外部標定問題の解は、画像配列内のピクセルの位置とシーン内の点を関連付けるカメラ較正問題の全体的な解を提供する。カメラ較正については12.10節で説明する。両眼ステレオ撮影において2台のカメラ間の関係を較正するための相対標定問題については12.4節で、両眼ステレオ撮影時の視差から奥行き測定値を計算する方法については12.6節で、観察者中心座標での奥行き測定値をシーンの絶対座標系に変換するための絶対標定問題については12.3節で説明する。カメラ較正で用いられる様々な座標系については12.1節で説明し、剛体変換の数学については12.2節で説明する。
+<!-- This chapter will present methods for calibrating cameras and depth mea-
+surement systems such as binocular stereo and range cameras. The machine
+vision algorithms developed in previous chapters involved the extraction of
+measurements within the image plane. Measurements, such as the location
+of an edge or the centroid of a region, were made in the coordinate system of
+the image array. We assumed that image plane coordinates could be deter-
+mined from image locations using simple formulas based on the premise that
+the location of the central axis of projection in the image plane (the principal
+point) was at the center of the image. We also assumed that the distance
+of the image plane from the center of projection (the camera constant) was
+known. This chapter will cover the calibration problems associated with these
+assumptions. Measurements based on the simple image geometry assumed
+in previous discussions can be corrected to true image plane coordinates us-
+ing the solution to the-interior orientation problem, covered in Section 12.9.
+The position and orientation of a camera in the scene can be determined
+by solving the exterior orientation problem, covered in Section 12.8. The
+solution to the interior and exterior orientation problems provides an overall
+solution to the camera calibration problem that relates the location of pixels
+in the image array to points in the scene. Camera calibration is covered in
+Section 12.10. The relative orientation problem for calibrating the relation-
+ship between two cameras for binocular stereo is covered in Section 12.4, the
+method for computing depth measurements from binocular stereo disparities
+is explained in Section 12.6, and the absolute orientation problem for con-
+verting depth measurements in viewer-centered coordinates to an absolute
+coordinate system for the scene is covered in Section 12.3. Several different
+coordinate systems encountered in camera calibration are described in Sec-
+tion 12.1, and the mathematics of rigid body transformations is covered in
+Section 12.2.
+</p><p>
+The mathematics behind solutions to the problems of calibrating cam-
+eras and range sensors has been developed in the field of photogrammetry.
+Photogrammetry provides a collection of methods for determining the posi-
+tion and orientation of cameras and range sensors in the scene and relating
+camera positions and range measurements to scene coordinates. There are
+four calibration problems in photogrammetry:
+
+Absolute orientation determines the transformation between two coordi-
+nate systems or the position and orientation of a range sensor in an
+absolute coordinate system from the coordinates of calibration points.
+
+Relative orientation determines the relative position and orientation be-
+tween two cameras from projections of calibration points in the scene.
+
+Exterior orientation determines the position and orientation of a camera
+in an absolute coordinate system from the projections of calibration
+points in the scene.
+
+Interior orientation determines the internal geometry of a camera, includ-
+ing the camera constant, the location of the principal point, and cor-
+rections for lens distortions.
+
+These calibration problems are the classic problems in photogrammetry and
+originated with the techniques used to create topographic maps from aerial
+images. In addition to the four basic calibration problems, photogrammetry
+also deals with the problem of determining the position of points in the scene
+from binocular stereo disparities and provides methods for resampling stereo
+images so that the epipolar lines correspond to image rows.
+
+All of the photogrammetric problems for determining the transformation
+between coordinate systems assum that a set of conjugate pairs is available.
+The conjugate pairs are obtained by matching feature points between views.
+These matches must be correct since the classic methods of photogrammetry
+use least-squares criteria and are very sensitive to outliers due to mismatched
+
+features. In fact, calibration algorithms can be ill conditioned, and one should
+12.1. COORDINATE SYSTEMS 311
+
+not tempt fate by adding outliers to the normally distributed errors. Sec-
+tion 12.13 includes some discussion on using robust regression for handling
+mismatched feature points. In some applications, if is necessary to match
+two sets of points that are not conjugate pairs or to match two curves or
+surfaces that do not have discrete features. This is the registration problem,
+discussed in Section 13.9.
+
+12.1 Coordinate Systems
+
+The image processing opcrations in machine vision are usually done in the
+coordinate system of the image array, with the origin at the upper left pixel.
+The rows and columns correspond to integer coordinates for the pixel grid.
+Subpixel measurements add a fractional part to the image array (pixel) coor-
+dinate system, leading to pixel coordinates being represented as floating-point
+numbers; however, subpixel resolution does not change the geometry of the
+image array coordinate system. We can convert from pixel coordinates to im-
+age plane coordinates using some assumptions about the camera geometry.
+In Section 12.9, we will show how the camera parameters can be calibrated
+so that the mapping from image array (pixel) coordinates to image plane
+coordinates uses the actual geometry of the camera, including accounting for
+the effects of lens distortions.
+
+The approximate transformation from pixel coordinates to image coordi-
+nates assumes that the principal axis intersects the image plane in the center
+of the image array. If the image array has n rows and m columns, then the
+centcr of the image array is
+
+. m—1
+= > (12.1)
+
+-1
+& = ‘S (12.2)
+
+We use the hat notation to stress that these are estimates for the location
+of the principal point. The x axis is in the direction of increasing column
+index, but the direction of increasing row index and the y axis point in
+opposite directions. The transformation from pixel coordinates [é, j] to image
+coordinates (2’, y’) is
+
+a = ;-"> (12.3)
+312 CHAPTER 12, CALIBRATION
+
+y = -(i-"S). (12.4)
+
+This transformation assumes that the spacing between rows and columns
+in the image array is the same and that image plane coordinates should be
+expressed in this system of units. Let the spacing between columns be s,,
+and the spacing between rows be s,. We can add these conversion factors to
+the transformation from pixel to image coordinates:
+
+wv = Sy G-">) (12.5)
+
+-1
+yo = ~8 ("5 ). (12.6)
+
+If the image sensor has square pixels, then the conversion factors are iden-
+tical and can be omitted. This simplifies the image processing algorithms.
+The image measurements (such as distances) can be converted to real units
+later, if necessary. If the image sensor has nonsquare pixels, then s, # sy
+and it may be necessary to convert pixel coordinates to image coordinates,
+using the formulas above, before performing measurements. However, some
+measurements are not affected by nonsquare pixels. For example, the cen-
+troid can be computed using pixel coordinates and converted to image planc
+coordinates later, but distances and angles are not invariant to unequal scale
+factors and should be computed from point locations in image coordinates.
+For example, the centroids of two regions must be converted to image plane
+coordinates before calculating the distance between the centroids. Because
+of these problems, it is very common to require cameras with squarc pixels
+in machine vision applications. If an application uses a camera with non-
+square pixels, then you must carefully consider how the measurements will
+be affected by nonsquare pixels. When in doubt, convert to image plane
+coordinates before making any measurements.
+
+The image plane coordinate system is part of the camera coordinate sys-
+tem, a viewer-centered coordinate system located at the center of projection
+with z and y axes parallel to the 2’ and y’ axes in the image plane and a z axis
+for depth. The camera coordinate system is positioned and oriented relative
+to the coordinate system for the scene, and this relationship is determined
+
+LOU CMC CAUCLS,NCe T L2T
+12.2. RIGID BODY TRANSFORMATIONS 313
+
+In summary, there are several coordinate systems in camera calibration:
+Scene coordinates for points in the scene
+Camera coordinates for the viewer-centered representation of scene points
+Image coordinates for scene points projected onto the image plane
+Pixel coordinates for the grid of image samples in the image array
+
+Image coordinates can be true image coordinates, corrected for camera errors
+such as lens distortions, or uncorrected image coordinates. Pixel coordinates
+are also called image array coordinates or grid coordinates.
+
+There may be multiple cameras in the scene, each with its own coordinate
+system. For example, in binocular stereo there is the left camera coordinate
+system, the right camera coordinate system, and the stereo coordinate sys-
+tem in which stereo depth measurcments are represented. Determining the
+relationships between these coordinate systems is the purpose behind the
+various calibration problems discussed in this chapter.
+
+12.2 Rigid Body Transformations
+
+Any change in the position or orientation of an object is a rigid body transfor-
+mation, since the object moves (changes position or orientation) but does not
+change size or shape. Suppose that a point p is visible from two viewpoints.
+The position of point p in the coordinate system of the first viewpoint is
+
+Py = (#1, 41521)" (12.7)
+
+and the position of point p in the coordinate system of the second viewpoint.
+is
+
+Po = (2, ¥2, zo)". (12.8)
+
+The transformation between the two camera positions is rigid body motion,
+so each point at position p, in the first view is transformed to its coordinates
+in the second view by rotation and translation:
+
+P2 = RP, + Po: (12.9)
+314 CHAPTER 12. CALIBRATION
+
+where matrix R is a 3 x 3 orthonormal matrix for rotation,
+
+Tee Vey Taz
+R=| tye Ty Tyz |; (12.10)
+
+Pea Vay Vax
+
+and vector py is the vector for the amount and direction of translation. Point
+Po is the position of the origin of coordinate system one in coordinate system
+two,
+
+Equation 12.9 can be viewed as a formula for computing the new coor-
+dinates of a point that has been rotated and translated or as a formula for
+computing the coordinates of the same point in space in different coordinate
+systems. The first interpretation is used in rigid body mechanics: the new co-
+ordinates of a point on an object must be computed after the object has been
+moved to a new position and orientation. The second interpretation is used
+for calibration problems: the same point has different coordinates when seen
+from different viewing positions and orientations. The change in coordinates
+is determined by the rigid body transformation between the two viewpoints,
+and the calibration problem is to determine the transformation from a set of
+calibration points (conjugate pairs). For example, consider the same point
+seen by two identical range cameras at. different positions and oricntations
+in space. Since the viewpoints are different, the coordinates are different
+even though the coordinates represent the same point. Imagine that the first
+range camera is rotated so that. it has the same orientation as the second
+range camera. Now the coordinate systems of the range cameras have the
+same orientation but different positions in space. Now imagine that the first
+rauge camera is translated to the same position in space as the second range
+camera. Now the point has the same coordinates in both cameras. This pro-
+cess of aligning the coordinate systems of the two cameras so that identical
+points have the same coordinates is modeled by the rigid body transforma-
+tion in Equation 12.9, which says that a point p, in the viewer-centered
+coordinate system of the first camera is first rotated and then translated
+to change its coordinates to point py in the second camera. This process
+is illustrated in Figure 12.1. In practice, there may be one or more range
+cameras, or depth measuring systems such as binocular stereo, that gencrate
+
+DLO CTC AT GN CUE i
+12.2. RIGID BODY TRANSFORMATIONS 315
+
+Figure 12.1: Point P is visible from both viewpoints but has different. coordi-
+nates in each system. The drawing illustrates the rigid body transformation:
+the coordinate system on the left is first rotated and then translated until it
+is aligned with the coordinate system on the right.
+
+measurements must be transformed into a common coordinate system that
+has been predefined for the scene. This common coordinate system is called
+the world or absolute coordinate system, sometimes called scene coordinates.
+The term absolute coordinates is used in this book to make it clear that we
+are talking about a global coordinate system for points in the scene, rather
+than the viewer-centered coordinate system for a particular camera or depth
+measuring system. The terms viewer-centered and camera-centered coordi-
+nates are synonymous. When we speak about camera coordinates, we are
+referring to the three-dimensional coordinate system for a camcra, that is,
+the coordinate system for a particular viewpoint. As explained in Section
+1.4.1, we generally use a left-handed coordinate system with the z and y
+axes corresponding to coordinates in the image plane in the usual way and
+the z axis pointing out into the scene. A point in the scene with coordinates
+316 CHAPTER 12. CALIBRATION
+
+(x,y, z) in a camcra-centered coordinate system is projected to a point (z’, y’)
+in the image plane through perspective projection:
+
+1 _ of
+c= (12.11)
+, _ ob
+y= a. (12.12)
+
+The coordinates (z’, y’) of the projected point are called image plane coor-
+dinates, or just image coordinates, for short. ‘The origin of the image plane
+coordinate system is located at the intersection of the image plane and the
+z axis of the camera coordinate system. The z axis is called the principal
+axis or optical axis for the camera system, and the origin of the image plane
+coordinate system is called the principal point.
+
+An affine transformation is au arbitrary linear transformation plus a
+translation. In other words, the vector of poiut coordinates is multiplicd
+by an arbitrary matrix and a translation vector is added to the result. Affine
+transformations include changes in position and orientation (rigid body trans-
+formations) as a special case, as well as other transformations such as scal-
+ing, which changes the size of the object. A transformation that changes
+the shape of an object in some general way is a nonlinear transformation,
+also called warping, morphing, or deformation. There are several ways to
+represent rotation, including Euler angles and quaternions, covered in the
+following sections.
+
+12.2.1 Rotation Matrices
+
+Angular orientation can be specified by three angles: rotation w about the
+« axis, rotation ¢ about the new y axis, and rotation « about the new z axis.
+Angle w is the pitch (vertical angle) of the optical axis, angle @ is the yaw
+(horizontal angle) of the optical axis, and angle x is the roll or twist about
+the optical axis. These angles are called the Euler angles. No rotation (zero
+values for all three angles) means that two coordinate systems are perfectly
+aligned. Posilive w raises the optical axis above the x—z plane in the direction
+of positive y, positive @ turns the optical axis to the left of the y z plane
+in the direction of negative z, and positive « twists the coordinate system
+
+dlocksnse shoul the optieal axis ag seatt bot the ry t Kt Algae Al tht
+12.2. RIGID BODY TRANSFORMATIONS 317
+
+rotation matrix R defined in Equation 12.10 in terms of these angles are
+
+Toe = cos@cosK
+
+Toy = SinwsingcosK + cosw sink
+
+Teor = —coswsind@cosé +sinw sink
+
+ly, = —cos@snk
+
+fy = —sinwsin dsin kK + cosw cos Kk (12.13)
+Pyz = coswsin dsin kK + silw cos «
+
+Trc = Sing
+
+Poy = —sinwcos¢d
+
+Tr, = coswcosd¢.
+
+Although this is a common representation for rotation, determining the rota-
+tion by solving for the Euler angles leads to algorithms that are not numeri-
+cally well conditioned since small changes in the Euler angles may correspond
+to large changes in rotation. Calibration algorithms either solve for the en-
+tries of the rotation matrix or usc other representations for the rotation angles
+such as quaternions.
+
+The rotation matrix is an orthonormal matrix,
+
+RTR=I, (12.14)
+
+where J is the identity matrix. This means that the matrix inverse is just
+the transpose of the rotation matrix. A calibration algorithm will produce a
+rigid body transformation between coordinate systems in one direction; for
+example, from coordinate system 1 to coordinate system 2,
+
+Pz = RP, + Pa o- (12.15)
+
+The inverse rigid body transform that converts coordinates in system 2 to
+coordinates in system 1 is
+
+p, = RT(p, - Poo) = Rp, + Pio (12.16)
+
+where the notation p;y means the point in coordinate system 7 that is the
+origin of the other coordinate system. Note that the inverse translation is not
+Just —py, but must be multiplied by the inverse rotation matrix, because the
+translation Ppyq is in coordinate system 2 and the inverse translation must
+be expressed in the same orientation as coordinate system 1.
+318 CHAPTER 12. CALIBRATION
+
+12.2.2. Axis of Rotation
+
+Rotation can also be specified as a couuterclockwise (right-handed) rotation
+about the axis specified by the unit vector (wz, wy,w,). This is a very intu-
+itive way of viewing rotation, but it has the same problems as Euler angles
+in numerical algorithms. The angle and axis representation can be converted
+into a rotation matrix for use in the formula for rigid body transformation
+(Equation 12.9), but it would be nice to have a scheme for working directly
+with the angle and axis representation that produced good numerical algo-
+tithms. This is part of the motivation for the quaternion representation for
+rotation, discussed in the next. section.
+
+12.2.3 Unit Quaternions
+
+The quaternion is a representation for rotation that has been shown through
+experience to yield well-conditioned numerical solutions to orientation prob-
+lems. A quaternion is a four-clement, vector,
+
+a = (40, 1, 92, 93). (12.17)
+
+To understand how quaternions encode rotation, consider the unit circle in
+the 2-y plane with the implicit equation
+
+eP+y=at. (12.18)
+
+Positions on the unit circle correspond to rotation angles. In three dimen-
+sions, the unit sphere is defined by the cquation
+
+ePtyYtee=l. (12.19)
+
+Positions on the unit sphere in three dimensions encode the rotation angles
+of w and ¢ about the x and y axes but cannot represent the twist « about
+the z axis. One more degree of freedom is required to represent all three
+rotation angles. The unit sphere in four dimensions is defined by the implicit
+
+equation
+ePtyp+2twel. (12.20)
+
+{| ln ule dwell UL TE
+
+points on the unit sphere in four dimensions.
+12.2. RIGID BODY TRANSFORMATIONS 319
+
+Rotation is represented by unit quaternions with
+G+G+e+gGg=l1. (12.21)
+
+Each unit quaternion and its antipole —q = (—qo, —91, —g2, —g3) represent a
+rotation in three dimensions.
+
+The rotation matrix for rigid body transformation can be obtained from
+the elements of the unit quaternion:
+
+wta— a — 43 Agar —qogs) —-2(q9s + gog2)
+
+Riq)= | 2(a19¢2 +9093) ah +93 —G7 — 4 2(g293 — Gum)
+2(4193 ~ 9092) Aegt+on) e+a-aG—-é
+(12.22)
+
+After the unit quaternion is computed, Equation 12.22 can be used to com-
+pute the rotation matrix so that the rotation can be applied to each point
+using matrix multiplication.
+
+The unit. quaternion is closely related to the angle and axis representation
+for rotation, described in Section 12.2.2. A rotation can be represented as a
+scalar 6 for the amount of rotation and a vector (w,,wy,w,) for the axis of
+rotation. A quaternion has a scalar part, which is related to the amount of
+rotation, and a vector part, which is the axis of rotation.
+
+Let the axis of rotation be represented by the unit vector (w,, wy, w,) and
+use i, j, and k to represent the coordinate axes so that the unit vector for
+the rotation axis can be represented as
+
+Wel + wyj + wk, (12.23)
+
+The unit quatcrnion for a counterclockwise rotation by @ about this axis is
+
+e 6g
+q = cos 5 + sin 2 (wri + wyj + wk) (12.24)
+= got dit Git ak. (12.25)
+
+The first term is called the scalar (real) part of the quaternion, and the other
+terms are called the vector (imaginary) part. A point p = (x,y,z) in space
+has a quaternion representation r which is the purely imaginary quaternion
+with vector part equal to p,
+
+r=zi+yj+ zk. (12.26)
+320 CHAPTER 12. CALIBRATION
+
+Let p’ be point p rotated by matrix R(q),
+p’ = R(aq)p. (12.27)
+
+If r is the quaternion representation for point p, then the quaternion repre-
+sentation r’ for the rotated point can be computed directly from the elements
+
+of quaternion q,
+
+r’ = qrq*, (12.28)
+where q* = (go, —4z, —dy, —@z) is the conjugate of quaternion q and quater-
+nion multiplication is defined as
+
+rq= (rogo — ede — Tydy — Pees (12.29)
+Pode + Ga + Pryde — Pedys
+Ody — Fede + TyGo + Pde
+O92 + Pedy — Pde + Peo).
+
+Rigid body transformations can be conveniently represented using a seven-
+element vector, (go, ¢1, 92; 93) 94) 95, Ye), in which the first four elements are a
+unit quaternion and the last three elements are the translation. If we let
+R(q) denote the rotation matrix corresponding to the unit quaternion in this
+representation, then the rigid body transformation is
+
+Po = R(q) py + (94,95, 98)" - (12.30)
+
+We will use quaternions in the next section to present an algorithm for solving
+the absolute orientation problem.
+
+12.3. Absolute Orientation
+
+The absolute orientation problem is the recovery of the rigid body transfor-
+mation between two coordinate systems. One application for the absolute ori-
+entation problem is to determine the relationship between a depth measuring
+device, such as a range camera or binocular stereo system, and the absolute
+coordinate system defined for a scene so that all measurement points may
+be expressed in a common coordinate system. Let p, = (xg, ye, Z-) denote
+
+the coordinates of a point in camera coordates and P, = lew Yas a denoke
+the coordinates of a point in absolute coordinates. The input to the absolute
+12.3. ABSOLUTE ORIENTATION 321
+
+orientation problem is a set of conjugate pairs: {(P.1, Pai), (Pea Pag)s
+
+(Pens Pan) }-
+To develop a solution to the absolute orientation problem, expand the
+
+equation for the rigid body transformation from a point p, in camera coor-
+dinates to a point p, in absolute coordinates to expose the components of
+the rotation matrix:
+
+Ly = Peele + Taye + Prz%e + Px
+Ya = Tyee + Pyyto + Pyzt%e + Py (12.31)
+2g = Prato t Prye +P rzZe + Pee
+
+The unknowns are the 12 parameters of the transformation: the 9 elements
+of the rotation matrix and the 3 components of translation. Each conjugate
+pair yields three equations. At least four conjugate pairs are needed to get
+12 equations for the 12 unknowns; in practice, a much larger number of
+calibration points is used to improve the accuracy of the result.
+
+If the system of lincar equations is solved without constraining the ro-
+tation matrix R to be orthonormal, the result may not be a valid rotation
+tmatrix. Using a nonorthonormal matrix as a rotation matrix can produce
+unexpected results: the matrix transpose is not necessarily the inverse of the
+matrix, and measurement errors in the conjugate pairs may influence the
+solution in ways that do not yield the best rigid body approximation. Some
+approaches orthogonalize the rotation matrix after each iteration, but there
+is no guarantee that the orthogonalized matrix will be the best approxima-
+tion to the rotation. In Section 12.7, we present a method for solving the
+absolute orientation problem that guarantees that. the solution matrix will be
+a rotation matrix. Another approach is to solve for {he rotation angles rather
+than the entrics in the rotation matrix; however, using the Huler angles leads
+to nonlinear algorithms with numerical difficulties. In photogrammetry, the
+nonlinear equations are linearized and solved to get corrections to the nom-
+inal values [103], but this approach assumes that good initial estimates are
+available.
+
+There are many other representations for rotation that may yield good
+numerical methods, such as unit quatcrnions. Let R(q) be the rotation
+matrix corresponding to a unit quaternion q. The rigid body transformation
+that converts the coordinates of each point in camera coordinates to absolute
+coordinates is
+
+Pai = RUG) Poi + Pes (12.32)
+322 CHAPTER 12. CALIBRATION
+
+where p, is the location of the origin of the camera in the absolute coordinate
+system. Now the regression problem has seven parameters: the four elements
+im the unit quaternion for rotation plus the three clements in the translation
+vector.
+
+As stated earlier, the input to the absolute orientation problem is a set of
+conjugate pairs: {(Po4;Pa1): (Pe2a>Pag))-- (Pen: Pan) }- Consider the set of
+pomnts in camera coordinates and the set of points in absolute coordinates as
+two sets of points: P, = {Pa1,Pa2s-++>Pan} and P. = {Pe1+Pe2s--+s Pen}:
+The absolute orientation problem is to align these two clouds of points in
+space. Compute the centroid of each point cloud,
+
+4
+
+PB, = —> “Pay (12.33)
+Mie
+7
+
+Be = = Peis (12.34)
+na
+
+and subtract the centroid from each point:
+
+Tui = Pai — Pa (12.35)
+Tei = Pei ~ Per (12.36)
+
+After the rotation has been dctermined, the translation is given by
+
+Pe = P, — R(q) py. (12.37)
+
+Now we are left with the problem of determining the rotation that will align
+the two bundles of rays.
+
+Tn the rest of this derivation of the rotation, the points will be expressed as
+rays about the centroids and all coordinates will be ray coordinates. Since the
+bundles of rays were derived from the set of conjugate pairs, we know which
+ray in the camera bundle corresponds to each ray in the bundle for absolute
+coordinates. When the two bundles of rays are aligned, cach corresponding
+pair of rays will be coincident, as illustrated in Figure 12.2. In other words,
+cach pair of rays will lie along the same line and point in the same direction.
+Neglecting the effects of measurement errors, the angle between each pair of
+
+FAN WL DE (AN TNE COMING OF UNH AEG AL DL CAIN ceca
+
+will prevent the bundles from being perfectly aligned, but we can achieve
+12.3. ABSOLUTE ORIENTATION 323
+
+Camera Pei Pei
+ae]
+2
+=
+z
+5 |
+SA ONE ONY
+\\/ \vi Sd t
+Absolute # Pai BB Pai Bw Pai
+1 2 3
+
+Figure 12.2: After the two bundles of rays (vectors of points about the cen-
+troids) are aligned and scaled, the centroid of one bundle can be translated
+to bring the two coordinate systems into alignment.
+
+the best alignment in a least-squares sense by finding the rotation R(q) that
+maximizes the scalar product of each ray pair:
+
+7 = rai: Rla)ees. (12.38)
+
+In quaternion notation, this sum is
+
+n
+
+Si ras ateea® = So (ares) - (ara): (12.39)
+
+a=] i=l
+
+The sum can be successively changed into the notation of a quadratic form,
+
+n nr
+
+S (ares) . (taiq) = So (Need)? (Nai) (12.40)
+
+i=1 i=l
+
+= = Lavan ai (12.41)
+324 CHAPTER 12. CALIBRATION
+
+=q' (x: NEN) q (12.42)
+i=l
+
+=q" (S4) | (12.43)
+i=1
+
+= q'Nq, (12.44)
+
+assuming that q corresponds to a column vector. The unit quaternion that
+maximizes this quadratic form is the eigenvector corresponding to the most
+positive eigenvalue. The eigenvalues can be determined by solving a fourth-
+order polynomial using the formulas published by Horn [110], or the eigen-
+values and eigenvectors can be calculated using standard numerical meth-
+ods [197].
+
+The matrices N,,; and N,, are formed from the elements of each ray. Let
+Toi = (ois You's Zoi) and Tai = (ats Ya,is Zai)s then
+
+[ 0 ~2ei Yet —Zei
+New = | te 9 et Ue (12.45)
+: Yet = Fe 0 Logi
+L 2cé¢ Ye, Lei 0
+[ 0 -®ai Yai Za,
+A (12.46)
+Yai 2a 0 Lai
+L “ai Yai Fas 0
+and the matrix N is
+(Sat Syy+Sez) Sy2—Say Bsn Sez Say —Syx
+Syz— Say (S2s—Syy— S22) SrytSye SretSez
+N= Sen — Suz Sey t Sys (-Snet+Syy—Sez) Sye+Sey ,
+Say —Syz S22+So2 SystSey (—S22—SyytSe2)
+(12.47)
+
+where the sums are taken over the clements of the ray coordinates in the
+camera and absolute coordinate systems:
+
+See = SS tesitas (12.48)
+
+nm
+i=l
+12.4. RELATIVE ORIENTATION 325
+
+Sey = S we itla,i (12.49)
+i=1
+
+See = Voteizaa (12.50)
+4=1
+
+In general, 5,; is the sum over all conjugate pairs of the product of coordinate
+k in the camera point and coordinate / in the absolute point:
+
+n
+Su = >- keslai. (12.51)
+i=1
+
+The result of these calculations is the unit quatcrnion that represents the
+rotation that aligns the ray bundles. A rotation matrix can be obtained from
+the quaternion using Equation 12.22, and the translation part of the rigid
+body transformation can be obtained using Equation 12.37. The rigid body
+transformation can be applied to any point measurements generated by the
+depth measurement system, whether from a range camera, binocular stereo,
+or any other scheme, to transform the points into the absolute coordinate
+system.
+
+12.4 Relative Orientation
+
+The problem of relative orientation is to determine the relationship between
+two camera coordinate systems from the projections of corresponding points
+in the two cameras. The relative orientation problem is the first step in
+calibrating a pair of cameras for use in binocular stereo. We covered binocular
+stereo algorithms for matching features along epipolar lincs in Section 11.2.
+To simplify the presentation, we assumed that the corresponding epipolar
+lines in the left and right image planes corresponded to the same rows in the
+left and right image arrays. This section will cover the solution to the relative
+orientation problem and show how the location of the epipolar lines in the two
+image planes can be determined. Scction 12.5 will show how the left and right
+images can be resampled so that the epipolar lines correspond to the image
+rows, as assumed by the algorithms presented in Section 11.2. The disparities
+326 CHAPTER 12. CALIBRATION
+
+Figure 12.3: Illustration of the relative orientation problem for calibrating
+stereo cameras using the corresponding projections of scene points.
+
+found by stereo matching are actually conjugate pairs. Section 12.6 will show
+how these conjugate pairs can be converted to point measurements in the
+coordinate system of the stereo device. The relative orientation problem is
+illustrated in Figure 12.3.
+
+Suppose that a point p in the scene is within the view volume of two
+cameras, designated as the left and right cameras. Point p is denoted p, in
+the coordinate system of the left camera and p, in the coordinate system
+of the right camera. The projection of point p onto the image plane of the
+left camera is p} = (xj, yy) and the projection of the point onto the image
+plane of the right camera is p/, = (x/., y,). From the equations for perspective
+projection:
+
+a ky yo Mt
+
+= = 12.52
+fr 2% fio 4 ( )
+xi, , ye Yr «
+f = z f = = (12.53)
+r i r r
+
+The rigid body transformation that transforms coordinates in the left camera
+system to coordinates in the right camera system is
+
+rE
+
+Ua = Font TT Ty ‘it
+
+Zp = Pept) + Pay Yt +224 + Pz. (12.56)
+12.4, RELATIVE ORIENTATION 327
+
+Solve the cquations for perspective projection for x;, yz, z,, aud y, and plug
+into the equations for a rigid body transformation to obtain a sect of equations
+for the relationship between the projections of the conjugate pairs:
+
+fi ar fi :
+cot) trey trefitpet = et | 12.57
+Powty + Tay + Pach + Po MR (12.57)
+t , Ly Fr fi ye 5
+Pyek + yyy + Tyzht + Pus = roe (12.58)
+1 2p fi ,
+Taattt + Payyt + tefi + Pe = a (12.59)
+,
+
+The rotation part of the transformation changes the oricntation of the left
+camera so that it coincides with the orientation of the right camera. The
+translation is the bascline between the two cameras. The variables for trans-
+lation and depth appear as tatios in the equations, which means that the
+length of the baseline and depth can be sealed arbitrarily. For example, you
+can separate the camcras by twice as much and move the points in the scene
+twice as far away without changing the perspective geometry.
+
+Ti is not possible to determine the bascline distance from the projections
+of the calibration points. This is not a scrious problem, as the scale factor can
+be determined later by other means. For now, assume that the translation
+between cameras is a unit vector. Solving the relative orientation problem
+provides the three parameters for rotation and the two parameters for a unit
+vector that represents the direction of baseline. The binocular stereo depth
+measurements scale with the bascline distance. Assuming a unit baseline
+distance means that the binocular stereo measurements will be in an arbi-
+trary system of units. The measurements obtained under the assumption of
+unit baseline distance will be correct except for the unknown scale factor.
+Relative distances between points will be correct. These arbitrary units can
+be converted to real units by multiplying by the bascline distance after it is
+obtained. Section 12.7 shows how the baseline distance can be determined
+as part of the solution to the absolute orientation problem. The conversion
+of stereo measurements from arbitrary units to real units and the transfor-
+mation of point coordinates from viewer-centcred coordinates to absolute
+coordinates can be done simultaneously by applying the transformation ob-
+tained from this augmented absolute oricntation problem.
+
+The rotation matrix is orthonormal, and this provides six additional con-
+straints in addition to the artificial constraint of unit baseline distance. Given
+328 CHAPTER 12. CALIBRATION
+
+n calibration points, there are 12+ 2n unknowns and 7+ 3n constraints. At
+least five conjugate pairs are uecded for a solution, but in practice many
+more calibration points would be used to provide more accuracy.
+
+‘The relative orientation problem starts with a sct of calibration points
+and determines the rigid body transformation between the left and right
+cameras using the projections of these calibration points in the left and right
+image planes. Each calibration point p in the scene projects to point p}
+in the left camera and point p/ in the right camera. Each projected. point
+corresponds to a ray from the center of projection of its camera, through the
+projected point, and into the scene. The rays corresponding to p; and pj},
+should intersect at point p in the scene, but may not intersect due to errors
+in measuring the projected locations in the image planes. We want to find
+the relative position and oricntation of the two cameras in space, subject. to
+the constraint of unit bascline distance, so that the errors in the locations
+of the rays in the image planes are minimized.
+
+Let r; be the ray (vector) from the center of projection of the left camera
+through point pj in the left image planc, let r, be the ray from the center
+of projection of the right camera through point p/ in the right image plane,
+and let b be the vector from the center of projection of the left camera to
+the center of projection of the right camera. We need to work with each
+ray in the same coordinate system, so rotate r; so that it is in the same
+coordinate system as ray r, and let rj denote this rotated ray. If the two
+tays intersect, then they lic in the plane normal to r; x r,. The baseline lies
+in this same plane, so the baseline is normal to rj x r,. This relationship
+is expressed mathematically by saying that the dot product of the baseline
+with the normal to the plane is zcro:
+
+b-(r) x r,) =0. (12.60)
+
+‘This relationship is called the coplanarity condition.
+
+Duc to measurement errors, the rays will not intersect and the coplanarity
+condition will be violated. We can formulate a least-squares solution to the
+relative oricntation problem by minimizing the sum of the squared errors of
+deviations from the triple products that represent the coplanarity condition:
+
+nm
+
+| | aa
+y= sn-itonlh Loot
+
+is
+12.4. RELATIVE ORIENTATION 329
+
+where the weight counteracts the cffect that when the triple product is near
+zero, changes in the baseline and rotation make a large change in the triple
+product. It is good practice in any regression problem to scale the relation-
+ship between the parameters and the data values so that small changes in the
+parameter space correspond to small changes in the data space. The weight
+on each triple product. is
+
+2 2 .
+[(b x ric) (rhs tna] Urtall2o? + [bat Cha xtna)] [ehalPo?
+(12.62)
+
+We need to switch to matrix notation, so assume that all vectors are column
+vectors. The error to be minimized is
+
+Uy; =
+
+x = Sui(b- 4)? (12.63)
+i=l
+= b? (> wet} b (12.64)
+i=1
+= b’Cb (12.65)
+
+subject to the constraint that b”b = 1. The term ¢;c7 is an outer product,
+a 3x 3 matrix formed by multiplying a 3 x 1 matrix with a l x 3 matrix,
+and is a real, symmetric matrix. The constrained minimization problem is
+
+x7 =b™ Cb + A(1— b*b), (12.68)
+where A is the Lagrange multiplicr. Differentiating with respect to vector b,
+Cb = Ab. (12.67)
+
+The solution for the baseline is the unit eigenvector corresponding to the
+smallest eigenvaluc of the C’ matrix. :
+
+The results above say that given an initial estimate for the rotation be-
+tween the two cameras, we can determine the unit vector for the baseline.
+There is no closed-form solution for determining the rotation, but the esti-
+mates for the rotation and baseline can be refined using itcrative methods.
+We will develop a system of linear equations for computing incremental im-
+provements for the baseline and rotation.
+330 CHAPTER 12, CALIBRATION
+
+The improvement 6b to the baseline must. be perpendicular to the base-
+line, since the unit vector representing the baseline cannot change length,
+
+b-6b=0, (12.68)
+
+and the improvement to the rotation of the left ray into the right coordinate
+system is the infinitesimal rotation vector 6w. The corrections to the bascline
+and rotation will change each triple product for cach ray from t; = b- (r),; x
+T,,) to t; + 6¢;, with the increment in the triple product given by
+
+c; 6b + d; - 6a, (12.69)
+where
+Cp = Thy X Ina (12.70)
+
+The corrections are obtained by minimizing
+C= So wi(ti tc; db +d; - dw)”, (12.72)
+i=k
+
+subject to the constraint that éb-b = 0. The constraint can be added onto
+the minimization problem using the Lagrange multiplier A to get a system of
+linear equations for the baseline and rotation increments and the Lagrange
+multiplier:
+
+C F bif éb é
+FT D 0 és |=-|d}, (12.73)
+b7 0 6 d 0
+where
+C = weep (12.74)
+i=]
+F = Swed; (12.75)
+i=l
+D = So wd,d? (12.76)
+i=1
+é = So witie? (12.77)
+i=1
+= te e
+d = >> witidf. (12.78)
+12.5. RECTIFICATION 331
+
+Once we have the corrections to the baseline and rotation, we have to
+apply the corrections in a way that preserves the constraints that the baseline
+is a unit vector and the rotation is represented correctly. For example, if
+rotation is represented as an orthonormal matrix, the corrected matrix must
+be orthonormal. It is difficult to update a rotation matrix without violating
+orthonormality, so the rotation will be represented as a unit quaternion.
+
+The baseline is updated using the formula
+
+b"*! — b" + 6b”. (12.79)
+
+The updated baseline should be explicitly normalized to guarantee that nu-
+merical errors do not lead to violation of the unit vector constraint.
+The infinitesimal rotation can be represented by the unit quatcrnion
+
+1 1
+6q=4f/1— qllell? + 5 e- (12.80)
+
+This formula guarantecs that the quaternion will be a unit quaternion even
+if the rotation is large. If r is the quatcrnion representing the rotation, then
+the updated rotation is the quaternion r’ given by
+
+r= qrq", (12.81)
+
+where multiplication is performed according to the rules for multiplying
+quaternions (Section 12.2.3), and q* is the conjugate of quaternion q.
+
+12.5 Rectification
+
+Rectification is the process of resampling stereo images so that the epipolar
+lines correspond to image rows. The basic idea is simple: if the left and right
+image planes are coplanar and the horizontal axes are colinear (no rotation
+about the optical axes), then the image rows are epipolar lines and sterco
+correspondences can be found by searching for matches along corresponding
+rows.
+
+In practice, this condition can be difficult to achicve and some vergence
+(inward rotation about the vertical camera axes) may be desirable, but if the
+pixels in the left and right images are projected onto a common plane, then
+332 CHAPTER 12. CALIBRATION
+
+the ideal epipolar geometry is achicved. Each pixel in the left (right) camera
+corresponds to a ray in the left (right) camera coordinate system. Let T;
+and T,. be the rigid body transformations that bring rays from the left and
+right cameras, respectively, into the coordinate system of the common plane.
+Determine the locations in the common plane of the corners of each image,
+create new left and right image grids, and transform each grid point back
+into its original image. Bilinear interpolation, discussed in Section 13.6.2,
+can be used to interpolate pixel values to determine the pixel values for the
+new left and right images in the common plane.
+
+12.6 Depth from Binocular Stereo
+
+Binocular stereo matches feature points in the left and right images to cre-
+ate a set of conjugate pairs, {(p,;,P,,)},¢ = 1,...,n. Each conjugate pair
+defines two rays that (ideally) intersect in space at a scene point. The space
+intersection problem is to find the three-dimensional coordinates of the point
+of intersection. Due to crrors in measuring the image plane coordinates and
+errors in the cameras, the rays will not intersect, so the problem of comput-
+ing depth from stereo pairs is to find the coordinates of the scene point that
+is closest to both rays.
+
+We will assume that stereo measurements will be made in a coordinate
+system that is different from the coordinate systems of either camera. For
+example, the stereo coordinate system might be attached to the frame that
+holds the two cameras. There will be two rigid body transformations: one
+aligns the left camera with stereo coordinates and the other aligns the right
+camera with stereo coordinates. The left transformation has rotation matrix
+FR, and translation p, = (x;, yr, 2:), and the right transformation has rotation
+matrix R, and translation p, = (-,y,,Z-). To represent point measure-
+ments in the coordinate system of the right (left) camera, use the rigid body
+transformation obtained from solving the relative orientation problem (or its
+inverse) for the left camera transformation and use the identity transforma-
+tion for the right (left) camera.
+
+The coordinates of the conjugate pair in three dimensions are (2/,,y1,, fi)
+and (#!.,,¥.a fr). Rotate and translate the left camera coordinates into stereo
+12.6. DEPTH FROM BINOCULAR STEREO 333
+
+coordinates,
+£ Fa Zhi
+y l=lu freak we ], (12.82)
+z 21 fi
+
+and rotate and translate the right camera coordinates into stereo coordinates,
+y |=] yw | +tF, Ue . (12.83)
+z Zp te
+
+In order to find the point that is close to both rays, find the values for
+t; and ¢, that correspond to the minimum distance between the rays by
+minimizing the norm
+
+x= |) ow fate) ue || we | -tR | me (12.84)
+cai fi Sp tr
+= [b+ te; —t,r,]°, (12.85)
+
+where b is the baseline in sterco coordinates, and r; and r, are the left
+and right rays rotated into stereo coordinates. To solve the ray intersection
+problem, differentiate with respect to t, and t, and set the result equal to
+zero. Solve the cquations for ¢ and t, and plug the solution values for the
+parameters into the ray equations (Equation 12.82 and 12.83) to obtain the
+point on each ray that is closest to the other ray. Average the two point
+locations to obtain the depth estimate.
+
+The stereo point measurements are in the coordinate system of the stereo
+system, either (he left or right camera, or a neutral coordinate system. If
+the algorithm for rclative oricntation presented in Section 12.4 was used
+to determine the baseline, then the measurements are in a unitless system
+of measurement. If the rigid body transformations betwoen the left and
+right cameras and another coordinate system for the stereo hardware were
+obtained by solving the exterior orientation problem (Section 12.8) or by
+other means, then the stereo point measurements are in the units that were
+used for the calibration points. Regardless of how the stereo system was
+calibrated, we have to transform the point measurements into an absolute
+coordinate system for the scene. We can convert the measurements into a
+system of units appropriate to the scene at the same time by solving the
+absolute orientation problem with a scale factor.
+334 CHAPTER 12. CALIBRATION
+
+12.7 Absolute Orientation with Scale
+
+The formulation of the absolute orientation problem in Section 12.3 does
+not. allow transformations that include a scale change; the transformation
+between coordinate systems is a rigid body transformation which includes
+only rotation and translation. Scale changes occur, for example, in binocular
+stereo wheu the baseline between the stereo cameras is unknown or incorrect
+or between range cameras with different measurement units.
+
+The absolute orientation problem, presented in Section 12.3, can be ex-
+tended to include scale changes. The solution to this extended problem will
+be a transformation that includes rotation and translation to align the view-
+point to an absolute coordinate system and includes a scale factor to convert
+camera-specific measurement units to the common system of units. Consider
+a point p with coordinates p, = (x1, y1, 21) in one coordinate system and co-
+ordinates py = (xa, ye, Z2) in another coordinate system. The transformation
+between coordinates is
+
+P2 = skp, + Po, (12.86)
+
+where s is the scale change. This increases the number of parameters in the
+absolute orientation problem to seven: three parameters for rotation, three
+parameters for translation, and the scale factor. The scaling transformation is
+uniform scaling: the coordinates of cach axis are scaled by the same amount.
+
+The input to the absolute orientation problem is a scl of n conjugate
+pairs for the first and second views: {(P,,;,P2;)}- The regression problem is
+to find the rotation A, translation py, and scale s that minimize
+
+y (P», — sRp, 3 — Po). . (12.87)
+i=l
+
+The solution requires at least three points to get nine equations for the seven
+unknowns. In practice, more points are used to provide better accuracy.
+Ignore for the moment that the correspondence between points is known
+and imagine that the two sets of points (the set of points in the first coor-
+dinate system and the set in the second system) are two clouds of points in
+absolute coordinate space. Compute the centroid of each cloud of points:
+
+|
+
+1
+Pi = - Pas (12.88)
+
+i=l
+12.7. ABSOLUTE ORIENTATION WITH SCALE 335
+
+Do = — >> Po, (12.89)
+GEL
+and transform each cloud of points to a bundle of vectors about the centroid:
+
+i= Piy- Pi: To, = Pa; — Po. (12.90)
+
+The scale parameter can be determined by computing the mean length of
+the vectors in each bundle:
+
+2 Det I[r-2,sll?
+Dee lity ll?
+
+The scale factor can be computed without knowing either the rotation or the
+translation. This is a very useful formula for calibrating the baselinc distance
+in binocular stereo and is more accurate than using only a few points.
+
+After the rotation and scale factor are determined, the translation can be
+easily computed from the centroids:
+
+Pp = Bo — sRpj. (12.92)
+
+(12.91)
+
+Computing the rotation is essentially the problem of determining how to
+align the bundles of rays about the centroids. Form the matrix M from the
+sum of scalar products of the coodinates of the rays in the first and second
+
+views:
+
+M= 3 ros(Tii)- (12.93)
+i=1
+Let matrix Q = M'M. The rotation matrix is
+R=Ms", (12.94)
+where matrix S is
+s=Q? (12.95)
+The eigenvalue-eigenvector decomposition of matrix Q is
+Q = Mvivt + Agveve + Agvavy (12.96)
+
+The cigenvalues of M?M are obtained by solving a cubic equation. The roots
+of the cubic equation can be computed from direct formulas [197]. Use the
+eigenvalucs to solve the linear equations
+
+(MTM — Ai) vi =0, (12.97)
+336 CHAPTER 12. CALIBRATION
+
+for the orthogonal eigenvectors v1, v2, and v3. Matrix S' is the square root
+of matrix Q. Fortunately, matrix square roots and their inverses are easy to
+compute in the eigensystcm representation (Equation 12.96). The inverse of
+matrix 5 is
+
+sta (M?M) — at + sot + ya (12.98)
+Compute the outer products of the eigenvectors, divided by the square root of
+the eigenvectors, and multiply this matrix by M to get the rotation matrix R.
+This method of construction guarantees that matrix R will be an orthonormal
+matrix.
+
+This algorithm provides a closed form (noniterative) solution for the ro-
+tation matrix. The scale can be determined without determining either the
+translation or rotation using the formula in Equation 12.91 and, finally, the
+translation can be determined using the formula in Equation 12.92. The
+transformation in Equation 12.86 can be applied to the point measurements
+from any depth measurement system, including binocular stereo or a range
+camera, to align the point measurements to an absolute coordinate system
+and convert the measurements into the units of the absolute coordinate sys-
+tem. The measurement units will be whatever system of units was used for
+the coordinates of the calibration points used for the absolute orientation
+problem. For example, if the calibration points in the absolute coordinate
+system are in millimeters and the depth measurements are from binocular
+stereo with a unit baseline, then the rigid body transformation obtaimed by
+solving the absolute orientation problem with these calibration points will
+transform stereo measurements to millimeters. The system of measurement
+must be the same along each coordinate axis since the same scale factor s is
+applied to cach coordinate.
+
+12.8 Exterior Orientation
+
+The problem of exterior orientation is to determine the relationship between
+image plane coordinates (2', y’) and the coordinates (a, y, z) of scene points
+in an absolute coordinate system. The exterior orientation problem is called
+
+the hand-eye problem in robotics and machine vision. L_| l.. lJ.
+1.4.1 on perspective projection that a point (x,y,z) in the viewer-centered
+12.8. EXTERIOR ORIENTATION 337
+
+coordinate system of the camcra is projected to a point (z’,y’) in the image
+plane. Until this section, we have been content to represent the coordinates
+of points in the scene in the coordinate system of the camera; in many ap-
+plications, though, it is necessary to relate the coordinates of measurements
+computed in the image plane coordinate system to the absolute coordinate
+system defined for the scene. Each point (z’,y’) in the image plane defines
+a ray from the center of projection, passing through (x',y’) in the image
+plane, and continuing on into the scene. The position of the camera in the
+scene is the location of the center of projection, and the orientation of the
+camera determines the orientation of the bundle of rays from the center of
+projection, passing through image plane points. An image plane point docs
+not correspond to a unique point in the scene, but we may be able to use the
+equation for the ray passing through the image point, along with other in-
+formation about the scene geometry, to determine a unique point in absolute
+coordinates. For example, if we know that an image plane point corresponds
+to a point on a wall, and if we know the cquation for the plane that models
+the wall, then the exact location of the point on the wall can be obtained by
+solving the system of ray and plane equations for the intersection.
+
+The exterior orientation problem is to determine the position and ori-
+entation of the bundle of rays corresponding to image plane points so that.
+the coordinates of each image plane point may be transformed to its ray in
+the absolute coordinate system of the scene. The problem is illustrated in
+Figure 12.4. The position and orientation of the bundle of rays is repre-
+sented as the rigid body transformation from camera coordinates to absolute
+coordinates. An image plane point (2’,y’) has coordinates (x’,y’, f) in the
+three-dimensional coordinate system of the camera, with the image plane at
+a distance f in front of the center of projection. The center of projection
+corresponds to the origin of the camera coordinate system. The position of
+the camera in the scene is the location of the center of projection in abso-
+lute coordinates. In camera coordinates, the parametric equation of the ray
+passing through point (z’, y’) in the image plane is
+
+(x,y,z) =t(2",y', f), (12.99)
+
+with parameter ¢ going from zero (at the center of projection) to infinity.
+At t = 1, the point (x,y,z) in the camera coordinate system is the image
+plane point (#’,y’, f). Given a measured location (z’,y’) in the image and
+338 CHAPTER 12. CALIBRATION
+
+Figure 12.4: Iustration of how the position and orientation of the camera are
+determined by aligning the bundle of rays with corresponding scene points.
+
+an estimate for the camera constant f, we have the equation for the ray in
+camera-centered coordinates.
+
+Let p = (a, y,z)" and p’ = (2’,y', f)*. The equation for the ray in the
+absolute coordinate system for the scene is obtained by applying the rigid
+body transformation from camera coordinates to absolute coordinates to the
+parametric equation for the ray (Equation 12.99),
+
+p =tRp' + po. (12.100)
+
+The rigid body transformation can be determined by measuring the position
+(zi, yf) of the projection of calibration points in the scene with known posi-
+tion (a4, yi, 2:), relating the image plane points to the scene points using the
+equations for perspective projection, and solving for the rigid body transfor-
+mation. The parameters for the exterior orientation of the camera (rotation
+angles and translation vector to the camera origin) are called the extrinsic
+parameters, as opposed to the intrinsic parameters of the internal geometry
+of the camera such as the camera constant.
+
+The exterior orientation problem can be succinctly stated: what is the
+rigid body transformation from absolute coordinates to camera coordinates
+12.8. EXTERIOR ORIENTATION 339
+
+that positions and orients the bundle of rays in space so that cach ray passes
+through its corresponding calibration point? To make the coordinate systems
+clear, we will use subscripts to distinguish absolute coordinates from camera
+coordinates. The position of a point in absolute coordinates is
+
+Pa = (®a, Yas Za)” (12.101)
+and the position of a point in camera coordinates is
+Be = (#05 Yes Ze)" (12.102)
+
+We will develop the exterior orientation problem as a transformation from
+absolute (scene) coordinates to camera coordinates. The inverse of this trans-
+formation, needed for practical applications, is given by Equation 12.16. The
+rigid body transformation from absolute coordinates to camera coordinates
+is
+
+Lo = TuxLa t+ Taya + Tuzta + Pe (12.103)
+Yo = TyxLa + lyyYa + Pyz%a + Py (12.104)
+Zo = Pala + PeyYa + Pezla + Pee (12.105)
+
+The positions of the points im the coordinate system of the camera are un-
+known, but the projection of the points onto the image plane is determined
+by the equations for perspective projection:
+
+,
+
+7 = “= (12.106)
+
+i
+
+7 = ve (12.107)
+xe
+
+Solve the perspective equations for 2, and y,., and combine the results for
+the first two equations for the transformation from absolute to camera coor-
+dinates (Equations 12.103 and 12.104) with Equation 12.105 as the denomi-
+nator to obtain two equations relating image plane coordinates (2’, y’) to the
+absolute coordinates for a calibration point:
+
+a! = Teal a + TaeyYa + e224 + Pe (12 108)
+fo Prxita + PeyYa + Prz2a + De ~
+
+Yo Pula + Paya + Pys2a t+ Py (12.109)
+f Pega + PeyYa + V2zta + De
+340 CHAPTER 12. CALIBRATION
+
+Each calibration point yiclds two equations that constrain the transforma-
+tion:
+
+2! (Pepa tT yYat Vez%atDz) — fF CexBatteyYatlertat Pe) = 0 (12.110)
+Y (PewCatPeyYat lez %e +z) _ F(tyxtot+TyyYatTyz2at+Py) = 0. (12.111)
+
+Six calibration points would yield 12 cquations for the 12 transformation
+parameters, but using the orthonormality constraints for the rotation matrix
+reduces the minimum number of calibration points to four. Many more
+points would be used in practice to provide an accurate solution. Replace
+the elements of the rotation matrix with the formulas using Euler angles and
+solve the nonlinear regression problem.
+
+12.8.1 Calibration Example
+
+A robot is equipped with a suction pickup tool at the end of the arm. The
+tool is good for picking up small, flat objects if the suction tool is positioned
+near the center of the object. There are flat objects on a table within reach
+of the arm. The absolute coordinate system is at one corner of the table.
+A camera is positioned above the table, with the table within the field of
+view. The position of a point in the image plane is (2’,y’). If the object
+has good contrast against the background of the table top, then the image
+plane position can be estimated using first moments. The position of a point
+in the absolute coordinate system of the table is (x,y,z). The position and
+orientation of the camera relative to the absolute coordinate system can be
+determined by solving the exterior orientation problem.
+
+Given the position (2’, y’) of the center of the object in the image plane,
+the location (x,y,z) in the absolute coordinate system of the center of the
+part on the table is given by intersecting the ray from the camera origin
+through (2’,y’) with the plane of the table top. Both the equation for the
+table top ‘
+
+ag +byt+tez+d=0 (12.112)
+
+and the equation for the ray from the camera origin
+
+y )=tl y' (12.113)
+12.9. INTERIOR ORIENTATION 341
+
+must be in the absolute coordinate system. The ray from the camera can
+be transformed to the absolute coordinate system using the transformation
+obtained by solving the exterior orientation problem. If the origin of the
+absolute coordinate system is in the plane of the table with the z axis normal
+to the table, then Equation 12.112 reduces to z = 0 and the intersection is
+easy to compute.
+
+12.9 Interior Orientation
+
+The problem of interior orientation is to determine the internal geometry of
+the camera. The geometry is represented by a set of camera parameters:
+
+Camera constant for the distance of the image plane from the center of
+projection
+
+Principal point for the location of the origin of the image plane coordinate
+system
+
+Lens distortion coefficients for the changes in image plane coordinates
+caused by optical imperfections in the camera
+
+Scale factors for the distances between the rows and columns
+
+The interior orientation problem is the problem of compensating for errors in
+the construction of the camera so that the bundle of rays inside the camera
+obeys the assumptions of perspective projection. The camera parameters are
+called the intrinsic parameters, as opposed to the extrinsic parameters for the
+exterior orientation of the camera. The interior orientation problem is the
+regression problem for determining the intrinsic parameters of a camera.
+The camera constant is not the same as the focal length of the lens.
+When the lens is focused at infinity, then the camera constant is equal to
+the focal length; otherwise, the camera constant is less than the focal length.
+The principal point is where the optical axis intersects the image plane. It
+establishes the origin of the image plane coordinate system, which up to this
+point has been assumed to be the center of the image array (sce Equations
+12.1 and 12.2). Although the camera constant is close to the focal length and
+the principal point is close to the center of the image, these approximations
+may not be good enough for many applications. The spacing between the
+342 CHAPTER 12. CALIBRATION
+
+rows and columns of pixels in the image sensor can be determined from the
+camera specifications, but frame grabbers may introduce errors that must be
+
+calibrated.
+
+Some calibration algorithms solve the interior orientation problems and
+exterior orientation problems at the same time. The motivation for this is
+that the true location of the calibration points on the image plane cannot
+be known until the exterior orientation of the camera has been determined.
+However, the interior orientation problem can be solved by itself, and there
+are several methods for determining the camera constant, location of the
+principal point, and lens distortions without knowing the exterior orientation
+of the camera in absolute coordinates. Methods for determining both the
+intrinsic and extrinsic parameters are covered in Section 12.10.
+
+The fundamental idea in determining the intrinsic camera parameters
+independent of the extrinsic parameters is to use a calibration image with
+some regular pattern, such as a grid of lines. Distortions in the pattern are
+used to estimate the lens distortions and calculate corrections to the nominal
+values for the other intrinsic parameters.
+
+Lens distortions include two components: radial distortion that bends the
+rays of light by morc or less than the correct amount, and decentering caused
+by a displacement of the center of the lens from the optical axis. The radial
+distortion and deeentering effects are modeled as polynomials; the interior
+orientation algorithm estimates the coefficients of these polynomials. Figure
+12.5 illustrates the radially symmetric nature of most lens distortions, in the
+absence of lens decentering errors. Light rays are bent toward the optical
+axis by more or less than the correct amount, but this error is the same at
+all positions on the lens (or in the image plane) that are the same distance
+from the principal point.
+
+The radial distortion can be modeled as a polynomial in even powers of the
+radius, since crror in the amount of bending of the rays of light is rotationally
+symmetric. Let (x’, y’) denote the true image coordinates and (%,#) denote
+the uncorrected image coordinates obtained from the pixel coordinates i and
+j using an estimate for the location of the principal point:
+
+Re
+ll
+
+I-G (12,114)
+-( - 4} (12.115)
+
+[
+
+—,
+ll
+12.9. INTERIOR ORIENTATION 343
+
+Ze
+
+Figure 12.5: Most lens distortions are radially symmetric. The rays are bent
+toward the center of the image by more or less than the correct amount. The
+amount of racial distortion is the same at all points in the image plane that
+are the same distance from the true location of the principal point.
+
+The corrections (6x, 5y} will be added to the uncorrected coordinates to get
+the true image plane coordinates:
+
+gc = E+6x (12.116)
+yl = Gt by. (12.117)
+
+The corrections for radial lens distortions are modeled by a polynomial in
+even powers of the radial distance from the center of the image plane:
+
+be = (& — ap)(wir? + Kor* + nar®) (12.118)
+by = (§ - Yp)(Kir? + wort + Kr), (12.119)
+
+where (ap, yp) is the refinement to the location of the principal point and
+r= (£— ay)? + (9 - wp)? (12.120)
+
+is Lhe square of the radial distance from the center of the image. Note that
+Zp and yp are not the same as ¢, and ¢, in Equations 12.114 and 12.115,
+344 CHAPTER 12. CALIBRATION
+
+which are used to compute the uncorrected image coordinates; x, and y, are
+corrections to ¢ and ¢,. After calibration, the corrections can be applied to
+
+the initial estirnates:
+
+Cy = Cy + Lp (12.121)
+Cy = by — Yp- (12.122)
+
+The calibration problem for correcting radial distortion is to find the coeffi-
+cients, K1, Ko, and «3, of the polynomial, Lens distortion models beyond the
+sixth degree are rarely used; in fact, it may not be necessary to go beyond
+a second-degree polynomial. The location of the principal point is included
+in the calibration problem since an accurate estimate for the location of the
+principal point is required to model the lens distortions. More powerful mod-
+els for lens distortions can include tangential distortions due to effects such
+as lens decentcring:
+
+dx = (%—ap)(Kiret+Kari+kare) (12.123)
++ [pr (1?+-2(@-<p)”) + 2po(@—x))(G—yp)] (+ sr?)
+
+by = (Y~Yp) (Kira + Kara + Kero) (12.124)
++ |2p1(-@p)(G—yp) + Be (7? +2(G—-yp)*)] 1-+psr?).
+
+Use a calibration target consisting of several straight lines at different
+positions and orientations in the field of view. The only requirement is that
+the lines be straight; the lines do not have to be perfectly horizontal or ver-
+tical. This method does not involve solving the exterior orientation problem
+simultaneously. It is easy to make a grid of horizontal and vertical lines
+using a laser printer. Diagonal lines are rendered less accurately, but since
+the exterior orientation does not matter, you can shift and rotate the grid to
+different positions in the field of view, acquire several images, and gather a
+large set of digitized lines for the calibration set. Mount the grid on a flat,
+rigid surface that is normal to the optical axis. Since the lines do not have
+to be parallel, any tilt in the target will not affect the calibration procedure.
+Determine the location of the cdge points to subpixcl resolution by comput-
+
+welhe fol mone over anal sd MIMAKI. TAA
+
+size should be somewhat larger than the width of the lines, but smaller than
+12.9, INTERIOR ORIENTATION 345
+
+the spacing between lines. The IIough transform can be used to group edges
+into lines and determine initial estimates for the line parameters.
+The equation for each line / in true (corrected) image coordinates is
+
+2’ cos @, + y' sin & — py = 0. (12.125)
+
+Since the precise position and orientation of each linc is unknown, the esti-
+mates for the line parameters must be refined as part of the interior oricn-
+tation problem. Let (xj, yg) denote the coordinates of edge point k along
+line 7, Replace the true image coordinates (z’, y’) in Equation 12.125 with
+the uncorrected coordinates 2; + 6a and yg + é6y using the model for the
+corrections given above. This yields an equation of the form
+
+Ff (ht, Yat: Lp: Yps Ky Re, Ka, Pi; Po, Ps, 01,6) = 0 (12.126)
+
+for each observation (edge point) and the intrinsic parameters. The set. of
+equations for n edge points is a system of n nonlinear equations that must
+be solved using nonlinear regression. The initial values for corrections to
+the location of the principal point are zero, and the coefficients for radial
+lens distortion and decentering can also be initialized to zero. The overall
+minimization criterion in
+
+nm
+x? = SF (en Yeas Lp, Up, K1, 82,83, Ply P2;P3; Pls 4)). (12.127)
+
+k=l
+This nonlinear regression problem can be solved for the location of the prin-
+cipal point (zp, y,); the parameters for the radial lens distortion «1, x2, and
+«3; and the parameters for the lens decentering pi, po, and p3. The param-
+eters of each line are estimated as a byproduct of determining the intrinsic
+
+parameters and can be discarded.
+
+Example 12.1 Suppose that a calibration table has been prepared to compen-
+sate for lens and camera distortions. The table provides a correction (dz, dy)
+for every row and column in the image array. How would this information
+be used in the overall system presented as an example in Section 12.8.1? Af-
+ter computing the position (,9) of the centroid of the object in the image
+plane, interpolate the corrections between pixels and add the corrections to
+the centroid to get correct coordinates for the ray from the camera origin to
+the object.
+346 CHAPTER 12. CALIBRATION
+
+12.10 Camera Calibration
+
+The camera calibration problem is to relate the locations of pixels in the
+image array to points in the scene. Since each pixel is imaged through per-
+spective projection, it corresponds to a ray of points in the scene. The camera
+calibration problem is to determine the equation for this ray in the absolute
+coordinate system of the scene. The camera calibration problem includes
+both the exterior and intcrior orientation problems, since the position and
+orientation of the camera and the camera constant must be determined to
+relate image plane coordinates to absolute coordinates, and the location of
+the principal point, the aspect ratio, and lens distortions must be determined
+to relate image array locations (pixels coordinates) to positions in the im-
+age plane. The camera calibration problem involves determining two sets
+of parameters: the extrinsic parameters for rigid body transformation (exte-
+rior orientation) and the intrinsic parameters for the camera itself (interior
+orientation).
+
+We can use an initial approximation for the intrinsic parameters to get
+a mapping from image array (pixel) coordinates to image plane coordinates.
+Suppose that there are n rows and m columns in the image array and assume
+that the principal point is located at the center of the image array:
+
+Ce = — (12.128)
+
+cy = (12.129)
+
+The image plane coordinates for the pixel at grid location [2, j] are
+
+= Trdly(j — Cx) (12.130)
+= —d,(t— cy), (12.131)
+
+Sr Re
+
+where d,, and d, are the center-to-center distances between pixels in the ¢ and
+y directions, respectively, and 7, is a scale factor that accounts for distortions
+in the aspect ratio caused by timing problems in the digitizer electronics. The
+row and column distances, d, and d,, are available from the specifications
+for the CCD camera and are very accurate, but the scale factor 7, must
+
+be added to the list of intrinsic parameters for the camera and determined
+through calibration. Note that these are uncorrected image coordinates,
+12.10. CAMERA CALIBRATION 347
+
+marked with a tilde to emphasize that the effects of lens distortions have not
+been removed. The coordinates are also affected by errors in the estimates
+for the location of the principal point (c,,c,) and the scale factor 7,.
+
+We must solve the exterior oricntation problem before attempting to solve
+the interior oricntation problem, since we must know how the camera is
+positioned and oriented in order to know where the calibration points project
+into the image plane. Once we know where the projected points should be, we
+can use the projected locations p; and the measured locations 9; to determine
+the lens distortions and correct the location of the principal point and the
+image aspect ratio. The solution to the exterior orientation problem must
+be based on constraints that are invariant to the lens distortions and camera.
+constant, which will not be known at the time that the problem is solved.
+
+12.10.1 Simple Method for Camera Calibration
+
+This section cxplains the widely uscd camera calibration method published
+by Tsai [234]. Let pj be the location of the origin in the image plane, rj
+be the vector from pj to the image point pi = (2), y/), p; = (ei, vi, zi) be a
+calibration point, and r; be the vector from the point (0,0, z;) on the optical
+axis to p,. If the difference between the uncorrected image coordinates (#;, §;)
+and the true image coordinates (2%, yj) is due only to radial lens distortion,
+then rj is parallel to r;. The camera constant and translation in z do not
+affect the direction of r/, since both image coordinates will be scaled by the
+same amount. ‘These constraints are sufficient to solve the exterior orientation
+problem [234].
+
+Assume that the calibration points lie in a plane with z = 0 and assume
+that the camera is placed relative to this plane to satisfy the following two
+crucial conditions:
+
+1. The origin in absolute coordinates is not in the field of view.
+
+2. The origin in absolute coordinates does not project to a point in the
+image that is close to the y axis of the image plane coordinate sys-
+tem.
+
+Condition 1 decouples the effects of radial lens distortion from the camera
+constant and distance to the calibration plane. Condition 2 guarantees that
+348 CHAPTER 12. CALIBRATION
+
+the y component of the rigid body translation, which occurs in the denomi-
+nator of many equations below, will not be close to zero, These conditions
+are easy to satisfy in many imaging situations. For example, suppose that
+the camera is placed above a table, looking down at the middle of the table.
+The absolute coordinate system can be defined with z = 0 corresponding
+to the plane of the table, with the « and y axes running along the edges
+of the table, and with the corner of the table that is the origin in absolute
+coordinates outside of the field of view.
+
+Suppose that there are n calibration points. For each calibration point,
+we have the absolute coordinates of the point (a;, y;, 2;) and the uncorrected
+image coordinates (2;, #;). Use these observations to form a matrix A with
+TOWS @;,
+
+ai = (Yiri, HY, —TiLi, —Liys, Yi). (12.132)
+Let u = (ur, tt, ug, U4, Us) be a vector of unknown parameters that are related
+to the parameters of the rigid body transformation:
+
+uy = = 12.133
+1S ( }
+uy = tt (12,134)
+Py
+ug = “Ht (12.135)
+Py
+Tyy
+ug = THe 12.136
+1= 5 { )
+us = ©. (12.137)
+Py
+
+Form a vector b = (4, @,...,%,) from the n observations of the calibration
+points. With more than five calibration points, we have an overdetermined
+
+system of linear equations,
+Au =b, (12.138)
+
+for the parameter vector u. Solve this linear system using singular value
+decomposition, and use the solution parameters, uj, ue, ug, ug, and us, to
+compute the rigid body transformation, except for p,, which scales with the
+12.10. CAMERA CALIBRATION 349
+
+First, compute the magnitude of the y component of translation. If w
+and wy are not both zero and ug and uy are not both vero, then
+
+U = (U? ~ A(uray — ugus)"]/?
+
+2(uyus — Ugus)?
+
+Dy = ; (12.139)
+
+where U = uv? + u2 + u2 + u2; otherwise, if uy and uw are both zero, then
+1 2 3 4 , L ,
+
+1
+—_— : 12.140
+Py ug t ul’ ( )
+otherwise, using uy, and we,
+p= l . (12.141)
+Y ug t+ ug
+
+Second, determine the sign of p,. Pick the calibration point p = (2, y, z)
+that projects to an image point that is farthest from the center of the im-
+age (the scene point and corresponding image point that are farthest in the
+periphery of the field of view), Compute ryz, T2y, Tye, Tyy, 20d pe from the
+solution vector obtained above:
+
+Too = UP, (12.142)
+Tey = UDy (12.143)
+Pye = UsPy (12.144)
+yy = UsPy (12.145)
+Po = Uspy. (12.146)
+
+Let € = Pert + Peyy + De aud €y = ryt + Tyyy + py. If €& and # have the
+same sign and &, and ¥ have the same sign, then p, has the correct sign
+(positive); otherwise, negate p,. Note that the parameters of the rigid body
+transformation computed above are correct, regardless of the sign of p,, and
+do not need to be changed.
+
+Third, compute the remaining parameters of the rigid body transforma-
+tion:
+
+= fl-72,—972, (12.147)
+
+rye = 1-12, —r2,. (12.148)
+350 CHAPTER 12. CALIBRATION
+
+Since the rotation matrix must be orthonormal, it must be true that R? R=
+I. Use this fact to compute the elements in the last row of the rotation
+matrix:
+
+— pt _
+Tog = La Moe Peyl ye (12.149)
+Pre
+l= PyePay — re
+Tay = - * iw (12.150)
+uz
+—— ve —Teelnz — PayPye (12.151)
+
+If the sign of ran?ye + Pay?yy 18 positive, negate ry,. The signs of rz, and
+rzy may need to he adjusted after computing the camera constant in the
+following step.
+
+Fourth, compute the camera constant f and p,, the z component of trans-
+lation. Use all of the calibration points to form a system of linear equations,
+
+Av =b, (12.152)
+
+for estimating f and p,. Use each calibration point to compute the corre-
+sponding row of the matrix,
+
+Oj = (yaks + Pye + Py, — dy), (12.153)
+
+and the corresponding element of the vector on the right side of Equation
+12.152,
+bs = (Text + Pay yi) dy ti. (12.154)
+
+The vector v contains the parameters to be estimated:
+v= (f,pz)". (12.155)
+
+Use singular value decomposition to solve this system of equations. If the
+camera constant f < 0, then negate r,, and rz, in the rotation matrix for
+the rigid body transformation.
+
+Fifth, use the estimates for f and p, obtained in the previous step as
+the initial conditions for nonlinear regression to compute the first-order lens
+
+ddan CLOUT TT UT
+
+age plane coordinates (2’, y') are related to the calibration points in camera.
+12.10. CAMERA CALIBRATION 351
+
+coordinates (&,, Ye, Z¢) through perspective projection:
+go= f= (12.156)
+
+y = f¥. (12.157)
+
+Assume that the true (corrected) image plane coordinates are related to the
+measured (uncorrected) image plane coordinates using the first term in the
+model for radial lens distortion:
+
+av = #(1+ Kir?) (12.158)
+yo = H+ mr), (12.159)
+
+where the radius r is given by
+
+r= (fP+4R. (12.160)
+
+Note that the uncorrected (measured) image plane coordinates (%, 7) are not
+the same as the pixel coordinates [i,j] since the location of the image center
+(Cx, ¢y), the row and column spacing d, and d,, and the cstimated scale factor
+T, have already been applied.
+
+Use the y components of the equations for perspective projection, lens
+distortion, and the rigid body transformation from absolute coordinates to
+camera coordinates to get a constraint on the camera constant f, z transla-
+tion, and lens distortion:
+
+Fyr@aa t Pyydag + Pyztat + Py
+Pankag + PeyYas 7 Peetu + Pz
+
+jl + xr?) = f (12.161)
+This leads to a nonlinear regression problem for the parameters p,, f, and #}.
+We use the measurements for y, rather than z, because the z measurements
+are affected by the scale parameter 7,. The spacing between image rows dy
+is very accurate and readily available from the camera specifications and is
+not affected by problems in the digitizing electronics.
+
+Since the calibration points were in a plane, the scale factor 7, cannot be
+detcrmined. Also, the location of the image center, c, and ¢,, has not been
+calibrated. The list of further readings provided at the end of this chapter
+provides references to these calibration problems.
+352 CHAPTER 12. CALIBRATION
+
+12.10.2 Affine Method for Camera Calibration
+
+The interior oricntation problem can be combined with the exterior oricnta-
+tion problem to obtain an overall transformation that relates (uncalibrated)
+image coordinates to the position and orientation of rays in the absolute co-
+ordinate system. Assume that the transformation from uncorrceted image
+coordinates to true image coordinates can be modeled by an affine trans-
+formation within the image plane. ‘This transformation accounts for several
+sources of camera error:
+
+Scale error due to an inaccurate value for the camera constant
+
+Translation error due to an inaccurate cstimate for the image origin (prin-
+cipal point)
+
+Rotation of the image sensor about the optical axis
+Skew error due to nonorthogonal camera axes
+
+Differential scaling caused by unequal spacing between rows and columns
+in the image sensor (nonsquare pixels)
+
+However, an affine transformation cannot model the errors due to lens dis-
+tortions.
+
+In the development of the exterior orientation problem (Section 12.8),
+we formulated equations for the transformation from absolute coordinates to
+image coordinates. Now we will add an affine transformation from true image
+coordinates to measured (uncorrected) image coordinates to get the overall
+transformation from absolute coordinates to measured image coordinates.
+
+The affine transformation in the image plane that models the distortions
+duc to errors and unknowns in the intrinsic parameters is
+
+E = Ayye! + dayy’ + by (12.162)
+
+y= Ayn! + dyyy! + by, (12.163)
+
+where we are mapping from true image plane coordinates (x’, y') to uncor-
+rected (measured) image coordinates (Z, 7). Use the equations for perspective
+projection,
+
+ee (12.164)
+12.10. CAMERA CALIBRATION 353
+
+¥ Ye 4
+[= 5, 12.165)
+foe (
+to replace x’ and y’ with ratios of the camera coordinates:
+x Le Ye by 1
+FZ = Ape | —} + ae (*) += 12.166
+f (=) "Nad f ( )
+y Lo fo b
+; = tye (=) + tty (2 ) +7 (12.167)
+
+Camera coodinates are related to absolute coordinates by a rigid body trans-
+formation:
+
+Lo = Vrata + PryYa + Tee%a + Pe (12.168)
+Yo = lyr®a + PyyYa + PyzZa + Py (12.169)
+Ze = Vegka + Paya + Pezta + Be (12.170)
+
+We can use these equations to replace the ratios of camera coordinates in the
+affine transformation with expressions for the absolute coordinates,
+
+&— by Senlq + SayYa + Sxz2Za t+ te
+
+= 12.171
+f Szn€a + 82yYa + S222q + te ( )
+f Szaka + SzyYa + 8y22q F t,’ .
+
+where the coefficients are sums of products of the coefficients in the affine
+transformation and the rigid body transformation. What we have is a pair
+of equations, similar to the equations for exterior orientation (Equations
+12.108 and 12.109), that relate absolute coordinates to uncorrected image
+coordinates. The affine model for camera errors has been absorbed into the
+transformation from absolute to camera coordinates. Equations 12.171 and
+
+12.172 can be written as
+
+f Ze S2n€a + SzyYa t+ S2zta tte :
+y- by _ Ye _ SyeLa + SyyYa + Syz2a + ty (12 174)
+
+f Ze Szekq + SzyYa + 82220 +t,
+354 CHAPTER 12. CALIBRATION
+
+to show that the (uncorrected) image coordinates are related to the camera
+coordinates by perspective projection, but the space of camera coordinates
+has been warped to account for the camera errors.
+
+Returning to Equations 12.171 and 12.172, we can absorb the corrections
+to the location of the principal point, 6, and by, into the affine transformation
+to get
+
+Bj (Sex Past SzyYait Szztai tts) — f(Seelait SryYait Se2%it+t,) =0 (12.175)
+Ui(SeeVait SeyYas + 82220; tte) _ F (Sy2%aitSyyYait Syz%aitty) =0, (12.176)
+
+which shows that cach calibration point and its corresponding measured lo-
+cation in the image plane provides two linear equations for the parameters
+of the transformation. The nominal value f for the camera constant is not
+absorbed into the affine transformation since it is needed for constructing the
+tay in camera coordinates.
+
+The set of calibration points yields a set of homogeneous linear equations
+that can be solved for the coefficients of the transformation. At least six
+points are needed to get 12 equations for the 12 unknowns, but more calibra-
+tion points should be used to increase accuracy. To avoid the trivial solution
+with all coefficients equal to zero, fix the value of one of the parameters, such
+as t, or ty, and move it 10 the right side of the equation. Form a system of
+
+linear equations,
+Au=b, (12.177)
+
+where u is the vector of transformation coefficients; row 7 of the A matrix
+is filled with absolute coordinates for calibration point 7 and products of the
+absolute coordinates and #;, gj, or f; and clement ¢ of the b vector is the
+constant chosen for ¢, or t,. Since the affine transformation within the im-
+age plane is combined with the rotation matrix for exterior orientation, the
+transformation matrix is no longer orthonormal. The system of linear equa-
+tions can be solved, without the orthonormality constraints, using common
+numerical methods such as singular value decomposition.
+
+The transformation maps absolute coordinatcs to measured image coor-
+dinates. Applications require the inverse transformation, given by
+
+y |}=Sti) & }-] ty Wh, (12.178
+
+iy
+
+haat
+oo
+
+8
+12.10. CAMERA CALIBRATION 355
+
+which can be used to determine the equation of a ray in absolute coordinates
+from the measured coordinates in the image. Note that the camera constant
+f has been carried unchanged through the formulation of the calibration
+algorithm. Since corrections to the camera constant are included in the
+affine transformation (Equations 12.162 and 12.163), the focal length of the
+lens can be used for f. Finally, the transformation from pixel coordinates
+(i, j] to image coordinates,
+
+& = 8,(j — cz) (12.179)
+§ = —s,(i—c,), (12.180)
+
+y
+
+is an affine transformation that can be combined with the model for camcra
+errors (Equations 12.162 and 12.163) to develop a transformation between
+absolute coordinates and pixel coordinates.
+
+12.10.3. Nonlinear Method for Camera Calibration
+
+Given a set of calibration points, determine the projections of the calibration
+points in the image plane, calculate the errors in the projected positions, and
+use these errors to solve for the camera calibration parameters. Since it is
+necessary to know where the calibration points should project to in the image
+plane, the exterior orientation problem is solved simultaneously. The method
+presented in this section is different from the procedure explained in Section
+12.10.2, where the interior and exterior orientation problems were combined
+into a single affine transformation, in that the actual camera calibration
+parameters are obtained and can be used regardless of where the camera is
+later located in scene.
+
+The principle behind the solution to the camera calibration problem is to
+measure the locations (i, y;) of the projections of the calibration points onto
+the image plane, calculate the deviations (6z,, 6y;) of the points from the cor-
+rect positions, and plug these measurements into the equations that model
+the camera parameters. Each calibration point yields two equations. The
+solution requires at least enough equations to cover the unknowns, but for
+increased accuracy more equations than unknowns are used and the overde-
+termined set. of equations is solved using nonlinear regression.
+
+Assume that the approximate position and orientation of the camera in
+absolute coordinates is known. Since we have initial estimates for the rota-
+tion angles, we can formulate the exterior orientation problem in terms of
+356 CHAPTER 12. CALIBRATION
+
+the Euler angles in the rotation matrix. The pararecters of the regression
+problem are the rotation angles w, ¢, and x; the position of the camera in
+absolute coordinates py, py, and p,; the camera constant f; the corrections
+to the location of the principal point (¢p, yp); and the polynomial coefficients
+for radial lens distortion «1, «2, and «3. The equations for the exterior ori-
+entation problem are
+
+f Pepa, Tay Yo + Pegg + Pe ‘
+y! _ Tyeta + lua + Pyzka + Dy (12.182)
+
+fo Peale + Paya + Peta + Ps
+Replace «’ and y' with the corrected positions from the camera model,
+
+(&—2p) (1+ Ky r?tkgrt+ngr*) _ Tne ka 7 Tay Ya T Pe22a + Pe (12.183)
+
+f Pegta Paya TP azkq 7 Dz
+
+(G— up) tar? +rart+ mgr) — Pye ®a + PyyYa + Pye%a + Py (12.184)
+
+f Tee®a + Paya + Pzzta + Pe
+
+and replace the elements of the rotation matrix with the formulas for the
+rotation matrix entries in terms of the Euler angles, provided in Equation
+12.13. Solve for the camera parameters and exterior orientation using nonlin-
+ear regression. The regression algorithm will require good initial conditions.
+If the target is a planc, the camera axis is normal to the plane, and the im-
+age is roughly centered on the target, then the initial conditions arc casy to
+obtain. Assume that the absolute coordinate system is set up so that the x
+and y axes are parallel to the camera axes. The initial conditions are:
+
+=¢=nr =0
+
+= translation in « from the origin
+
+= translation in y from the origin
+
+distance of the camera from the calibration plane
+
+il
+
+il
+
+wr we ce BE
+
+focal length of the lens
+
+=
+Il
+
+=:
+ll
+land
+12.11. BINOCULAR STEREO CALIBRATION 357
+
+It is easy to build a target, of dots using a laser printer. The uncorrected po-
+sitions of the dots in the image can be found by computing the first moments
+of the connected components.
+
+The disadvantage to nonlincar regression is that good initial values for
+the parameters are needed, but the advantage is that there is a body of
+literature on nonlinear regression with advice on solving nonlinear problems
+and methods for estimating crrors in the parameter estimates.
+
+12.11 Binocular Stereo Calibration
+
+In this section we will discuss how the techniques presented in this chapter
+can be combined in a practical system for calibrating sterco cameras and
+using the stereo measurements. This provides a forum for reviewing the
+relationships between the various calibration problems.
+
+There are scveral tasks in developing a practical system for binocular
+stereo:
+
+1. Calibrate the intrinsic parameters for each camera.
+2. Solve the relative orientation problem.
+
+3. Resample the images so that the epipolar lines correspond to image
+rows.
+
+4. Compute conjugate pairs by feature matching or correlation.
+5. Solve the stereo intersection problem for each conjugate pair.
+6. Determine baseline distance.
+
+7. Solve the absolute orientation problem to transform point measure-
+ments from the coordinate system of the stereo cameras to an absolute
+coordinate system for the scene.
+
+There are several ways to calibrate a binocular stcreo system, correspond-
+ing to various paths through the diagram in Figure 12.6. To start, cach
+camera must be calibrated to determine the camera constant, location of the
+358 CHAPTER 12. CALIBRATION
+
+Left Camera Right camera
+Interior Interior
+orientation orientation
+
+Relative
+! orientation
+
+Baseline - \
+
+calibration
+- [ Compute |
+
+Exterior
+orientation
+
+inlersections
+Y - — 4 Compute
+intersections
+~ Absolute
+orientation
+Absolute with scale
+
+orientation
+
+|
+
+Point coordinates
+
+Figure 12.6: A diagram of the steps in various procedures for calibrating a
+binocular stereo system.
+
+principal point, correction table for lens distortions, and other intrinsic pa-
+rameters. Once the left and right stereo camcras have becn calibrated, there
+are basically three approaches to using the cameras in a stereo system.
+
+The first approach is to solve the relative orientation problem and de-
+termine the baseline by other means, such as using the stereo cameras to
+measure points that are a known distance apart. This fully calibrates the
+rigid body transformation between the two cameras. Point measurements can
+be gathered in the local coordinate system of the stereo cameras. Since the
+baseline has been calibrated, the point measurements will be in real units and
+the stereo system can be used to measure the relationships between points
+on objects in the scene. IL is not necessary to solve the absolute oricntation
+problem, unless the point measurements must be transformed into another
+coordinate system.
+
+The second approach is to solve the relative orientation problem and
+obtain point measurcments in the arbitrary system of measureiment that.
+results from assuming unit baseline distance. The point measurements will be
+
+correct, except for the unknown scale factor. Distance ratios and angles will
+12.12. ACTIVE TRIANGULATION 359
+
+be correct, even though the distances are in unknown units. If the baseline
+distance is obtained later, then the point coordinates can be multiplied by the
+baseline distance to gct point measurements in known units. If it is necessary
+to transform the point measurements into another coordinate system, thon
+solve the absolute orientation problem with scale (Section 12.7), since this
+will accomplish the calibration of the baseline distance and the conversion of
+point coordinates into known units without additional computation.
+
+The third approach is to solve the exterior orientation problem for each
+sterco camera. This provides the transformation from the coordinate systems
+of the left and right camera into absolute coordinates. The point measure-
+meuts obtained by intersecting rays using the methods of Section 12.6 will
+automatically be in absolute coordinates with known units, and no further
+transformations are necessary.
+
+12.12 Active Triangulation
+
+This section will cover methods for determining the coordinates of a point
+using an active sensor that projects a plane of light onto opaque surfaces in
+the scene. A method for calibrating an active triangulation system will be
+presented.
+
+We will start with a simple geometry in camera-centered coordinates and
+proceed to the general case in absolute coordinates. Suppose that the planc
+of light rotates about an axis that is parallel to the y axis and displaced along
+the x axis by 8. Let @ be the orientation of the plane relative to the z axis.
+With @ = 0, the plane of light is parallel to the y-z plane and positive values
+for @ correspond to counterclockwise rotation about the y axis. In terms of
+vector geometry, the normal to the plane is
+
+n = (nz, Ny, n) = (cos(@), 0, sin(#)), (12.185)
+the baseline is
+b = (be, by, 62) = (62,0,0), (12.186)
+and point p = (2, y, 2) lics in the plane if
+(p—b)-n=0. (12.187)
+
+The planc of light illuminates the scene and intersects an opaque surface to
+produce a curve in space that is imaged by the camera. A line detection
+360 CHAPTER 12. CALIBRATION
+
+operator is used to estimate the locations of points along the projected curve
+in the image plane. Suppose that an estimated linc point has coordinates
+(z',y’). This corresponds to a ray in space represented by the equation
+
+&
+y |=tl yf, (12.188)
+
+where f is the distance of the image plane from the center of projection.
+Replace p in Equation 12.187 with the equation for the ray and solve for ¢,
+by, cos 6
+
+t= ————_—__ 12.189
+x’ cos — f sing’ ( )
+
+and plug into the equation for the ray to get the coordinates of the point in
+camera-centered coordinates:
+
+2'by cos 8
+F cost—f sind
+
+z
+
+_ y' by cos
+Y | =| wost-fsmo |° (12.190)
+2 fon cos 6
+
+2 cos 0—f sind
+
+If the exterior orientation of the camera has been calibrated, then the ray
+can be represented in absolute coordinates; if the position and oricntation
+of the plane are also represented in absolute coordinates, then the point
+measurements will be in absolute coordinates.
+
+It is easy to generalize these equations to allow an arbitrary position and
+orientation for the plane in space. Suppose that the plane is rotated by
+@ counterclockwise about an axis w and the normal n corresponds to the
+orientation with @ = 0. Let R(@) be the rotation matrix. A point p lies in
+
+the plane if
+(p—b)- R(@)n = 0. (12.191)
+
+We can also change the position of the plane in space by varying b,
+(p — b(d)) - R(O)n = 0, (12.192)
+
+where d is the control parameter of a linear actuator.
+12.13. ROBUST METHODS 361
+
+12.13. Robust Methods
+
+All of the calibration methods presented in this chapter have used least-
+squares regression, which is very sensitive to outliers duc to mismatches in
+forming the conjugate pairs. There are two approaches to making calibration
+robust: use a resampling plan or change the regression procedure to use a
+robust norm.
+
+To implement a resampling plan, it is necessary to consider all combina-
+tions of m conjugate pairs from the set of n conjugate pairs obtained from
+the calibration data. The size m of the subset must be large enough to get a
+good solution to the calibration problem. Choose the best sect of parameters
+by comparing the fit of the transformation to all conjugate pairs according to
+the least. median of squares criterion [207]. Use the best parameter estimates
+to remove outliers from the set of conjugate pairs, and repeat the calibration
+procedure using all of the remaining conjugate pairs.
+
+The other approach involves replacing the square norm with a robust
+norm [197, pp. 558-565]. If the calibration procedure uses linear regression,
+then usc a weighted lcast-squares solution method. Calculate the weights
+so that the weighted least-squares regression problem is cquivalent to the
+unweighted robust regression problem. If the robust norm for residual r; is
+
+p(r;), then solve
+wr? = (ri) (12.193)
+
+for the weight w,; and use this weight for the conjugate pair. This leads to
+iterative reweighted least-squares: a sequence of regression problems is solved
+with the weights adjusted between iterations. For nonlincar regression, the
+solution method may allow the robust norm to be used directly.
+
+12.14 Conclusions
+
+Several methods for calibration have been presented in this chapter, includ-
+ing the basic problems in photogrammetry: absolute, relative, exterior, and
+interior orientation. The interior orientation problem should be solved for
+any camera to ensure that the camera obeys the assumptions of image forma-
+tion assumed by inost machine vision algorithms. The remaining calibration
+problems can be divided into two groups: methods used in image analysis
+and methods used in depth measurement. The exterior orientation problem
+362 CHAPTER 12. CALIBRATION
+
+must be solved for an image analysis application when it is necessary to relate
+image measurements to the geometry of the scene. The relative orientation
+problem is used to calibrate a pair of cameras for obtaining depth measure-
+ments with binocular stereo. The absolute orientation problem is used to
+calibrate the position and oricntation of any system for depth measurement,
+including binocular stcreo or active sensing, so that the depth measurements
+in camera coordinates can be translated into the coordinate system used in
+the application.
+
+Further Reading
+
+An excellent introduction to photogrammetry is provided by Horn [109],
+who has also published a closed-form solution to the absolute orientation
+problem using orthonormal matrices [113] and unit quaternions [110]. The
+American Society of Photogrammetry publishes a comprehensive collection
+of articles on photogrammetry [224], and there are several books on pho-
+togrammetry [17, 95, 170, 254]. Photogrammetry was originally developed
+for preparing topographic maps from aerial photographs hence the name,
+which means making measurements in photographs. Terrestrial photogram-
+metry is covered in the Handbook of Non- Topographic Photogrammetry and
+includes methods of use in machine vision [137]. The camera calibration
+technique developed by ‘Tsai [234] is widely used. Further work on camera
+calibration has been done by Lenz and Tsai [154]. Horn [111] published
+an excellent description of the solution to the relative orientation problem.
+Brown [51] published the algorithm for correcting radial lens distortions and
+decentering.
+
+Photogrammetry usually assumes that objects and cameras move by rigid
+body transformations. In many cases, an object will deform as it moves, in
+addition to undergoing translation, rotation, and change in scale. Bookstein
+has published an extensive body of literature on modcling nonrigid deforma-
+tions in diverse fields using thin-plate splines [39, 40, 41, 42].
+
+Exercises
+
+12.1 How many types of orientations are possible in calibration? Consider
+some examples and illustrate the difference among them.
+EXERCISES 363
+
+12.2
+
+12.3
+
+12.4
+
+12.5
+
+12.6
+
+12.7
+
+12.8
+
+12.9
+
+12.10
+
+Why is photogrammetry concerned with the camera calibration prob-
+lem? Illustrate using an cxample.
+
+What is the effect of rectangular pixels on image measurements? How
+can you compensate for the rectangularity of pixels in measuring areas
+and centroids of regions? How will it affect measurements of relative
+locations and orientations of regions? What care would you take to
+get. correct measurements in the real world?
+
+Define affine transformation. Give three examples of objects that will
+undergo an affine transformation in an image at different time instants
+and three examples of objects that will not.
+
+Define Euler angles. Where are they used? What are their strengths
+and weaknesses”?
+
+What are quaternions? Why are they considered a good represen-
+tation for rotation in calibration? Demonstrate this considering the
+calibration of absolute orientation.
+
+Define the coplanarity constraint. Where and how is it used in camera
+calibration?
+
+Suppose that you are designing a hand-eye system. In this system a
+camera is mounted at a fixed position in the work space. The hand, a
+robot arm, is used to pick and place objects in the work space. What
+kind of calibration scheme will you require?
+
+In the above problem, if the camera is mounted on the robot arm
+itself, what kind of calibration scheme will you require to find the
+location of objects? How many fixed known points will you require
+to solve the problem?
+
+Now let’s provide a sterco system on our robot arm so that we can
+compute the depth of points easily and perform more dexterous ma-
+nipulations. What kind of calibration scheme is required in this case?
+What are the criteria for selecting scene points for calibration? What
+arrangements of points are bad for calibration?
+364 CHAPTER 12. CALIBRATION
+
+12.11 What camera paramcters should be determined for calibrating a cam-
+cra? How can you determine these parameters without directly mea-
+suring them? What parameters are available from the data sheets
+provided by the camera manufacturer?
+
+Computer Projects
+
+12,1 You want to develop a camera calibration algorithm for preparing a
+three-dimensional model of a football field using lane markers. Assume
+that a sufficient number of lane markers, their intersections, and other
+similar features are visible in the field of view. Develop an approach
+to solve the camera calibration problem and use it to determine the
+location of each player, their height, and the location of the ball.
+
+12.2 Develop an algorithm for the calibration of sterco cameras. Use this
+algorithm to calibrate a set of cameras mounted on a mobile robot.
+Develop an approach that will use known calibration points in an envi-
+ronment to determine the camera calibration and then use this to get
+the exact distance to all points. -->
 </p>
     </body>
 </html>

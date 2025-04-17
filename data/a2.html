@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+        <meta charset="utf-8" />
+        <title>付録B</title>
+        <style type="text/css">
+            p
+            {
+                padding-left: 2em;
+            }
+            .margin-large
+            {
+                margin-left: 30px;
+            }
+           .margin-abstract {
+               margin-left: 60px; /* 左マージンを広くする */
+               margin-right: 60px; /* 右マージンを広くする */
+           }
+        </style>
+    <style>
+        .two-columns {
+            display: flex;
+            flex-direction: row;
+            gap: 20px; /* 列間のスペース */
+        }
+        .column {
+            flex: 1; /* 各列が均等に幅を取る */
+        }
+    </style>
+<style>
+.three-columns {
+  display: flex;
+  gap: 10px; /* 列間の余白を設定 */
+}
+.column {
+  flex: 1; /* 各列の幅を均等にする */
+  padding: 10px; /* 内側の余白を設定 */
+}
+</style>
+    <style>
+        .styleRef { 
+            text-indent: -40px; /* 最初の行の字下げを逆方向に */
+            margin-left: 10px; /* 2行目以降の字下げを調整 */
+            ul {
+                  list-style-type: none; /* 箇条書き記号を非表示 */
+                  padding-left: 40px; /* 全体の左余白 */
+            }
+            li {
+            }
+        }
+    </style>
+    <style>
+        .styleBullet { 
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
+            margin-left: 30px; /* 2行目以降の字下げを調整 */
+            ul {
+                  list-style-type: none; /* 箇条書き記号を非表示 */
+                  padding-left: 0px; /* 全体の左余白 */
+            }
+            li {
+            }
+        }
+    </style>
+    <style>
+            ol
+            {
+                margin-left: 30px;
+            }
+            ul
+            {
+                margin-left: 30px;
+            }
+    </style>
+    </head>
+    <body>
+        <h1>付録B<br>統計的手法</h1>
+<p>
+マシンビジョンは、画像データから幾何学的な情報を推定することから、統計幾何学とも言えるだろう。本書では、正規分布や線形回帰といった統計学の基礎的な要素をいくつか用いており、それらは付録にまとめられている。また、モデル化されていない誤差に対して堅牢な測定アルゴリズムを定式化するために、統計学におけるいくつかの新しい理論も用いている。
+<!-- 
+Machine vision could be called statistical geometry, since vision involves esti-
+mating geometrical information from image data. This book uses som basic
+material from statistics, such as the normal distribution and linear regres-
+sion, which are reproduced in this appendix. The book also uses some new
+idcas in statistics for formulating measurement algorithms that are robust to
+unmodeled errors.-->
+</p>
+<h2>B.1 測定誤差</h2>
+<p>
+センサーや測定手順には、3種類の性能パラメータがある。分解能または精度とは、センサーが報告できる値の最小の変化である。再現性とは、同じ量を繰り返し測定した場合の変動である。正確度とは、既知の真の値の測定値の変動である。正確度と再現性の関係は簡単に覚えることができる:
+<!-- There are three types of performance parameters for a sensor or measurement,
+procedure. Resolution or precision is the smallest change in the value that a
+sensor can report. Repeatability is the variation in repeated measurements
+of the same quantity. Accuracy is the variation in measurements of a known
+true value. It is easy to remember the relationship between accuracy and
+repcatability:-->
+\[
+正確度(Accuracy) = 再現性(Repeatability) + 較正(Calibration) \tag{B.1}
+\]
+誤差の構成要素間にも同様の関係がある:
+<!-- There is a similar relationship between the components of error:-->
+\[
+誤差(Error) = 分散(Variance) + バイアス(Bias) \tag{B.2}
+\]
+分散は計測における再現性の誤差であり、バイアスは較正不足に起因する体系的な誤差である。例えば、廊下の長さをヤード棒で測定しているときに、ヤード棒の代わりに誤ってメートル棒を手に取ったとする。廊下の長さを測ったのと同じくらい注意深く測定棒を端から端まで置いていたと仮定すると、計測結果は依然として同じ再現性を持つ。しかし、測定棒の長さが不正確であるため、廊下の実際の長さに比例する定数である体系的なバイアスが生じる。バイアスは慎重な較正によって除去できるが、分散（または再現性）は測定方法の特性上の限界である。
+<!-- The variance is the error in repeatability for a mcasurement; the bias is the
+systcmatic crror duc to lack of calibration. For example, suppose that you
+are measuring the length of a hallway with a yardstick, but instead of a
+yardstick you accidentally pick up a meter stick. Your mcasurements would
+still have the same repeatability, assuming that you were just as careful in
+laying the measuring stick end to end as you measured the length of the hall.
+But there would be a systematic bias, a constant proportional to the true
+length of the hall, due to the incorrect length of the measuring stick. Bias
+can be removed through careful calibration, but variance (or repeatability)
+is a characteristic limitation of thc measurement method.-->
+</p><p>
+ヒストグラムは、測定値の分散とバイアスの両方を含む分布を調べるのに便利なツールである。実線上の測定値の範囲は、バケットと呼ばれる有限数の区間に分割される。バケットの数に等しい長さの1次元整数配列は、各区間に含まれる測定値の発生回数をカウントするために使用される。ヒストグラムをプロットすると、測定値の分布が示される。プロットの幅は分散を示し、分布の中心位置と真の測定値との差はバイアスを示す。
+<!-- The histogram is a useful tool for sccing the distribution, including both
+variance and bias, of a measurement. The range of measurements on the
+real linc is partitioned into a finite number of intervals called buckets. A
+one-dimensional integer array of length equal to the number of buckets is
+used to count the number of occurrences of measurements that fall in the
+intervals. A plot of the histogram shows the distribution of measurements.
+The width of the plot is an indication of variance, and the difference between
+the location of the center of the distribution and the true measurement is an
+indication of bias.-->
+</p><p>
+ある量 \(x\) の測定値 \(y_i\) は、加法的な誤差によって壊れることがある。
+<!-- A measurement \(y_i\) of some quantity \(x\) can be corrupted by additive error: -->
+\[
+y_i = x + e_i \tag{B.3}
+\]
+ここで、\(e_i\) は測定値の誤差である。もし誤差が既知であるか、較正によって誤差を除去できるのであれば、各測定値は未知の量の正確な推定値となり、それ以上の処理は必要ない。しかし、測定手順の再現性は完璧ではなく、各測定値には何らかの分布から導かれた誤差が含まれ、その結果、未知のパラメータに何らかの関連のある測定値の分布が生じる。統計学は測定手順に関する科学であり、誤差の特性に関する様々な仮定に基づいて未知のパラメータを推定する方法を含む。
+<!-- where \(e_i\) is the error in the measuremcnt. If the error were known or if the
+crror could be removed through calibration, then each measurement would
+be an accurate estimate of the unknown quantity, and no further processing
+would be necessary. However, the repeatability of a measurement procedure
+is not perfect, and each measurement will include error drawn from some
+distribution leading to a distribution of measurements somehow related to
+the unknown parameter. Statistics is the science of measurement procedures
+and includes methods for estituating unknown parameters given various as-
+sumptions about the characteristics of the errors.-->
+</p><p>
+\(n\) 回の測定の平均は
+<!-- The average of a set of n mcasurements is -->
+\[
+\overline{x}=\frac{1}{n}\sum_{i=1}^n x_i \tag{B.4}
+\]
+中央値は、測定値をソートし、中央の要素を選択する（または、測定値の数が偶数の場合は中央の2つの要素を平均する）ことによって計算される。モードは、測定値の分布におけるピークの位置である。平均値と中央値は、対称分布からの加法誤差によって乱された測定値から未知のパラメータを推定する方法である。例えば、局所的な近傍領域にわたってピクセルを平均化したり、一連の画像内の同じ位置で得られたピクセル値を平均化して、グレー値の測定値におけるノイズを低減したりすることができる。
+<!-- The median is computed by sorting the mcasurements and choosing the mid-
+dle element (or averaging the two middle elements if the number of measure-
+ments is even). The mode is the location of the peak in the distribution
+of measurements. The average and median are methods for estimating an
+unknown parameter from measurements corrupted by additive errors from
+a symmetric distribution. For example, pixels can be averaged over local
+neighborhoods, or the pixel values obtained at the same location in a se-
+quence of images can be averaged to reduce the noise in the measurements
+of gray value.-->
+</p><p>
+誤差の大きさはいくつかの異なる方法で計算できる。平均絶対誤差（MAE）は\(\pm\delta_x\)で、
+<!-- Several different measurements of the amount of error can be computed.
+Mean absolute error (MAE) is \(\pm\delta_x\), where -->
+\[
+\delta_x=\frac{1}{n}\sum|x_i-\mu_x| \tag{B.5}
+\]
+\(\mu_x\)は平均値または中央値である。二乗平均平方根（RMS）誤差は\(\pm\delta_x\)で、
+<!-- and \(\mu_x\) is the average or median. Root mean square (RMS) error is \(\pm\delta_x\), where -->
+\[
+\delta_x^2=\frac{1}{(n-1)}\sum(x_i-\mu_x)^2 \tag{B.6}
+\]
+\(\mu_x\)は平均である。最大誤差は\(\pm\epsilon_x\)である。
+<!-- and \(\mu_x\) is the average. Maximum error is \(\pm\epsilon_x\), where -->
+\[
+\epsilon_x = \max_i |x_i-\mu_x| \tag{B.7}
+\]
+\(\mu_x\)は平均値または中央値である。\(\delta\leq \sigma\lt \epsilon\)であることに注意。
+<!-- and \(\mu_x\) is the average or median. Note that \(\delta\leq \sigma\lt \epsilon\).-->
+</p>
+<h2>B.2. 誤差分布</h2>
+<p>
+二項分布は、事象と呼ばれる有限個の結果を伴う測定プロセスをモデル化する。例えば、公平なコインを1回投げると、確率1/2で表、確率1/2で裏が出る。この結果の集合は、次の多項式でモデル化される。
+<!-- The binomial distribution models measurement processes with a finite num-
+ber of outcomes, called events. For example, a fair coin that is flipped once
+will show heads with probability 1/2 and tails with probability 1/2. This set
+of outcomes is modeled by the polynomial -->
+\[
+P(x) = 0.5 + 0.5x \tag{B.8}
+\]
+ここで、\(x\)の各べき乗の係数は、表がその回数だけ出る確率である。コインを \(n\) 回投げた場合、表が出る確率は、多項式を展開することで次のように求めることができる。
+<!-- where the coefficient, for each power of \(x\) is the probability that heads will
+occur that many times. If the coin is tossed n times, then the probabilities of
+various numbers of heads can be determined by expanding the polynomial:-->
+\[
+P(x;n) = (0.5+0.5x)^n \tag{B.9}
+\]
+表が \(i\) 回出る確率は、展開された多項式における \(x^i\) の係数である。一般に、\(k\) 回の結果を伴う単一の測定は、次数 \(k\) の多項式でモデル化できる。
+<!-- The probability that heads will occur \(i\) times is the coefficient of \(x^i\) in the
+expanded polynomial. In general, a single measurement with & outcomes can
+be modeled by a polynomial of order \(k\),-->
+\[
+P)x)=p_0+p_1x+p_2x^2+\cdots+\_{k-1}x^{k-1} \tag{B.10}
+\]
+ここで \(p_i\) は結果 \(i\) の確率であり、
+<!-- where \(p_i\) is the probability of outcome \(i\) and -->
+\[
+\sum_{i=1}^k p_i=1 \tag{B.11}
+\]
+一連の \(n\) 回の測定後の様々な結果の組み合わせの累積結果は、1回の測定の多項式を \(n\) 乗することでモデル化される。
+<!-- The cumulative results of various combinations of outcomes after a sequence
+of \(n\) measurements are modeled by raising the polynomial for one measurement to power \(n\),-->
+\[
+P(x;n)=(p_0+p_1x+p_2x^2+\cdots +p_{k-1}x^{k-1})^n \tag{B.12}
+\]
+多項式を展開し、各係数を計算する。
+<!-- expanding the polynomial, and calculating each coefficient. -->
+</p><p>
+<!-- The uniform distribution is used to model measurements that are equally
+likely. For example, if a point is located anywhere with equal probability in
+the rectangular region defined by points (21, y,) and (ze, y,) at the corners,
+then the probability that the point is at location (z, y) is
+
+1/A_ if (x,y) is in the region
+
+Plz.y) = { 0 otherwise (B.13)
+
+where A is the area of the region.
+</p><p>
+The normal distribution is a useful approximation to the crrors in many
+measurement processes. The normal distribution N(a; y, 07) is
+
+1 -(e-p)?
+
+€ 208 (B.14)
+
+N(a; p, 0°) =
+200
+where y is the location of the center of the distribution and o? is the variance.
+Since bias is usually eliminated by proper calibration, the normal distribution
+for errors is usually zero mean.
+</p><p>
+Some measurement processes occasionally produce gross errors, called
+outliers, in addition to normally distributed errors. Such an error process
+can be modeled as the mixture of a normal distribution and some unknown,
+broad-tailed distribution:
+
+where » represents the odds that an outlier will occur. There is a probability
+of v that the measurement will be contaminated with error from the outlier
+506 APPENDIX B. STATISTICAL METHODS
+
+distribution and a probability of y — 1 that the measurement. will be subject
+to normally distributed errors. Typically, the bias from both error processes
+is eliminated through proper calibration, and so both error distributions are
+zero mica:
+
+(1 — v)N(#;0, 07) + vB(x;0, 03). (B.16)
+
+Since outliers are extreme errors, og “> o;. As an example, the Cauchy
+
+distribution
+1 a
+
+C(a2; a,b) = — ~—--—-— B.17
+has such broad tails that the variance is infinite.
+</p>
+<h2>B.3 Linear Regression</h2>
+<p>
+Given n data points and a model with m parameters a1, G2,...,@m, the least-
+squares error in the fit of the model to the data is
+
+n i — y(aj3 a1, 4 Om) °
+v=y(% Yr, i Zyeeey ”)) ; (B.18)
+i=1 i
+
+This is weighted least-squares regression, where the weights a; are the errors
+(standard deviations) in the measurements so that less noisy measurements
+are given more weight.
+</p><p>
+Often, the error is the same for each measurement, or the individual mea-
+surement errors are unknown and assumed to be identical, in which case the
+least-squares regression problem is to determine the parameters @1, @2,...,@m
+that minimize
+
+n
+
+v= SS yi — y(az; a1, 42,...,@m))°. (B.19)
+
+i=1
+
+If the model is linear in the parameters, then the problem is linear regression.
+A model is linear if it can be represented as a linear combination of basis
+functions:
+
+y(@; 01, A9,..., Am) = a101(2) + agdo(x) +--+ + Gndm(2), (B.20)
+B.3. LINEAR REGRESSION 507
+
+where the functions ¢;(r) do not depend on the model parameters. The coef-
+ficients a, a@2,43,...,@, of the linear combination are the model parameters
+to be determined through regression. For example, the linc
+
+yoart+b (B.21)
+
+is a linear model with parameters a and 6.
+</p><p>
+A linear least-squares regression problem can be reliably solved using stan-
+dard numerical routines for singular value decomposition [84, pp. 534 539],
+which also provides a measure of the error in the fitted parameters. Consider
+fitting a linear model
+
+z=a t+ aor t+ asy (B.22)
+
+to a set of data points {(r1, 41, 21), (x2, yo, 22),---;(@n, Yn, Zn) }- Each data
+point leads to a constraint
+
+24 a1 + 2k; + a3y:, (B.23)
+
+and the set of data points leads to a set of constraints that can be written in
+matrix form:
+
+tT Yi 21
+
+liz ay 29
+Pe lal |. (B.24)
+
+a3 .
+
+1 fn Yn an
+
+These equations are usually written in the more compact form
+AX = B. (B.25)
+
+The A matrix is not square and cannot be inverted directly. One technique is
+to multiply both sides of Equation B.25 by A to form the normal equations
+and solve the normal equations using standard techniques for solving systems
+of linear equations such as LU decomposition. A better technique is to use
+singular value decomposition. There are several advantages to using singular
+value decomposition: (1) it is not necessary to premultiply Equation B.25
+to form the normal equations, (2) singular value decomposition handles ill-
+conditioned systems of equations, and (3) the singular values provided as a
+by-product of SVD indicate redundancies (unnecessary terms) in the model.
+</p><p>
+Since singular value decomposition is used frequently for the algorithms
+in this book and Numerical Recipes [197] is an excellent source for good
+508 APPENDIX B. STATISTICAL METHODS
+
+numerical algorithms, the method for solving a linear regression problem
+using the singular value decomposition routine in Numerical Recipes will
+be presented in detail. (Note that some elements of C programming are
+described in Appendix C.} The interface for the numerical routine for singular
+value decomposition is
+
+void svdcmp (a, n, m, w, v)
+float **a, *W, **V;
+int n, m;
+
+The routine takes an array a with n rows and m columns and replaces it with
+the singular value decomposition
+
+A=UWV?. (B.26)
+
+The array a is replaced by U in the singular value decomposition, the array w
+receives the singular values in the diagonal matrix W, and the array v receives
+the V matrix. Note that n is the number of observations (mcasurements),
+while m is the number of parameters in the linear model. It is easy to fill
+the entries in the array a according to Equation B.24 and call svdcmp to
+obtain the singular value decomposition. After obtaining the singular value
+decomposition, use the routine svbksb to solve for the model parameters:
+
+void svbksb (u, w, v, n, m, b, x)
+float **u, *w, *#V, ¥D, ¥X;
+int n, m;
+
+The u, w, and v arrays are the a, w, and v arrays computed by svdemp. The
+dimensions n and mare the same as for svdemp. The b array is the right-hand
+side of Equation B.24, and the array x is the parameter vector (solution).
+In other words, the combination of svdcmp and svbksb solve the nonsquare
+system of lincar equations presented as Equation B.24. The code fragment
+for invoking the routines is
+
+float wmin, wmax;
+svdemp (a, n, m, w, v);
+wmax = 0.0;
+for (j = 1; j <= m; j++)
+if (w[j] > wmax) wmax = wLjl;
+B.3. LINEAR REGRESSION 509
+
+wmin = wmax * 1.0e-6;
+for (j = 1; j <= m; j++)
+
+if (wlj] < wmin) wfj] = 0.0;
+svbksb (a, w, v, n, m, b, x);
+
+Small singular values indicate problems in the regression model. The code
+provided above sets small singular values to zero, which is one safe way to
+handle the problem. The constant 1.0e-6 is a typical value but may be dif
+ferent for some applications. If there are small singular valucs, it is important
+to carefully analyze the model and determine why the small singular values
+occur. There may be terms in the model that arc unnecessary.
+</p><p>
+Singular value decomposition is a very reliable algorithm but can fail to
+produce a good regression estimate for several reasons:
+
+● The wrong model may be used in formulating the regression problem.
+
+● The measurement errors a; may be too large.
+
+● The measurement errors may not be from a normal distribution. For
+example, the errors could be from a broad-tailed distribution.
+</p><p>
+The probability distribution for x? when the minimum value of the regres-
+sion norm is obtained is the chi-square distribution with v = n — m degrees
+of freedom. The probability that chi-square should exceed x? by chance is
+
+g-— [. ett" dt (B.27)
+The regression error x? should be calculated as part of the regression pro-
+cedure. The integral can be calculated using numerical methods, but values
+of Q are provided in statistical tables. If @ > 0.001, then the regression fit
+should probably be rejected. This provides an objective way to evaluate the
+model fitting procedure. In practice, the value for @ is selected based on
+knowledge of the application. The value for v is determined by the number
+of data points and the order of the model. The corresponding value for x?
+can be found in statistical tables. If the measured value for x? obtained
+during regression exceeds the tabulated value, then the algorithm has not
+succeeded, and the results should be discarded. If excessive values for ? are
+encountered frequently, then the model is probably wrong or linear regres-
+sion is not the right approach, and perhaps robust regression should be used
+instead.
+</p>
+<h2>B.4 Nonlinear Regression</h2>
+<p>
+If the model is nonlinear in its parameters, the least-squares regression prob-
+lem is to minimize y? for the nonlincar modcl. Since the formula for the
+model is known, both the gradient and Hessian can be calculated. This
+allows the Levenberg-Marquardt method to be used for selving nonlinear
+regression problems [197, pp. 540-547].
+</p><p>
+Seber and Wild [217] is an excellent text on nonlinear regression. In
+some cases, the arguments to the Levenberg-Marquardt routine in Numeri-
+cal Recipes may not match the intended application, but Numerical Recipes
+provides routines for the Newton-Raphson method, which is discussed in
+practical texts on nonlinear regression [23].
+
+Further Reading
+
+There are many excellent textbooks on probability and statistics. Any book
+that describes experimental methods in science and engineering or statistica
+methods in the social sciences would be sufficient. For example, Beck and
+Arnold [24] cover linear and nonlinear methods for regression with emphasis
+on applications in engineering and science. Box, Hunter, and Hunter [43
+have written a classic text on experimental methods. Drake [69] has writ-
+ten a basic introduction to probability and statistics, while Papoulis [192
+provides more comprehensive coverage. Gaussian error models are used in
+communications theory [257], which has influenced machine vision and pat-
+tern recognition. Vanmarcke [244] and Cressie [63] present probability and
+statistical methods for spatial data which may be useful as further readings
+in machine vision. Robust regression methods are summarized in the article
+by Efron and Tibshirani [72]. Finally, Numerical Recipes in Cis an excellen
+source for statistics algorithms [197] and explains regression particularly well.
+
+-->
+</p>
+    </body>
+</html>

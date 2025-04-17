@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+        <meta charset="utf-8" />
+        <title>付録A</title>
+        <style type="text/css">
+            p
+            {
+                padding-left: 2em;
+            }
+            .margin-large
+            {
+                margin-left: 30px;
+            }
+           .margin-abstract {
+               margin-left: 60px; /* 左マージンを広くする */
+               margin-right: 60px; /* 右マージンを広くする */
+           }
+        </style>
+    <style>
+        .two-columns {
+            display: flex;
+            flex-direction: row;
+            gap: 20px; /* 列間のスペース */
+        }
+        .column {
+            flex: 1; /* 各列が均等に幅を取る */
+        }
+    </style>
+<style>
+.three-columns {
+  display: flex;
+  gap: 10px; /* 列間の余白を設定 */
+}
+.column {
+  flex: 1; /* 各列の幅を均等にする */
+  padding: 10px; /* 内側の余白を設定 */
+}
+</style>
+    <style>
+        .styleRef { 
+            text-indent: -40px; /* 最初の行の字下げを逆方向に */
+            margin-left: 10px; /* 2行目以降の字下げを調整 */
+            ul {
+                  list-style-type: none; /* 箇条書き記号を非表示 */
+                  padding-left: 40px; /* 全体の左余白 */
+            }
+            li {
+            }
+        }
+    </style>
+    <style>
+        .styleBullet { 
+            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            margin-left: 30px; /* 2行目以降の字下げを調整 */
+            ul {
+                  list-style-type: none; /* 箇条書き記号を非表示 */
+                  padding-left: 50px; /* 全体の左余白 */
+            }
+            li {
+            }
+        }
+    </style>
+    <style>
+            ol
+            {
+                margin-left: 30px;
+            }
+            ul
+            {
+                margin-left: 30px;
+            }
+    </style>
+    </head>
+    <body>
+        <h1>付録A<br>数学の概念(準備中)</h1>
+<p>
+本書で使用されている数学的概念の一部を、この付録にまとめている。セクションA.1では、マシンビジョンで一般的に役立つ幾何学の公式をいくつか紹介し、セクションA.2では線形空間を扱い、セクションA.3では、正則化を用いて不良設定問題を解く際に用いられる変分計算について説明する。
+<!-- Some of the mathematical concepts used in this book are summarized in this appendix. Section A.1 includes some formulas for geometry that are generally useful in machine vision, Section A.2 covers linear spaces, and Section A.3 describes the variational calculus which is used in solving ill-posed problems through regularization. -->
+</p>
+<h2>A.1 解析幾何</h2>
+<p>
+2次元の点を \(\mathbf p = (x,y)\)、3次元の点を \(\mathbf p = (x, y, z)\) としよう。
+<!-- Let point \(p = (x,y)\) in two dimensions or \(p = (x, y, z)\) in three dimensions. -->
+</p><p>
+　ベクトル \(\mathbf v\) の向きを表す単位ベクトル \(\mathbf u\) は、各座標軸に対するベクトル \(\mathbf v\) の余弦のベクトルである。
+<!-- The unit vector u that represents the orientation of a vector v is the vector of cosines of vector v with respect to each of the coordinate axes, -->
+\[
+\mathbf u=\frac{1}{||\mathbf v||}(\mathbf v\cdot \mathbf e_1, \mathbf v\cdot \mathbf e_2, \cdots , \mathbf v\cdot \mathbf e_n) \tag{A.1}
+\]
+ここで \(\mathbf e_i\) は座標軸 \(i\) の単位ベクトルである。
+<!-- where \(\mathbf e_i\) is the unit vector for coordinate axis \(i\). -->
+</p><p>
+　直線の媒介変数方程式は
+<!-- The parametric equation for a line is -->
+\[
+\mathbf p(t)=t\mathbf u+\mathbf p_0 \tag{A.2}
+\]
+ここで、\(\mathbf u\) は直線の方向を定義する単位ベクトル、\(\mathbf p_0\) は直線が通過する点、\(-\infty \leq t \leq \infty\) である。この式は、\(t\) の定義域を制限することで、線（半開線）や線分を記述するためにも使用できる。\(0 \leq t \leq \infty\) の場合、式 A.2 は点 \(\mathbf p_0\) を起点として \(\mathbf u\) の方向を指すベクトルを表す。 \(0\leq t\leq 1\) の場合、式 A.2
+は、点 \(\mathbf p_0\) と点 \(\mathbf p_1\) 間の単位線分を表し、\(\mathbf p_1 = \mathbf p_0+\mathbf u\) で表される。
+<!-- where \(\mathbf u\) is the unit vector that defines the orientation of the line, \(\mathbf p_0\) is a point through which the line passes, and \(-\infty \leq t \leq \infty\). This equation can also be used to describe rays (half open lines) and line segments by restricting the domain of \(t\). For \(0 \leq t \leq \infty\), Equation A.2 represents the vector starting at point \(\mathbf p_0\) and pointing in the direction \(mathbf u\). For \(0\leq t\leq 1\), Equation A.2　represents the unit line segment between point \(\mathbf p_0\) aud point \(mathbf p_1\) given by \(mathbf p_1 = \mathbf p_0+\mathbf u\).-->
+</p><p>
+　2点間の線分の方程式は次のように書くことができる。
+<!-- The equation for the line segment between two points can be written as -->
+\[
+\mathbf p(t) = (1 — t)\mathbf p_1 + t\mathbf p_2 \tag{A.3}
+\]
+ここで \(0 \leq t \leq1\) である。
+<!-- with \(0 \leq t \leq1\) -->
+</p><p>
+　3つの異なる点 \(\mathbf p_0,\, \mathbf p_1\) および \(\mathbf p_2\) は空間上の平面を定義する。\(\mathbf v_1 = \mathbf p_1 - \mathbf p_0\) および \(\mathbf v_2 = \mathbf p_2 - \mathbf p_0\) とする。ベクトル \(\mathbf v_1\) と \(\mathbf v_2\) が平面上にあり、かつ平行でない場合、平面の法線は
+<!-- Three distinct points \(\mathbf p_0, \mathbf p_1\) and \(\mathbf p_2\) define a plane in space. Let \(\mathbf v_1 = \mathbf p_1 - \mathbf p_0\) and \(\mathbf v_2 = \mathbf p_2 - \mathbf p_0\). If vectors \(\mathbf v_1\) and \(\mathbf v_2\) lie in a plane and are not parallel, then the normal to the plane is -->
+\[
+\mathbf n= \mathbf v_1\times \mathbf v_2 \tag{A.4}
+\]
+右手の指が \(\mathbf v_1\) から \(\mathbf v_2\) に動くとき、法線は親指の方向を向いている。平面の暗黙方程式は、平面法線 \(\mathbf n\) に直交する点の集合 \(\mathbf p\) である。
+<!-- The normal points in the direction of the thumb as the fingers of the right
+hand sweep from \(\mathbf v_1\) to \(\matgbf v_2\). The implicit equation for the plane is the set of points \(\mathbf p\) that are orthogonal to the plane normal \(\mathbf n\),-->
+\[
+\mathbf n\cdot (\mathbf p - \mathbf p_0) = 0  \tag{A.5}
+\]
+
+where \(\mathbf p_0\) is a point in the plane and allows the plane to be offset from the
+origin. If the normal vector \(\mathbf n = (a,b,c)\), then the plane equation can be
+written as
+\[
+ax + by + cz+d=0 \tag{A.6}
+\]
+where \(d = \\mathbf n\cdot\mathbf p_0\) accounts for the displacement of the plane from the origin.
+</p><p>
+The parametric form of a surface, such as a plane, is an equation of the
+form p(u,v) = (a(u, v), y(u, v), 2(u, v)). The parametric equation for a plane
+is derived by noting that the origin in the (u,v) domain maps to a point
+Po = (2, Yo, Zo) on the plane, the u-axis in the domain maps to a vector vy
+in the plane, and the v-axis in the domain maps to a vector v2 in the plane.
+The parametric equation is
+
+p(u,v) =A ( e ) + Po (A.7)
+
+v
+
+where the columus of the 3 x 2 matrix A are the vectors v; and vo.
+494 APPENDIX A. MATHEMATICAL CONCEPTS
+
+A.2 Linear Algebra
+
+The notion of a lincar space is based on some common assumptions about how
+physical systems should behave. The power of linear spaces in science and
+engineering comes from this correspondence between simple mathematical
+
+models and real physical systems.
+A set of scalars F is a field if the scalars obcy the following conditions:
+
+1. If 2 and y are elements of F, then x + y and zy are elements of F.
+
+2. If x is an element of F, then the additive inverse —z is an element of
+F.
+
+3. If z is an element of F and « 4 0, then the multiplicative inverse x7!
+
+is an element of F’.
+
+4. The additive identity 0 and the multiplicative identity 1 are both ele-
+ments of F.
+
+For example, the set of real numbers with the usual forms of addition and
+multiplication is a field.
+
+The mathematical model that comes from combining scalars into vectors
+to represent points in space and many other things is a very powerful model.
+Let vector u = (uj, U2,...,Un) and vector v = (2, %2,...,%)- Addition of
+vectors is defined by the scalar addition of the corresponding vector elements,
+
+utv = (uy +1, Ua t02,..., Un + Un), {A.8)
+
+and multiplication of a vector v by a scalar a is defined by applying scalar
+multiplication to the individual elements of the vector:
+
+av = (avi, av2,..., An). (A.9)
+A vector space, also called a linear space, obeys the following conditions:
+1. Addition of vectors u and v is commutative
+
+utvevt+u. (A.10)
+
+2. Addition of vectors u, v, and w is associative:
+
+(utv)+w=u+(v+w). (A.11)
+A.2. LINEAR ALGEBRA 495
+
+3. There is a vector denotcd by 0 that is the identity element for vector
+addition:
+0+u=u+0=u. (A.12)
+
+4, For every vector v there is an additive inverse:
+
+v+(-v) =0. (A.13)
+
+5. Multiplication of a vector sum by a scalar c is distributed to the indi-
+vidual vectors:
+c(u+v) = cu-+cv. (A.14)
+
+6. Multiplication of a vector by a sum of scalars can be rewritten as the
+sum of the individual scalar multiplications:
+
+{a+ b)v = av +t bv. (A.15)
+
+7. Multiplication of a vector by a product of scalars is associative:
+
+(ab)v = a(bv). (A.16)
+
+8. There is an idcutity element for multiplication of a vector by a scalar:
+
+lu =u. (A.17)
+
+The linear space is fundamental to science and engineering because it is the
+mathematical model for systems that behave linearly, which means that the
+systcms behave in a simple way and are easy to understand and use in design.
+A linear system S$ obeys the conditions of superposition and homogeneity:
+
+Slx+y] = S[z] + Sy] (A.18)
+Sfaz] = aS{[x] (4.19)
+
+which say that the response to a sum of inputs is the sum of the responses
+to the individual inputs, and the response to an input scaled by a constant
+is the scaled response. The linearity conditions correspond to our intuitive
+notions about how things should behave. For example, we expect that a light
+that is twice as bright would make a scene appear to be twice as bright, and
+496 APPENDIX A. MATHEMATICAL CONCEPTS
+
+we expect that the result of using two lights should be the sum of the results
+of using each light alone.
+A lincar combination is a sum of terms multiplied by constant coefficients:
+
+An clement v in an n-dimensional vector space V can be represented as a
+linear combination of n basis vectors:
+
+V = aye) + ayeg +--+ + anen, (A.21)
+
+where e; is a basis vector and a, is the corresponding coefficient. A linear
+transformation is a mapping between vector spaces and can be implemented
+by matrix multiplication applied to the vector of coefficients that represent
+an element in a vector space relative to some basis. The natural basis is the
+set of vectors €;,€2,...,@, with e; = 1 at position 7 and zero elsewhere. The
+coefficients for the natural basis are the coordinates of the vector in the usual
+Cartesian coordinate system.
+
+Functional analysis extends the notion of vector space to spaces of func-
+tions that can be represented by linear combinations of basis functions:
+
+F(t) = aby (t) + aghe(t) +--+ + aubp(t). (A.22)
+
+This is a finite-dimensional vector space, since the basis contains a finite
+number of basis functions; but there arc linear spaces with an infinite number
+of dimensions that require an infinite number of basis functions, such as
+Fourier scrics. Fimite-dimensional vector spaces play an important role in
+statistics, and hence in this book, since a model can be represented by a
+finite number of parameters that can be estimated by linear regression.
+
+The scalar product supports the notions of the length of a vector and
+the angle between vectors. The square of the length of a vector is the scalar
+product of the vector with itself,
+
+IVP = vey, (A.23)
+
+which is the sum of the squares of the cocfficients that represent the vector
+relative to some basis. The angle between two vectors is the scalar product of
+the two vectors, normalized by the length of each vector. The angle provides
+a measure of the difference between two vectors.
+A.2. LINEAR ALGEBRA 497
+
+Consider two vectors v, and v2 in the usual Euclidean three-dimensional
+space that are not collinear. Vectors v; and v2 define a plane in space. Any
+linear combination of v; and v2 is a vector in the plane,
+
+V = a1V1 + G2Ve, (A.24)
+
+and any point in the plane can be reached with a unique linear combination
+of the vectors. This plane is a subspace of the three-dimensional Euclidean
+space, and the vectors vy and v2 form a basis that spans the subspace.
+
+Now consider a third vector v3 that does not lie in the plane spanned
+by the vectors v, and v2 as defined in the preceding paragraph. The three
+vectors V1, V2, and v3 form a basis that spans the entire three-dimensional
+space. Consider some vector v that is not coplanar with v, and vo. Vector
+v can be written as a linear combination of two vectors,
+
+v= aU + aw, (A.25)
+
+such that vector u lies in the plane spanned by v; and v2, and vector w is
+perpendicular to that plane. This concept is fundamental to applications in
+optimization and regression.
+
+The usual scalar product between vectors u and v can be generalized
+to a quadratic form that includes a weight on each scalar product between
+corresponding vector elements,
+
+QU VY + a9U9V2 So An Unvn, (A.26)
+
+which can be further generalized to a weighted sum of the products between
+all pairwise combinations of the elements of vectors u and v:
+
+y
+
+i=1j
+
+n
+=1
+
+This weighted sum can be writtcn in matrix notation as
+uAv’, (A.28)
+
+where the superscript T denotes the transposc of a row vector into a column
+vector. There is no loss of generality in assuming that matrix A is symmetric.
+498 APPENDIX A. MATHEMATICAL CONCEPTS
+
+The concept of eigenvalues and cigenvectors starts simply with the idea
+that there may be a linear transformation represented by matrix A and some
+
+vector x such that.
+Ax = Ax (A.29)
+
+for some constant A. Vector x is an eigenvector of the linear transformation,
+and A is its eigenvalue.
+
+Let matrix A be a linear transformation that scales and rotates the nat-
+ural basis of a vector space so that the axes (basis vectors) correspond in
+length and orientation with the axes of some ellipsoid that is centered on the
+origin. Consider a unit vector u that is already aligned with both an axis
+of the ellipse and one of the axes of the coordinate system. Since the unit
+vector is aligned with the axes of the ellipsoid, it will not change orientation
+uuder the transformation into the orientation of the ellipsoid, but will change
+length so that it is scaled to the length of the axis of the ellipsoid; thus,
+
+Au = Au, (A.30)
+
+where 4 is the length of the axis of the ellipsoid. This shows that the eigen-
+values and eigenvectors are the length and orientation of the axes of the
+ellipsoid.
+
+A.3 Variational Calculus
+
+Let f(z, y) be the function that is the solution to a variational problem. The
+general form of a variational problem is
+
+The solution to the variational problem is given as a partial differential equa-
+tion, called the Euler equation, which is constructed from a formula involving
+various partial derivatives of F. The general form for a function of two vari-
+ables is
+
+a ? an
+oy ant fe + Baal lee —++(-1) Ban’ faim
+a] & a”
+—_— — —.--+(-])” = wl
+By + Oy? Py, ( ) aye fu) 0 (A 3 )
+
+A.3. VARIATIONAL CALCULUS 499
+
+if F does not contain any cross derivatives. In computing the derivatives of
+the integrand F' with respect to a partial derivative of the solution function
+f, the partial derivative of the solution function is treated as a single variable
+even though the variable is denoted by a symbol with subscripts. Note how
+the sign alternates with the order of the derivatives and how the rows of
+the formula for z and y have the same form. If f is a function of more
+than two variables, then the Euler equation is extended with an additional
+sequence of terms for each of the additional variables. If F contains cross
+derivatives, then there will be additional terms to handle the cross derivatives.
+If the variational problem requires finding morc than one function, then each
+function will yield another Euler equation.
+
+As an cxample, consider the problem of determining the surface z =
+f(x,y) that interpolates a set of data points zz at locations (xj, y,) in a
+rectangular region FR of the image plane, for k = 1,...,n. This is an ill-posed
+problem, since there arc an infinite number of functions that can interpolate
+a set of points. To make the problem well posed, choose the function that is
+smooth according to the norm
+
+/ [Ife] aeay, (A.32)
+
+which means choose the function that minimizes Equation A.32 and interpo-
+lates the data points z;, at locations (x,, y,). Using the calculus of variations,
+the solution is the biharmonic equation
+
+Vif (e,y) =0 (A.33)
+with boundary conditions
+Fy = 0 (A.34)
+
+along the top and bottom edges of the rectangular domain and boundary
+conditions
+
+Fyya = 0 (A.37)
+
+along the left and right sides of the rectangular domain. The boundary
+conditions mean that the interpolated surface does not have to assume any
+500 APPENDIX A. MATHEMATICAL CONCEPTS
+
+particular value or orientation along the boundary, but should smoothly ap-
+proach the boundary.
+
+Finding the partial differential equation and boundary conditions for a
+problem in the variational calculus is only part of the solution. The partial
+differential equations must be solved by numerical methods.
+
+A.4 Numerical Methods
+
+There arc many numerical methods for solving partial differential equations
+such as the biharmonic Equation A.33 and its boundary conditions. All
+of the methods involve replacing the partial derivatives with finite differ-
+ence approximations. There are basically two approaches: (1) replace the
+partial derivatives in the variational problem, such as Equation A.32, with
+finite difference approximations to obtain a system of equations that can
+be solved numerically, or (2) replace the partial derivatives in the partial
+differential equation derived from the variational problem—Equation A.33,
+for instancc-~-with finite difference approximations to obtain a system of
+equations and solve the equations numerically. The numerical methods that
+solve the variational problem directly can be more efficient, but the iterative
+methods that solve the partial differential equations are easier to describe
+and implement.
+
+The simplest finite difference methods solve a partial differential equation
+at points on a uniform grid. The solution is an array of values for the func-
+tion z = f(z,y) at grid locations [7,3], with i = 1,...,n and j =1,...,m.
+The finite difference approximation for the biharmonic evaluated at grid lo-
+cation [?, 7] is a linear combination of the function values at neighboring grid
+locations. Imagine that the n by m grid of function values f[i, j] is unfolded
+into a long vector f[k], with k = (i -1)m— Jj. Let N, be the list of offsets
+for the grid locations of the neighbors of f[A] in the grid. The biharmonic
+equation is approximated at each grid location by
+
+Vif(z,y) © afk] + D0 aflk+ 0 =0 (A.38)
+
+1EN;,
+
+with changes to the coefficients near the boundaries of the domain. For cach
+grid location, this linear equation provides one row in a system of linear
+
+equations
+Af =0 (A.39)
+FURTHER READING 501
+
+except at the grid locations where a known value is being interpolated, in
+which case that row is filled with zeros except at f[k] = 1 and the right-hand
+size is the known valuc z,. The system of linear equations can be solved
+with sparse matrix techniques, or Equation A.38 can be solved for f[k] and
+this formula repeated over all grid locations that do not have a known value
+until the solution vector does not change significantly. This is the method of
+successive approximation and is described in Numerical Recipes [197], along
+with more sophisticated methods for solving partial differential equations
+and variational problems.
+
+Further Reading
+
+The series of books Graphics Gems [89] provide many useful formulas and
+algorithms for geometry.
+
+Linear spaces are widely used in scicnce and engineering. Lang [153
+provides a rigorous introduction to linear spaces. Noble and Daniel [187
+cover lincar spaces with many practical applications. Naylor and Sell [182
+cover functional analysis, which is the extension of vector spaces to spaces 0
+functions, and include many examples from science and engineering.
+
+Many problems can be formulated as optimization problems and solved
+using the variational calculus. An excellent introduction to the variationa
+calculus is provided by Courant and Hilbert [62, Chap. 4]. The variationa
+calculus produces a partial differential equation that usually must be solved
+by numerical methods. The book Numerical Recipes is an excellent intro-
+duction to numerical methods [197].
+
+    </body>
+</html>
