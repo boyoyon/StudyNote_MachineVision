@@ -75,9 +75,9 @@
     </style>
     </head>
     <body>
-        <h1><center>９章 陰影(準備中)</center></h1>
+        <h1><center>９章 陰影</center></h1>
 <p>
-この章では、光が表面でどのように反射するかという物理学的考察と、反射特性を用いて表面の形状を推定する照度差ステレオ法と呼ばれる手法について解説する。照度差ステレオ法とシェーディングからの形状推定について説明する前に、画像形成の物理学的側面について説明する必要がある。画像形成とは、シーン内の点からの光強度を画像平面上に写像するプロセスである。本稿は、Horn [109] の先駆的な研究に基づいている。
+この章では、光が表面でどのように反射するかという物理学的考察と、反射特性を用いて表面の形状を推定する照度差ステレオ法と呼ばれる手法について解説する。照度差ステレオ法と陰影からの形状推定について説明する前に、画像形成の物理学的側面について説明する必要がある。画像形成とは、シーン内の点からの光強度を画像平面上に写像するプロセスである。本稿は、Horn [109] の先駆的な研究に基づいている。
 <!-- This chapter covers the physics of how light reflects from surfaces and de-
 scribes a method called photometric stereo for estimating the shape of sur-
 faces using the reflectance properties. Before covering photometric stereo
@@ -93,81 +93,108 @@ plane of a scene point, but do not determine the image intensity of the point.
 Image intensity is determined by the physics of imaging, covered in this
 section. The proper term for image intensity is image irradiance, but terms
 such as intensity, brightness, or gray value are so common that they have
-been used as synonyms for image irradiance throughout this text.
+been used as synonyms for image irradiance throughout this text. -->
 </p><p>
-The image irradiance of a point in the image plane is defined to be the
-power per unit area of radiant energy falling on the image plane. Radiance is
-outgoing energy; irradiance is incoming energy. The irradiance at a point in
-the image plane F(z’, y’) is determined by the amount of energy radiated by
-the corresponding point in the scene L(x, y, z) in the direction of the image
-point:
+画像平面上のある点の画像放射照度は、画像平面上に降り注ぐ放射エネルギーの単位面積あたりのパワーと定義される。放射輝度(radiance)は出て行くエネルギーであり、放射照度(irradiance)は入ってくるエネルギーである。
+</p><p class="margin-large">
+(ここから蛇足)<br>
+モニターに画像を映したものを眺める場合、ピクセルが光を出しているので紛らわしいが、あくまで、フィルムや撮像素子がシーンに照らされた結果の記録を表示しているので、(輝度(出力)ではなく)照度(入力)になる。<br>
+(ここまで蛇足)
+</p><p>
+画像平面上のある点 \(E(x^\prime, y^\prime)\) の放射照度は、シーン内の対応する点が画像点の方向に放射するエネルギー量 \(L(x, y, z)\) によって決定される：
+<!--
+The image irradiance of a point in the image plane is defined to be the power per unit area of radiant energy falling on the image plane. Radiance is outgoing energy; irradiance is incoming energy. The irradiance at a point in the image plane \(E(x^\prime, y^\prime)\) is determined by the amount of energy radiated by the corresponding point in the scene \(L(x, y, z)\) in the direction of the image point: -->
 
-E(z',y') = L(z,y, z). (9.1)
+\[
+E(x^\prime, y^\prime) = L(x,y,z)  \tag{9.1}
+\]
 
-The scene point (z, y, z) lies on the ray from the center of projection through
+投影中心から画像点 \((x^\prime,y^\prime)\) を通る光線上にシーン点 \((x,y,z)\) がある。画像放射照度のソースを見つけるには、光線が放射された表面パッチまで光線をさかのぼり、シーン照明からの光が表面パッチでどのように反射されるかを理解する必要がある。
+<!--
+The scene point \((x, y, z)\) lies on the ray from the center of projection through image point \((x^\prime,y^\prime)\). To find the source of image irradiance, we have to trace the ray back to the surface patch from which the ray was emitted and understand how the light from scene illumination is reflected by a surface patch.
+-->
+</p><p>
+シーン表面のパッチによって反射される輝度は、以下の2つの要素によって決まる。
+<div class="styleBullet">
+<ul>
+<li>● シーン表面のパッチに当たる照度</li>
+<li>● 入射光のうち、表面パッチによって反射される割合</li>
+</ul>
+</div>
 
-257
-258 CHAPTER 9. SHADING
-
-image point (z’,y’). To find the source of image irradiance, we have to
-trace the ray back to the surface patch from which the ray was emitted and
-understand how the light from scene illumination is reflected by a surface
-patch.
-
+<!--
 Two factors determine the radiance reflected by a patch of scene surface:
-
-e The illumination falling on the patch of scene surface
-
-e The fraction of the incident illumination that is reflected by the surface
-patch.
-
-The amount of illumination falling on a particular surface patch is deter-
-mined by the position of the surface patch relative to the distribution of the
-light sources in the scene. The fraction of the incident illumination that is
-reflected by the surface patch in a particular direction depends on the optical
-properties of the surface material.
-
+● The illumination falling on the patch of scene surface
+● The fraction of the incident illumination that is reflected by the surface patch.
+-->
+</p><p>
+特定の表面パッチに当たる光量は、シーン内の光源の分布に対する表面パッチの位置によって決まる。入射光のうち表面パッチによって特定の方向に反射される割合は、表面材質の光学特性に依存する。
+<!--
+The amount of illumination falling on a particular surface patch is determined by the position of the surface patch relative to the distribution of the light sources in the scene. The fraction of the incident illumination that is reflected by the surface patch in a particular direction depends on the optical properties of the surface material.
+-->
+</p>
+<p>
+単一の点光源で照らされたシーン内の微小な表面領域を考えよう。図9.1に示すように、表面領域上に座標系を設定する。この座標系は、表面へのエネルギーの到達または放射が可能な方向の半球面を表す。
+</p>
+<center><img src="images/fig9_1.png"></center>
+<p>
+<center>図 9.1: 極座標系は表面の微小なパッチ上に確立され、表面のパッチから見える方向の半球内の照明と放射の方向を記述する。</center>
+</p>
+<p>
+<!--
+Figure 9.1: A polar coordinate system is established on an infinitesimal patch of surface to describe the directions of illumination and radiance in the hemi-sphere of directions visible from the surface patch.
+-->
+</p><p>
+\((\theta_i,\phi_i)\) は、シーン照明の点光源の、表面領域に対する極座標での方向を表し、\((\theta_e,\phi_e)\) は、表面領域からエネルギーが放射される方向を表す。特定の方向から表面領域に到達するエネルギーは \(E(\theta_i, \phi_i)\) であり、表面領域から特定の方向に放射されるエネルギーは \(L(\theta_e,\phi_e)\) である。表面パッチからある方向に放射されるエネルギー量と、ある方向から表面パッチに到達するエネルギー量の比が、双方向反射分布関数である。放射輝度は、放射照度から次のように決定されます。
+<!--
 Consider an infinitesimal patch of surface in a scene that is illuminated
 with a single point light source. Establish a coordinate system on the surface
 patch as shown in Figure 9.1. The coordinate system represents the hemi-
 sphere of possible directions from which energy can arrive or depart from the
-surface. Let (@;,¢;) denote the direction, in polar coordinates relative to the
-surface patch, of the point source of scene illumination and let (6., 4.) denote
+surface. Let \((\theta_i,\phi_i)\) denote the direction, in polar coordinates relative to the
+surface patch, of the point source of scene illumination and let \((\theta_e,\phi_e)\) denote
 the direction in which energy from the surface patch is emitted. The energy
-arriving at the surface patch from a particular direction is E(6;,0;) and the
-energy radiated in a particular direction from the surface patch is L(8., ¢,).
+arriving at the surface patch from a particular direction is \(E(\theta_i, \phi_i)\) and the
+energy radiated in a particular direction from the surface patch is \(L(\theta_e,\phi_e)\).
 The ratio of the amount of energy radiated from the surface patch in some
 direction to the amount of energy arriving at the surface patch from some
 direction is the bidirectional reflectance distribution function. The radiance
 is determined from the irradiance by
+-->
+\[
+L(\theta_e,\phi_e) = f(\theta_i,\phi_i,\theta_e,\phi_e)E(\theta_i, \phi_i) \tag{9.2}
+\]
 
-L(6e, be) = f (i; b:, Pc; be) H(i, bi), (9.2)
-
-where f(6:,¢:,¢,%e) is the bidirectional reflectance distribution function,
-called the BRDF for short. The BRDF depends on the optical properties
-of the surface material. This is the general formulation and can be very
-complicated, but in most cases of interest in machine vision, the effects are
-fairly simple. For most materials, the BRDF depends only on the difference
-between the incident and emitted angles:
-
-F (is is Pes be) = F(G: — Ges bi — Ge). (9.3)
-9.1. IMAGE IRRADIANCE 259
-
-Figure 9.1: A polar coordinate system is established on an infinitesimal patch
-of surface to describe the directions of illumination and radiance in the hemi-
-sphere of directions visible from the surface patch.
-
-9.1.1 Illumination
-
+ここで、\(f(\theta_i,\phi_i,\theta_e,\phi_e)\) は双方向反射率分布関数 (略してBRDF) である。BRDF は表面材質の光学特性に依存する。これは一般的な定式化であり、非常に複雑になる場合があるが、マシンビジョンで関心のあるほとんどのケースでは、その効果は比較的単純です。ほとんどの材質において、BRDFは入射角と出射角の差のみに依存する。
+<!--
+where \(f(\theta_i,\hi_i,\theta_e, \phi_e)\) is the bidirectional reflectance distribution function, called the BRDF for short. The BRDF depends on the optical properties of the surface material. This is the general formulation and can be very complicated, but in most cases of interest in machine vision, the effects are fairly simple. For most materials, the BRDF depends only on the difference between the incident and emitted angles:
+-->
+\[
+f(\theta_i,\phi_i,\theta_e,\phi_e)) = f(\theta_i-\theta_e, \phi_i-\phi_e) \tag{9.3}
+\]
+</p>
+<h3>9.1.1 照明</h3>
+<p>
+表面パッチから放射される放射輝度は、表面材質の双方向反射率分布関数 (BRDF: bi-directional reflectance distribution function) と光源分布が与えられれば計算できる。ここでは2種類の照明について説明する。
+<div class="styleBullet">
+<ul>
+<li>● 点光源</li>
+<li>● 均一光源</li>
+</ul>
+</div>
+<!--
 The radiance emitted from a surface patch can be calculated given the bidi-
 rectional reflectance distribution function (BRDF) for the surface material
 and the distribution of light sources. Two types of illumination will be cov-
 ered:
 
-e Point light source
+● Point light source
 
-e Uniform light source
-
+● Uniform light source
+-->
+</p><p>
+まず、光源の一般的な分布から表面パッチ上の全放射照度を計算するための一般的な公式を示す。座標系は、図9.1に示すように、半球の可能な方向の極座標系である。表面パッチ上の全放射照度は、半球内のすべての方向から表面パッチに到達する放射照度の合計である。単位半球のパッチを通過する放射照度の小さな寄与は、半球の全面積を使用するようにカウントする必要がある。角度増分\(\delta\theta_i\)と\(\delta\phi_i\)を持つ半球の特定のセクションは、立体角と呼ばれる半球の面積\(\delta\omega\)をカバーする。
+<!--
 First, the general formula for computing the total irradiance on a surface
 patch from a general distribution of light sources will be presented. The co-
 ordinate system is the polar coordinate system for the hemisphere of possible
@@ -176,82 +203,94 @@ patch is the sum of the contributions arriving at the surface patch from all of
 the directions in the hemisphere. Each small contribution of irradiance pass-
 ing through a patch of the unit hemisphere must be counted in such a way
 that the total area of the hemisphere is used. A given section of the hemi-
-sphere with angular increments 60; and 6¢; covers an area of the hemisphere
-6w called the solid angle:
-260 CHAPTER 9. SHADING
+sphere with angular increments \(\delta\theta_i\) and \(\delta\phi_i\) covers an area of the hemisphere \(\delta\omega\) called the solid angle:
+-->
+\[
+\delta\omega=\sin\theta_i\,\delta\theta_i\,\delta\phi_i \tag{9.4}
+\]
 
-The sin 6; term accounts for the effect that the area of the portion of the
-hemisphere 66; 6¢; is smaller near the top of the hemisphere. The area of a
-sphere of radius r is 4ar?, so the area of a hemisphere with unit radius is 27.
-The area S of the hemisphere can be obtained by adding up the solid angles
+\(\sin\theta_i\) 項は、半球面の面積 \(\delta\theta_i\delta\phi_i\) が半球面の上端付近で小さくなる効果を表している。半径 \(r\) の球面の面積は \(4\pi r^2\) なので、単位半径の半球面の面積は \(2\pi\) である。半球面の面積 \(S\) は、半球面を構成する立体角を合計することで得られる。
+<!--
+The \(\sin\theta_i\) term accounts for the effect that the area of the portion of the hemisphere \(\delta\theta_i\delta\phi_i\) is smaller near the top of the hemisphere. The area of a sphere of radius \(r\) is \(4\pi r^2\), so the area of a hemisphere with unit radius is \(2\pi\). The area \(S\) of the hemisphere can be obtained by adding up the solid angles
 that comprise the hemisphere:
+-->
+\[
+\begin{align}
+S &= \int_0^{2\pi} d\omega \tag{9.5} \\
+\\
+&=\int_0^{\pi/2}\int_0^{2\pi} \sin\theta\,d\theta\, d\phi \tag{9.6} \\
+\\
+&= 2\pi\int_0^{\pi/2} \sin\theta\,d\theta \tag{9.7} \\
+\\
+&=2\pi[-\cos\theta]_0^{\pi/2} \tag{9.8} \\
+\\
+&=2\pi \tag{9.9}
+\end{align}
+\]
 
-Qn
+式9.4の \(\sin\theta\) 係数がなければ、半球面の個々の微小部分を合計しても正しい総面積にはならない。球面を通過する全放射輝度は、球面の微小部分を各部分を通過する単位立体角あたりの放射輝度の量で重み付けした合計である。\(I(\theta_i, \phi_i)\)を、方向\((\theta_i, \phi_i)\)から半球面を通過する単位立体角あたりの放射輝度とする。表面部分全体の放射輝度は、
+<!--
+Without the \(\sin\theta\) factor in Equation 9.4, the individual infinitesimal pieces of hemisphere would not add up to the correct total area. The total radiance passing through the sphere is the sum of the infinitesimal patches of sphere weighted by the amount of radiance per unit solid angle passing through each patch. Let \(I(\theta_i, \phi_i)\) be the radiance per unit solid angle passing through the hemisphere from the direction \((\theta_i, \phi_i)\). The total irradiance of the surface patch is
+-->
+\[
+I_0=\int_0^{2\pi}\int_0^{\pi/2} I(\theta_i, \phi_i) \sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \tag{9.10}
+\]
 
-Cen : dw (9.5)
-m/2 p2m
+ここで、\(\cos\theta_i\) 項が追加されているのは、短縮効果により照明方向から見ると表面パッチが小さく見えるためである。表面パッチから反射される放射量は
+<!--
+where the additional \(\cos\theta_i\) term is needed because the surface patch appears smaller from the direction of illumination due to foreshortening. The amount of radiance reflected from the surface patch is
+-->
+\[
+L(\theta_e,\phi_e)=\int_0^{2\pi}\int_0^{\pi/2} f(\theta_i,\phi_i,\theta_e,\phi_e) I(\theta_i, \phi_i) \sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \tag{9.11}
+\]
 
-2 f [ sin 0 dédé (9.6)
-n/a
+シーンの放射輝度が画像の放射輝度に等しいという仮定のもと、画像平面内の位置 \((x^\prime,y^\prime)\) における画像の放射輝度は、シーン内の対応する表面パッチからの放射輝度に等しくなる。
+<!--
+With the assumption that scene radiance is equal to image irradiance, the image irradiance at position \((x^\prime,y^\prime)\) in the image plane is equal to the radiance from the corresponding surface patch in the scene:
+-->
+\[
+\begin{align}
+E(x^\prime,y^\prime) &= L(x,y,z) \tag{9.12} \\
+\\
+&=L(\theta_e,\phi_e) \tag{9.13}
+\end{align}
+\]
 
-= an | sin 6 dé (9.7)
+ここで、シーン放射の放射角は、シーン表面の形状から決定される。各画像位置 \((x^\prime,y^\prime)\) に対して、対応するシーン位置 \((x,y,z)\) を計算できることに注意。また、表面パッチの表面法線 \(\hat{\mathbf n}\) と、表面パッチから画像平面上の点 \((x^\prime, y^\prime)\) への光線の角度 \((\theta_e,\phi_e)\) を、表面法線または表面パッチに対する極座標で計算できる。
+<!--
+where the angles of emittance of the scene radiance are determined from the geometry of the scene surfaces. Note that for each image position \((x^\prime,y^\prime)\), the corresponding scene position \((x,y,z)\) can be calculated, as well as the surface normal \(\hat{\mathbf n}\) for the surface patch and the angle \((\theta_e,\phi_e)\) of the ray from the  urface patch to the point \(8x^\prime, y-\prime)\) in the image plane, in polar coordinates relative to the surface normal or the surface patch.
+-->
+</p><p>
 
-= 2n[-coso]r”? (9.8)
+シーン内の表面の形状と光源の配置から画像全体の放射照度を決定するには、シーン表面のBRDFを知る必要がある。これは次のセクションで説明する。
+<!--
+To determine the irradiance of the entire image from the geometry of surfaces in the scene and the arrangement of light sources, it is necessary to know the BRDF for the scene surfaces. This is the subject of the next section.
+-->
+</p>
+<h3>9.1.2 反射率</h3>
+<p>
+反射率にはいくつかの種類がある。
+<div class="styleBullet">
+<ul>
+<li>● ランバート反射率（拡散反射率とも呼ばれる）
+</li><li>● 鏡面反射率
+</li><li>● ランバート反射率と鏡面反射率の組み合わせ
+</li><li>● 走査型電子顕微鏡における反射率</li>
+</ul>
+</div>
 
-= Qn. (9.9)
-
-Without the sin @ factor in Equation 9.4, the individual infinitesimal pieces
-of hemisphere would not add up to the correct total area. The total radiance
-passing through the sphere is the sum of the infinitesimal patches of sphere
-weighted by the amount of radiance per unit solid angle passing through each
-patch. Let I(6;,¢;) be the radiance per unit solid angle passing through the
-hemisphere from the direction (0;,¢;). The total irradiance of the surface
-patch is
-
-Qe pr /2
-i= | f 1(8;, 4;) sin @, cos 6, dB, dé, (9.10)
-0 Jo
-where the additional cos @; term is needed because the surface patch appears
-
-smaller from the direction of illumination due to foreshortening. The amount
-of radiance reflected from the surface patch is
-
-Qn pr/2 :
-L(G, be) = f° f(s 4:s 05 8) 1(0., ds) sin 8, c08 8; dB, dfs. (9-11)
-
-With the assumption that scene radiance is equal to image irradiance, the
-image irradiance at position (z’, y’) in the image plane is equal to the radiance
-from the corresponding surface patch in the scene:
-
-E(z',y') = L(z,y, 2) (9.12)
-L (Be, de); (9.13)
-
-ll
-9.1. IMAGE IRRADIANCE 261
-
-where the angles of emittance of the scene radiance are determined from the
-geometry of the scene surfaces. Note that for each image position (z’, y’),
-the corresponding scene position (2, y,z) can be calculated, as well as the
-surface normal fi for the surface patch and the angle (8, ¢,) of the ray from
-the surface patch to the point (z’, y’) in the image plane, in polar coordinates
-relative to the surface normal or the surface patch.
-
-To determine the irradiance of the entire image from the geometry of
-surfaces in the scene and the arrangement of light sources, it is necessary
-to know the BRDF for the scene surfaces. This is the subject of the next
-section.
-
-9.1.2 Reflectance
-
+<!--
 Several different types of reflectance will be covered:
-e Lambertian reflectance (also called diffuse reflectance)
-e Specular reflectance
-e Combinations of Lambertian and specular reflectance
+● Lambertian reflectance (also called diffuse reflectance)
+● Specular reflectance
+● Combinations of Lambertian and specular reflectance
+● Reflectance in scanning electron microscopy
+-->
+</p><p>
+<strong>ランバート反射</strong><br>
+ランバート面は、一定の照明分布に対して、どの視線方向から見ても等しく明るく見え、入射光を吸収しない。ランバート反射率は拡散反射率とも呼ばれる。これは、ランバート面が、照明分布がどのようなものであっても、入射光を取り込み、そのすべてを面のすべての方向に分散させ、どの方向から見ても同じ量のエネルギーが見えるからである。これは、9.3.2節で説明するように、面がすべての方向に等しくエネルギーを放射するという意味ではないことに注意。多くのマット面は近似的にランバート面であり、以下に示す例外を除き、多くの面は定性的にランバート面である。
 
-e Reflectance in scanning electron microscopy
-
-Lambertian Reflectance
-
+<!--
 A Lambertian surface appears equally bright from all viewing directions for
 a fixed distribution of illumination and a Lambertian surface does not ab-
 sorb any incident illumination. Lambertian reflectance is also called diffuse
@@ -262,340 +301,370 @@ seen from any direction. Note that this is not the same as saying that the
 surface emits energy equally in all directions, as will be explained in Sec-
 tion 9.3.2. Many matte surfaces are approximately Lambertian, and many
 surfaces, with the exceptions noted below, are qualitatively Lambertian.
-The BRDF for a Lambertian surface is a constant:
+-->
+</p><p>
+ランバート面の BRDF は定数である。
+<!-- The BRDF for a Lambertian surface is a constant: -->
+\[
+f(\theta_i,\phi_i,\theta_e,\phi_e)=\frac{1}{\pi} \tag{9.14}
+\]
 
-(Bis ise, be) = =. (9.14)
-262 CHAPTER 9. SHADING
-
+放射輝度は放射方向に依存せず、BRDFが入射光に及ぼす影響を、可能な方向の半球面から合計することで得られる。
+<!--
 The radiance is independent of the emitted direction and is obtained by
 summing the effect of the BRDF on the incident illumination coming from
 the hemisphere of possible directions:
+-->
+\[
+\begin{align}
+L &=\int_0^{2\pi}\int_0^{\pi/2} f(\theta_i,\phi_i,\theta_e,\phi_e)I(\theta_i,\phi_i)\sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \tag{9.15} \\
+\\
+&= \int_0^{2\pi}\int_0^{\pi/2}\frac{1}{\pi}I(\theta_i,\phi_i)\sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \tag{9.16} \\
+\\
+&=\frac{1}{\pi}I_0 \tag{9.17}
+\end{align}
+\]
 
-Qa pr
-L= i [$64.4 60) 6) sin 8,008 8; dB, de (9.15)
-
-ax pn/2 7
-a i ¥ ~1 (64, $4) sin 8; cos 8; d8; de (9.16)
-
-= ti (9.17)
-wT
-
-Il
-
-where Jo is the total incident illumination on the surface patch.
-
+ここで、\(I_0\)は表面パッチ上の総入射光量である。
+<!-- where \(I_0\) is the total incident illumination on the surface patch. -->
+</p><p>
+遠方の点光源によって照らされたランバート面の知覚される明るさはどれくらいだろう？面パッチの法線に対する方向\((\theta_s,\phi_s)\)の点面からの照明は次のように記述される。
+<!--
 What is the perceived brightness of a Lambertian surface that is illumi-
 nated by a distant point source? The illumination from a point surface in a
-direction (,,¢;) relative to the normal of a surface patch is described by
+direction \((\theta_s,\phi_s)\) relative to the normal of a surface patch is described by
+-->
+\[
+I(\theta_i,\phi_i)=I_0\frac{\delta(\theta_i-\theta_s)\delta(\phi_i-\phi_s)}{\sin\theta_i} \tag{9.18}
+\]
 
-(6, $2) = Io ee (9.18)
-
-where Jy is the total illumination. Essentially, the 6-functions merely restrict
+ここで、\(I_0\) は総照度である。本質的に、\(\delta\) 関数は、表面パッチに到達する照明の方向を単一の方向 \((\theta_s,\phi_s)\) に制限するだけである。式 9.18 の分母には正弦項が含まれるため、式 9.10 に代入すると総照度は \(I_0\) となる。
+<!--
+where \(I_0\) is the total illumination. Essentially, the \(\delta\)-functions merely restrict
 the directions from which illumination arrives at the surface patch to the
-single direction (@,,¢,). Equation 9.18 has a sine term in the denominator
+single direction \((\theta_s,\phi_s)\). Equation 9.18 has a sine term in the denominator
 so that when it is plugged into Equation 9.10, the total illumination comes
-out to be Jp.
-
+out to be \(I_0\).
+-->
+</p><p>
+式9.18の照度関数と式9.14のBRDFを、表面パッチからの放射輝度を表す式9.11に代入すると、知覚される明るさを表す式が得られる。
+<!--
 Now plug the illumination function from Equation 9.18 and the BRDF
 from Equation 9.14 into Equation 9.11 for the radiance from the surface
 patch to get the equation for the perceived brightness:
+-->
+\[
+\begin{align}
+L(\theta_e,\phi_e) &=\int_0^{2\pi}\int_0^{\pi/2} f(\theta_i,\phi_i,\theta_e,\phi_e)I(\theta_i,\phi_i)\sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \\
+\\
+&=\int_0^{2\pi}\int_0^{\pi/2}\frac{I_0}{\pi}\frac{\delta(\theta_i-\theta_s)\delta(\phi_i-\phi_s)}{\sin\theta_i}\sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \\
+\\
+&=\frac{I_0}{\pi}\cos\theta_s \tag{9.19}
+\end{align}
+\]
 
-Qn px /2 :
-L(Be, 42) = f° [$6,080 de) 108i, 6) sin 4, cos 0, dB,
-f fo In 6(0; — 9s) (9; — os)
-
-sin 6;
-
-sin @; cos @; d6; dd;
-
-_ a couse (9.19)
-
-T
-
+これはランバートの余弦法則であり、点光源によって照らされた表面パッチの知覚される明るさは、そのパッチの面法線に対する入射角によって変化するというものである。入射角による変化は、照明方向に対する表面パッチの短縮によるものである。言い換えれば、ある面積の表面パッチは、その面法線が照明方向を向くように配置されている場合に、最も多くの光を捉える。面法線が照明方向から離れるにつれて、照明方向から見たパッチの面積、ひいてはパッチの明るさは減少する。この効果を実際に確認するには、白いボールなどの球形の物体を用意し、部屋の電球を1つだけ残して、残りのすべての照明を消す。球体の最も明るい部分は、ボールに対してどこに立っているかに関係なく、表面法線が照明の方向を向いている部分であり、光源に対応する球体上の点からすべての方向で明るさが同じ割合で減少していることがわかる。
+<!--
 This is the Lambert cosine law, which says that the perceived brightness of
 a surface patch illuminated by a point source varies with the incident angle
 relative to the surface normal of the patch. The variation with incident angle
 is due to the foreshortening of the surface patch relative to the direction of
-9.1. IMAGE IRRADIANCE 263
-
 illumination. In other words, a surface patch of a given area captures the
 most illumination if it is oriented so that the surface normal of the patch
 points in the direction of illumination. As the surface normal is pointed
 away from the direction of illumination, the area of the patch as seen from
-the direction of illumination, and hence the brightness of the patch, decreases.
-To see a demonstration of this effect for yourself, take a spherical object such
-as a white ball and turn out all of the lights in the room except for a single
-bulb. You will see that the brightest part of the sphere is the portion with
-the surface normal pointing toward the direction of illumination, regardless
-of where you stand relative to the ball, and the brightness decreases at the
-same rate in all directions from the point on the sphere that corresponds to
-the light source.
-
+the direction of illumination, and hence the brightness of the patch, decreases. To see a demonstration of this effect for yourself, take a spherical object such as a white ball and turn out all of the lights in the room except for a single bulb. You will see that the brightest part of the sphere is the portion with the surface normal pointing toward the direction of illumination, regardless of where you stand relative to the ball, and the brightness decreases at the same rate in all directions from the point on the sphere that corresponds to the light source.
+-->
+</p><p>
+点光源ではなく、全方向から均一な照明が照射され、その総強度が \(I_0\) であると仮定する。この場合、明るさは次のように表される。
+<!--
 Suppose that instead of a point source, the illumination is uniform from
 all directions with total intensity Jg. Then the brightness is given by
+-->
+\[
+\begin{align}
+L(\theta_e,\phi_e) &= \int_0^{2\pi}\int_0^{\pi/2} f(\theta_i,\phi_i,\theta_e,\phi_e)I(\theta_i,\phi_i)\sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \\
+\\
+&=\int_0^{2\pi}\int_0^{\pi/2}\frac{I_0}{\pi}\sin\theta_i\cos\theta_i\,d\theta_i\,d\phi_i \\
+\\
+&=I_0 \tag{9.20}
+\end{align}
+\]
 
-Qa px {2 S
-L(0.,4) = f [ $(G;, 4%, Ge, be) 1(A,, 4) sin 6; cos @; dO; dd
-
-Qn px/2 J,
-ee { i sin 6; cos 0; dO; dd;
-0 Jo
-Io.
-
-T
-
-(9.20)
-
+ランバート面の知覚される明るさは、どの方向から見ても同じである。なぜなら、面の向きに関係なく、同じ量の照明を受けるからである。
+<!--
 Now the perceived brightness of the Lambertian surface patch is the same
 from all directions because no matter how the surface patch is oriented, it
 receives the same amount of illumination.
+-->
+</p><p>
+<strong>鏡面反射</strong><br>
 
-Specular Reflectance
-
+鏡面反射面は、入射光をすべて、面法線に対して同じ角度を持ちながら、面法線の反対側の方向に反射する。言い換えれば、\((\theta_i,\phi_i)\) の方向から来た光線は、\((\theta_e,\phi_e)=(\theta_i,\phi_i+\pi)\) の方向に反射される。鏡面反射面のBRDFは、
+<!--
 A specular surface reflects all incident illumination in a direction that has the
 same angle with respect to the surface normal but is on the opposite side of
 the surface normal. In other words, a ray of light coming from the direction
 
-(9;, ;) is reflected in the direction (6.,¢-) = (0,0; ++ 7). The BRDF for a
-specular surface is
+\((\theta_i,\phi_i)\) is reflected in the direction \((\theta_e,\phi_e)=(\theta_i,\phi_i+\pi)\). The BRDF for a specular surface is
+-->
+\[
+f(\theta_i,\phi_i,\theta_e,\phi_e)=\frac{\delta(\theta_e-\theta_i)\delta(\phi_e-\phi_i-\pi)}{\sin\theta_i\cos\theta_i} \tag{9.21}
+\]
 
-5(8_ — 8) (de ~ 45-7)
-
-sin 6; cos 6;
-
-(i, di, Ge, de) a
-
-(9.21)
-
-The sin 6; and cos 6; factors are needed in the BRDF to cancel the correspond-
-ing factors due to foreshortening and solid angle in Equation 9.11. Plugging
-264 CHAPTER 9. SHADING
-
+BRDFでは、式9.11における短縮と立体角による対応する係数を打ち消すために、\(\sin\theta_i\)と\(\cos\theta_i\)の係数が必要である。式9.21を式9.11に代入すると、以下の式が得られる。
+<!--
+The \(\sin\theta_i\) and \(\cos\theta_i\) factors are needed in the BRDF to cancel the corresponding factors due to foreshortening and solid angle in Equation 9.11. Plugging
 Equation 9.21 into Equation 9.11 yields
+-->
+\[
+L(\theta_e,\phi_e)=I(\theta_e,\phi_e-\pi) \tag{9.22}
+\]
 
-L(6., de) = I(6e, Pe ae 7), (9.22)
-
+これは、入射光線が表面パッチから反射されることを示している。これは、完璧な鏡の場合に予想される通りである。
+<!--
 which shows that the incoming rays of light are reflected from the surface
 patch as one would expect for a perfect mirror.
-
-Combinations of Lambertian and Specular Reflectance
-
+-->
+</p><p>
+<!--
+<strong>Combinations of Lambertian and Specular Reflectance</strong><br>
+-->
+<strong>ランバート反射と鏡面反射の組み合わせ</strong><br>
+コンピュータグラフィックスでは、物体の反射特性をモデル化するために、鏡面反射と拡散反射を組み合わせて使用​​するのが一般的である。
+<!--
 In computer graphics, it is common to use a combination of specular and
 diffuse reflectance to model the reflectance properties of objects:
+-->
+\[
+f(\theta_i, \phi_i,\theta_e, \phi_e)=\frac{\eta}{\pi}+(1-\eta)\frac{\delta(\theta_e-\theta_i)\delta(\phi_e-\phi_i-\pi)}{\sin\phi_i\cos\phi_i} \tag{9.23}
+\]
 
-) Slee — 91) 6(¢. — 4: — 7)
-
-sin @; cos ?;
-
-n
-F (Oi, bi, Pe, Ge) = Pes (lq (9.23)
-where the constant 7 controls the mixture of the two reflectance functions.
+ここで、定数 \(\eta\) は2つの反射率関数の混合を制御する。
+鏡面反射と拡散反射の相対的な割合は、物体の表面材質によって異なる。光沢のある物体、つまり光沢のある物体は、マットな物体よりも鏡面反射率が高くなる。
+<!--
+where the constant \(\eta\) controls the mixture of the two reflectance functions.
 The relative proportion of specular and diffuse reflectance varies with the
 surface material of the objects. Objects that are glossy, in other words shiny
 objects, have a greater degree of specular reflectance than matte objects.
+-->
+</p><p>
 
-Scanning Electron Microscopy
+<strong>走査型電子顕微鏡</strong><br>
+
+走査型電子顕微鏡では、表面はあらゆる方向に同じ量のエネルギーを放射する。これは、あらゆる方向から均一に明るく見えるランバート面とは異なる。この違いは、9.3節で説明するように、2つの表面の反射率マップを比較することで最も簡単に確認できる。
+<!--
+<strong>Scanning Electron Microscopy</strong><br>
 
 In scanning electron microscopy, a surface emits the same amount of energy in
 all directions. This is not the same as a Lambertian surface, which appears
 equally bright from all directions. The difference is most easily seen by
 comparing the reflectance maps for the two surfaces, as will be done in Section
 9.3.
-
-9.2 Surface Orientation
-
+-->
+</p>
+<h2>9.2 表面の向き</h2>
+<p>
+9.1.2節では、仮想的な表面パッチ上に構築された座標系における照明と知覚される明るさの関係について論じた。これを視覚に適用するには、表面反射率とシーン照明に関する議論を図9.2の画像平面の座標系で再構築する必要がある。表面の向きはカメラ座標系で定式化する必要がある。
+<!--
 The material in Section 9.1.2 discussed the relationship between illumination
 and perceived brightness in a coordinate system erected on a hypothetical
 surface patch. In order for this to be useful in vision, the discussion of surface
 reflectance and scene illumination must be reworked in the coordinate system
 of the image plane from Figure 9.2. Surface orientation must be formulated
 in camera coordinates.
-
-Consider a sphere aligned with the optical axis as shown in Figure 9.3.
-Imagine a point on the sphere and suppose that a plane is tangent to the
-9.2. SURFACE ORIENTATION 265
-
-Surface normal
-n
-
-Camera lens
-
-object point
-center ea
-
-Gy, 2)
-
-'
-
-x
-Gy)
-Image plane
-
+-->
+</p>
+<center><img src="images/fig9_2.png"></center>
+<p>
+<center>図9.2: シーン内の点を像面へ投影した図。座標系の原点はレンズ中心にある</center>
+<!--
 Figure 9.2: Projection of a point in the scene onto the image plane. The
 origin of the coordinate system is at the lens center.
-
-Surface normal
-
-Camera lens
-center
-
-Unit Gaussian
-Image plane sphere
-
+-->
+</p><p>
+図9.3に示すように、光軸と一直線に並んだ球面を考える。球面上の点を想像し、その点において球面に接する平面があるとする。平面の面法線は、球面上の対応する点の面法線でもある。
+<!--
+Consider a sphere aligned with the optical axis as shown in Figure 9.3.
+Imagine a point on the sphere and suppose that a plane is tangent to the sphere at that point. The surface normal of the plane is also the surface
+normal of the corresponding point on the sphere.
+-->
+</p>
+<center><img src="images/fig9_3.png"></center>
+<p>
+<center>図9.3: 表面の向きと画像座標の関係を示すガウス球</center>
+<!--
 Figure 9.3: The Gaussian sphere illustrating the relationship between surface
 orientation and image coordinates.
-266 CHAPTER 9. SHADING
-
-sphere at that point. The surface normal of the plane is also the surface
-normal of the corresponding point on the sphere.
-
+-->
+</p><p>
+点が画像平面から距離 \(z\) 離れており、平行投影によって点が画像平面に写像されると仮定する。カメラ座標系では、点の位置は \((x,y,z)\) である。以下の手順では、画像平面座標系におけるシーン内の面パッチの向きを表す命名法を確立する。画像平面上の近傍の点の位置は \((x+\delta x,y+\delta y)\) である。この点の深度は \(z+\delta z\) である。深度を画像平面座標系の関数とする。
+<!--
 Suppose that the point is a distance z from the image plane and suppose
 that parallel projection is used to map the point onto the image plane. In
-camera coordinates, the point is at position (2,y,z). The following steps
+camera coordinates, the point is at position \((x,y,z)\). The following steps
 establish a nomenclature for the orientation of a surface patch in the scene
 in image plane coordinates. Consider a point nearby in the image plane at
-position (7 +éx,y+é6y). The depth of the point will be z+6z. Let the depth
+position \((x+\delta x,y+\delta y)\). The depth of the point will be \(z+\delta z\). Let the depth
 be a function of image plane coordinates:
+-->
+\[
+z = z(x,y) \tag{9.24}
+\]
+点の深度の変化 \(\delta z\) は、像面座標の変化 \(\delta x\) および \(\delta y\) とどのように関係するだろうか？その答えは、点 \((x, y)\) に関する関数 \(z(x, y)\) のテイラー展開を考えることで見つかる。
+<!--
+How does the change in depth \(\delta z\) of the point relate to the change in image
+plane coordinates \(\delta x\) and \(\delta y\)? The answer is found in considering the Taylor
+series expansion of the function \(z(x,y)\) about the point \((x, y)\):
+-->
+\[
+\delta z\approx \frac{\partial z}{\partial x}\delta x+\frac{\partial z}{\partial y}\delta y \tag{9.25}
+\]
 
-2 = 2059): (9.24)
-
-How does the change in depth 6z of the point relate to the change in image
-plane coordinates 6x and éy? The answer is found in considering the Taylor
-series expansion of the function z(z,y) about the point (x, y):
-
-Oz Oz
-
-bz br +
-
-a Bye! (9.25)
-
-The size of the partial derivatives of z with respect to xz and y are related
+\(z\) の \(x\) および \(y\) に関する偏微分の大きさは、\((x, y, z)\) に対応する点におけるシーン表面の接線平面の傾きの量と関係している。
+<!--
+The size of the partial derivatives of \(z\) with respect to \(x\) and \(y\) are related
 to the amount of tilt in the tangent plane on the scene surface at the point
-corresponding to (x, y, z).
+corresponding to \((x, y, z)\).
+-->
+</p><p>
+\((x, y, z)\)における表面の勾配は、次式で与えられるベクトル\((p,q)\)である。
+<!--
+The gradient of the surface at \((x, y, z)\) is the vector \((p,q)\) given by
+-->
+\[
+p=\frac{\partial z}{\partial x}　and　q=\frac{\partial z}{\partial y} \tag{9.26}
+\]
 
-The gradient of the surface at (x,y, z) is the vector (p,q) given by
-
-az Oz
-
-p= a and Gg ay (9.26)
-
+表面パッチの表面法線は勾配と次の関係がある。
+<!--
 The surface normal of a surface patch is related to the gradient by
+-->
+\[
+\mathbf n=(p,q,1)  \tag{9.27}
+\]
 
-n=(p,q,1), (9.27)
+これは、深さ\(z\)の単位変化に対応する\(x\)と\(y\)の変位量がそれぞれ\(p\)と\(q\)であることを意味している。単位面法線は、面法線をその長さで割ることで得られる。
+<!--
+which simply says that the amount of displacement in \(x\) and \(y\) corresponding to a unit change in depth \(z\) is \(p\) and \(q\), respectively. The unit surface normal is obtained by dividing the surface normal by its length:
+-->
+\[
+\hat{\mathbf n}=\frac{\mathbf n}{|\mathbf n|}=\frac{(p,q,1)}{\sqrt{1+p^2+q^2}} \tag{9.28}
+\] 
 
-which simply says that the amount of displacement in x and y corresponding
-to a unit change in depth z is p and q, respectively. The unit surface normal
-is obtained by dividing the surface normal by its length:
+シーン内の任意の点 \((x,y,z)\) は、シーン表面が不透明で、画像が平行投影によって形成されると仮定すると、 \(x\) と \(y\) 座標だけで指定できる。したがって、シーン表面上の点の座標は、プライム記号を省略した画像平面座標 \(x\) と \(y\) で表すことができる。シーン表面の任意の関数またはプロパティは、画像平面座標で指定できる。特に、表面パッチの方向は \(x\) と \(y\) の関数として指定できる。また、\(p\) と \(q\) は表面の方向を指定するために開発されているため、任意の表面の方向は次の2つの関数で指定される。
+<!--
+Any point \((x,y,z)\) in the scene can be specified by just the \(x\) and \(y\) coordinates, assuming that scene surfaces are opaque and the image is formed by parallel projection, so the coordinates of a point on a scene surface can just be denoted by image plane coordinates \(x\) and \(y\) with the primes omitted. Any function or property of the scene surface can be specified in terms of image plane coordinates; in particular, the orientation of a surface patch can be specified as functions of \(x\) and \(y\), and since \(p\) and \(q\) have been developed to specify surface orientation, the orientation of any surface is specified by the two functions
+-->
+\[
+p=p(x,y)　and　q=q(x,y) \tag{9.29}
+\]
 
-Rivage (p,q, 1)
-1= _— FOS. 9.28
-ln] Vit p+? sas
-
-Any point (x,y,z) in the scene can be specified by just the « and y coordi-
-nates, assuming that scene surfaces are opaque and the image is formed by
-9.3. THE REFLECTANCE MAP 267
-
-parallel projection, so the coordinates of a point on a scene surface can just
-be denoted by image plane coordinates r and y with the primes omitted.
-Any function or property of the scene surface can be specified in terms of
-image plane coordinates; in particular, the orientation of a surface patch can
-be specified as functions of x and y, and since p and q have been developed
-to specify surface orientation, the orientation of any surface is specified by ~
-the two functions
-
-p=plt,y) and q=q(z,y). (9.29)
-
+</p><p>
+次のステップでは、このセクションで提示された、視聴者中心座標における表面の向きを記述するためのアイデアと、セクション9.1で提示された表面反射率とシーン照明の概念を組み合わせる。
+<!--
 The next step is to combine the ideas presented in this section for de-
 scribing surface orientation in viewer-centered coordinates with the concepts
 of surface reflectance and scene illumination presented in Section 9.1.
-
-9.3. The Reflectance Map
-
+-->
+</p>
+<h2>9.3. 反射率マップ</h2>
+<p>
+シーンの照明、表面反射率、および観察者中心座標における表面の向きの表現を組み合わせたものを反射率マップと呼ぶ。これは、与えられた照明分布と表面材質に対して、特定の向きにある表面パッチの明るさを指定する。
+このセクションでは平行投影を前提としているため、画像平面座標はプライム記号を省略して \((x, y)\) で表す。
+<!--
 The combination of scene illumination, surface reflectance, and the repre-
 sentation of surface orientation in viewer-centered coordinates is called the
 reflectance map. It specifies the brightness of a patch of surface at a partic-
 ular orientation for a given distribution of illumination and surface material.
 The presentation in this section assumes parallel projection, so the image
-plane coordinates will be denoted by (z, y) with the primes omitted.
-
-9.3.1 Diffuse Reflectance
-
+plane coordinates will be denoted by \((x, y)\) with the primes omitted.
+-->
+</p>
+<h3>9.3.1 拡散反射率</h3>
+<p>
+シーン内の、画像平面座標 \(x\) と \(y\) に対応する、面方向 \(p\) と \(q\) を持つ面パッチを考える。面パッチはランバート反射率を持ち、点光源によって照明されているとする。9.1.2節では、パッチの放射輝度は次のように計算された。
+<!--
 Consider a surface patch in the scene corresponding to image plane coordi-
-nates x and y with surface orientation p and g. Suppose that the surface
-patch has Lambertian reflectance and is illuminated by a point light source.
-In Section 9.1.2, the radiance of the patch was calculated to be
+nates \(x\) and \(y\) with surface orientation \(p\) and \(q\). Suppose that the surface patch has Lambertian reflectance and is illuminated by a point light source. In Section 9.1.2, the radiance of the patch was calculated to be
+-->
+\[
+L(\theta_e,\phi_e)=\frac{I_0}{\pi}\cos\theta_s \tag{9.30}
+\]
 
-L(6., be) = * 00s 9s, (9.30)
+ここで、\(\theta_s\) はパッチの面法線と光源への方向ベクトルとの間の角度である。ビューア中心座標系では、これに対応する表現は何だろうか？ 9.2節で示したビューア中心座標系では、面法線は \((-p,-q,1)\) であり、光源への方向は \((-p_s,-q_s,1)\) である。任意の2つのベクトル間の角度のコサインは、2つのベクトルの内積を各ベクトルの長さで割った値である。したがって、面法線と点光源への方向との間の角度のコサインは次のようになる。
+<!--
+where \(\theta_s\) is the angle between the surface normal of the patch and the direction vector to the light source. What is the corresponding representation in viewer-centered coordinates? In the viewer-centered coordinate system presented in Section 9.2, the surface normal is just \((-p,-q,1)\) and the direction to the light source is \((-p_s,-q_s,1)\). The cosine of the angle between any two vectors is the dot product of the two vectors divided by the length of each vector, so the cosine of the angle between the surface normal and the direction to the point light source is:
+-->
+\[
+\begin{align}
+\cos\theta_s &= \frac{(-p,-q,1)}{\sqrt{1+p^2+q^2}}\cdot\frac{(-p_s,-q_s,1)}{\sqrt{1+p_s^2+q_s^2}} \tag{9.31}\\
+\\
+&= \frac{1+p_sp+q_sq}{\sqrt{1+p^2+q^2}\sqrt{1+p_s^2+q_s^2}} \tag{9.32}
+\end{align}
+\]
 
-where 6, is the angle between the surface normal of the patch and the di-
-rection vector to the light source. What is the corresponding representation
-in viewer-centered coordinates? In the viewer-centered coordinate system
-presented in Section 9.2, the surface normal is just (—p,—g,1) and the di-
-rection to the light source is (—p,,—q,,1). The cosine of the angle between
-268 CHAPTER 9. SHADING
-
-any two vectors is the dot product of the two vectors divided by the length
-of each vector, so the cosine of the angle between the surface normal and the
-direction to the point light source is:
-
-(=p,-G1) | (=Per = 9s, 1)
-VIF ee Vitr+@?
-
-= 1+ psp + 969 (9.32)
-
-Vier reylt p+
-
+与えられた光源分布と与えられた表面材質に対して、すべての表面方向pとqの反射率をカタログ化または計算することで、反射率マップ\(R(p,q)\)を得ることができる。画像放射照度の正確な値は、光源の強度、光学系の集光能力、その他反射率に定性的な影響を与えない多くの要因など、さまざまな要因に依存するため、反射率マップは最大値が1になるように正規化される。この正規化と、シーンの放射照度が画像放射照度に等しいという仮定を組み合わせると、画像放射照度の式が得られる。
+<!--
 For a given light source distribution and a given surface material, the
 reflectance for all surface orientations p and q can be cataloged or computed
-to yield the reflectance map R(p,q). Since the precise value for the image
+to yield the reflectance map \(R(p,q)\). Since the precise value for the image
 irradiance depends on a variety of factors such as the strength of the light
 source, the light-gathering ability of the optical system, and many other
 factors that do not affect reflectance qualitatively, the reflectance map is
 normalized so that its maximum value is 1. Combining this normalization
 with the assumption that scene radiance equals image irradiance yields the
 image irradiance equation:
+-->
+\[
+E(x,y)=R(p,q) \tag{9.33}
+\]
 
-cos@, =
-
-(9.31)
-
-E(z,y) = R(p,q), (9.33)
-
-which says that the irradiance (brightness) at point (2, y) in the image plane
+これは、画像平面上の点 \((x, y)\) における放射照度（明るさ）が、シーン表面上の対応する点の面方向 p と gq における反射率マップの値に等しいことを示している。ランバート反射体と点光源の場合、反射率マップ \(R(p, q)\) は式9.32で与えられ、図9.4に示されている。
+<!--
+which says that the irradiance (brightness) at point \((x, y)\) in the image plane
 is equal to the reflectance map value for the surface orientation p and gq of
 the corresponding point on the scene surface. For a Lambertian reflector and
-
-point light source, the reflectance map R(p, q) is given by Equation 9.32 and
+point light source, the reflectance map \(R(p, q)\) is given by Equation 9.32 and
 is shown in Figure 9.4.
-
-9.3.2 Scanning Electron Microscopy
-
+-->
+</p>
+<h3>9.3.2 走査型電子顕微鏡</h3>
+<p>
+走査型電子顕微鏡では、反射率マップは次のように表される。
+<!--
 In scanning electron microscopy, the reflectance map is given by
+-->
+\[
+\begin{align}
+R(p,q) &= \sqrt{p^2+q^2+1} \tag{9.34} \\
+\\
+&= sec\,\theta_i \tag{9.35}
+\end{align}
+\]
 
-R(p,q) = yPrt+etl (9.34)
 
-= secdj. (9.35)
 
+同じエネルギーがあらゆる方向に放射されるため、表面は観察者から離れて傾いている方が明るく見える。これは、観察者は一定の視線方向の角度内でより広い表面を見ているためである。
+<!--
 The same energy is emitted in all directions; hence a surface appears to be
 brighter if it is slanted away from the viewer because the viewer is seeing
 more surface within a given angle of viewing direction.
-9.4. SHAPE FROM SHADING 269
-
-3
-2
-1
-q q 0
--]
-2
-gaia 0 2
-a Pp
-
+-->
+</p>
+<center><img src="images/fig9_4.png"></center>
+<p>
+図9.4: p, = 0.2、g, = 0.4の点光源で照らされたランバート面の典型的な反射率マップR(p,q)。左: グレーレベル表現。右: 等高線図。
+<!--
 Figure 9.4: Typical reflectance map, R(p,q), for a Lambertian surface illu-
 minated by a point light source with p, = 0.2 and g, = 0.4. Left: Gray level
 representation. Right: Contour plot.
-
-9.4 Shape from Shading
-
+-->
+</p>
+<h2>9.4 陰影からの形状復元</h2>
+<p>
+反射率マップには、対応するシーン点の表面方向の関数として、ピクセルにおける画像強度が記録される。したがって、照明と撮影条件が固定され、反射率特性が既知の表面の場合、表面方向の変化は画像強度の変化に対応する。画像強度の変化から表面形状を復元する逆問題は、陰影からの形状復元問題として知られている。ここでは、表面平滑性制約を用いてこの問題を解く手順をまとめる。
+<!--
 Image intensity at a pixel as a function of the surface orientation of the corre-
 sponding scene point is captured in a reflectance map. Thus, for fixed illumi-
 nation and imaging conditions, and for a surface with known reflectance prop-
@@ -604,264 +673,252 @@ in image intensity. The inverse problem of recovering surface shape from
 changes in image intensity is known as the shape from shading problem.
 We now summarize the procedure for solving this problem using a surface
 smoothness constraint.
-
+-->
+</p><p>
+前の節から、画像放射照度 \(E(x,y)\) と表面上の対応する点の方向 \((p,q)\) の関係は次のように表される。
+<!--
 From the previous section, the relationship between image irradiance
 E(z,y) and the orientation (p,q) of the corresponding point on the surface
 is given by
+-->
+\[
+E(x,y) = R(p,q) \tag{9.36}
+\]
 
-E(z,y) = R(p,9), (9.36)
-
-where R(p,q) is the reflectance map of the surface. The goal is to recover
-surface shape by calculating the orientation (p,q) on the surface for each
-point (x,y) in the image. Note that we have only one equation, but there
-are two unknowns, p and q. Thus, this problem cannot be solved unless
+ここで、\(R(p,q)\) は表面の反射率マップである。目標は、画像内の各点 \((x,y)\) について、表面上の方向 \((p,q)\) を計算することで表面形状を復元することである。方程式は1つだけだが、未知数は \(p\) と \(q\) の2つであることに注意。したがって、追加の制約を課さない限り、この問題を解くことはできない。一般的に課される制約は、表面の滑らかさである。物体は、エッジに沿ってのみ滑らかさの制約から逸脱する、区分的に滑らかな表面で構成されていると仮定する。
+<!--
+where \(R(p,q)\) is the reflectance map of the surface. The goal is to recover
+surface shape by calculating the orientation \((p,q)\) on the surface for each
+point \((x,y)\) in the image. Note that we have only one equation, but there
+are two unknowns, \(p\) and \(q\). Thus, this problem cannot be solved unless
 additional constraints are imposed. A commonly imposed constraint is that
-270 CHAPTER 9. SHADING
-
 of surface smoothness. We assume that objects are made up of piecewise
 smooth surfaces which depart from the smoothness constraint only along
 their edges.
-
-A smooth surface is characterized by slowly varying gradients, p and gq.
-Thus, if pz, Py, de, and gy represent the partial derivatives of p and q along
+-->
+</p><p>
+滑らかな表面は、緩やかに変化する勾配 \(p\) と \(q\) によって特徴付けられる。
+したがって、\(p_x, p_y, q_x\)、および \(q_y\) が p と q の z 方向および y 方向の偏微分を表す場合、次のようにこれらの偏微分の二乗和の積分を最小化するように滑らかさの制約を指定できる。
+<!--
+A smooth surface is characterized by slowly varying gradients, \(p\) and \(q\).
+Thus, if \(p_x, p_y, q_x\), and \(q_y\) represent the partial derivatives of p and q along
 z and y directions, we can specify the smoothness constraint as minimizing
 the integral of the sum of the squares of these partial derivatives as follows.
+-->
+\[
+e_s= \int\int \left(\left(p_x^2+p_y^2\right) + \left(q_x^2+q_y^2\right)\right)dx\,dy \tag{9.37}
+\]
 
-es= ff ((e +H) + (+) ardy. aan)
-
+厳密に言えば、この積分は式9.36に与えられた制約の下で最小化されなければならない。しかし、理想からの逸脱を引き起こすノイズを考慮すると、問題は次式で表される全誤差 \(e\) を最小化する問題として提示される。
+<!--
 Strictly speaking, we must minimize this integral subject to the constraint
 given in Equation 9.36. However, to account for noise which causes departure
 from the ideal, the problem is posed as that of minimizing total error e given
 by
+-->
+\[
+e =e_s+\lambda e_i \tag{9.38}
+\]
 
-e =e, + rA€;, (9.38)
-
-where 4 is a parameter which weighs the error in smoothness constraint
+ここで、\(\lambda\)は、平滑性制約の誤差を、次式で与えられる画像放射照度方程式の誤差と比較して重み付けするパラメータである。
+<!--
+where \(\lambda\) is a parameter which weighs the error in smoothness constraint
 relative to the error in the image irradiance equation given by
+-->
+\[
+e_i=\int\int\left(E(x,y)-R(p,q)\right)^2\,dx\,dy \tag{9.39}
+\]
 
-be } + (B(c, y) — R(p, q))? de dy. (9.39)
-
+これは変分法における問題である。\((n + 1)\)回目の反復計算中に\((p,q)\)の値を更新する反復解は次のように与えられる。
+<!--
 This is a problem in the calculus of variations. An iterative solution for
-updating the value of (p,q) during the (n + 1)th iteration is given by
+updating the value of \((p,q)\) during the \((n + 1)\)th iteration is given by
+-->
+\[
+\begin{align}
+p_{ij}^{n+1} &= p_{ij}^{*n}+\lambda\left[E_{ij}-R(p_{ij}^{*n},q_{ij}^{*n})\right]\frac{\partial R}{\partial p} \tag{9.40} \\
+\\
+q_{ij}^{n+1} &= q_{ij}^{*n}+\lambda\left[E_{ij}-R(p_{ij}^{*n},q_{ij}^{*n}\right]\frac{\partial R}{\partial q} \tag{9.41}
+\end{align}
+\]
 
-nv =n en oen OR
-pat? = pit +2 [By - RO a] - (9.40)
-
-OR
-
-— (9.41)
-
-ay = a +A [By — Rept, a)
-where * denotes the average values computed in a 2 x 2 neighborhood, and
-the subscripts 7,7 denote discrete coordinates in the image plane. Note that
+ここで、*は\(2 x 2\)近傍で計算された平均値を表し、添字\(i,j\)は画像平面上の離散座標を表す。特定の反復における計算は局所的であるが、多くの反復にわたる制約の伝播によって全体的な一貫性が達成されることに注意。
+<!--
+where * denotes the average values computed in a \(2 x 2\) neighborhood, and
+the subscripts \(i,j\) denote discrete coordinates in the image plane. Note that
 although the computations for a given iteration are local, global consistency
 is achieved by the propagation of constraints over many iterations.
-
+-->
+</p><p>
+上で説明した基本的な手順は、多くの点で改良されている。詳細は、本章末の参考文献を参照。シェーディングから形状を推定する基本原理は単純だが、その有用性を制限する実用上の困難が数多く存在する。特に、表面の反射特性が必ずしも正確に分かっているとは限らず、シーンの照明を制御することが困難である。
+<!--
 The basic procedure described above has been improved in many ways.
 Details may be found in references at the end of the chapter. Although the
 basic principles of shape from shading are simple, there are many practical
 difficulties which limit its usefulness. In particular, the reflectance properties
 of the surfaces are not always known accurately, and it is difficult to control
 the illumination of the scene.
-9.5. PHOTOMETRIC STEREO 271
+-->
+</p>
 
-9.5 Photometric Stereo
-
+<h2>9.5 照度差ステレオ</h2>
+<p>
+シーン内のすべての表面がランバート（拡散）反射率を持つと仮定する。
+特定の方向にある点光源に対して、一定反射率（一定輝度）の線は2次多項式によって定義される。画像内の各点 \((x,y)\) の輝度は \(E(x, y)\) となり、表面の可能な方向 \((p, q)\) は、ある2次多項式によって定義される反射率マップ上の曲線に沿って存在するように制限される。
+<!--
 Assume that all surfaces in the scene have Lambertian (diffuse) reflectance.
 For a point light source in a particular direction, the lines of constant re-
 flectance (constant brightness) are defined by second-order polynomials. Each
-point (x,y) in the image will have brightness E(x, y), and the possible sur-
-face orientations (p, q) will be restricted to lie along a curve in the reflectance
+point \((x,y)\) in the image will have brightness \(E(x, y)\), and the possible sur-
+face orientations \((p, q)\) will be restricted to lie along a curve in the reflectance
 map defined by some second-order polynomial.
-
+-->
+</p><p>
+同じ表面が異なる場所にある点光源によって照らされていると仮定する。表面の反射率は同じだが、反射率マップは反射率と照明の両方に依存するため異なる。画像内の特定の点に対応する表面の向きは、勾配空間内の異なる2次曲線に制約される。
+<!--
 Suppose that the same surface is illuminated by a point light source in
 a different location. Although the surface reflectance will be the same, the
 reflectance map will be different since it depends on both reflectance and
 illumination. The surface orientation corresponding to a given point in the
 image will be constrained to a different second-order curve in gradient space.
-
+-->
+</p><p>
+ある面をある光源で照らして画像の放射照度を測定し、同じ面を別の光源で照らして再び画像の放射照度を測定すると、画像放射照度の測定値のペアから、画像内の各点について、面の向きを拘束する2つの方程式が得られる。基本的な考え方は、画像内の各点 \((x, y)\) における2つの方程式を、面の向き \(p(x, y)\) と \(q(x, y)\) について解くことである。拘束方程式は2次多項式であるため、2つの未知数を持つ2次方程式のペアには一意の解がなく、3つの方程式が必要になる。これが図9.5に示す照度差ステレオ法である。
+<!--
 If a surface is illuminated with one light source and the image irradiance
 is measured, and the same surface is illuminated with a different light source
 and the image irradiance is measured again, then the pairs of image irradi-
 ance measurements will provide two equations for every point in the image
 that constrain the surface orientation. The basic idea is to solve the two
-equations at each point (zx, y) in the image for the surface orientation p(z, y)
-and q(z,y). Since the equations of constraint are second-order polynomi-
+equations at each point \((x, y)\) in the image for the surface orientation \(p(x, y)\)
+and \(q(x,y)\). Since the equations of constraint are second-order polynomi-
 als, three equations will be needed since a pair of second-order equations
 in two unknowns does not have a unique solution. This is the method of
 photometric stereo, illustrated in Figure 9.5.
-
+-->
+</p><p>
+これまでの議論では省略されてきた放射効果がある。それは、入射光のすべてが表面から放射されるわけではないということである。この効果は、アルベド係数を用いることで、画像放射照度方程式に簡単に組み込むことができる。
+<!--
 There is a radiometric effect that has been omitted in the discussion so
 far: all incident light is not radiated from a surface. This effect can be easily
 incorporated into the image irradiance equation with an albedo factor:
-
-E(zx,y) = pR(p, 9), (9.42)
-
-with the albedo factor p such that 0 < » <1. The term albedo comes from
+-->
+\[
+E(x,y) = \rho R(p, q)  \tag{9.42}
+\]
+アルベド係数\(\rho\)は\(0 < \rho <1\)である。アルベドという用語は、ラテン語で「白さ」を意味することに由来する。
+<!--
+with the albedo factor \(\rho\) such that \(0 < \rho <1\). The term albedo comes from
 Latin, meaning whiteness.
-
+-->
+</p><p>
+アルベドが変化するランバート面の場合、面の向きとアルベドは同時に復元できる。面法線を次のように表す。
+<!--
 For a Lambertian surface with varying albedo, the surface orientation and
 albedo can be recovered simultaneously. Let the surface normal be denoted
-
 by
-(p,q, —1)
-VIF PFE
-
+-->
+\[
+\hat{\mathbf n}=\frac{(p,q,-1)}{\sqrt{1+p^2+q^2}} \tag{9.43}
+\]
+3つの点光源があると仮定する。点光源\(i\)の方向を単位ベクトルで表す。
+<!--
 Assume that there are three point sources of illumination. Let the direction
+of point source \(i\) be denoted by the unit vector
+-->
+\[
+\hat{\mathbf s}_i=\frac{(p_i,q_i,-1)}{\sqrt{1+p_i^2+q_i^2}} \tag{9.44}
+\]
 
-a=
-
-(9.43)
-272 CHAPTER 9. SHADING
-
-Figure 9.5: A diagram illustrating the principle of photometric stereo. The
-image irradiance measurements are normalized to the unit interval.
-
-of point source 7 be denoted by the unit vector
-
-i (pi, gi, —1)
-
-i
-Vl+tet+a
-
+点光源によって照らされた拡散面の明るさは、面法線と照明方向のなす角度の余弦に依存することを思い出そう。したがって、明るさはこれら2つのベクトルの内積に関係する。照明点光源ごとに反射率マップが異なるため、像放射照度方程式も異なる。点光源 \(i\) の場合、像放射照度方程式は次のようになる。
+<!--
 Recall that the brightness of a diffuse surface illuminated by a point source
 depends on the cosine of the angle between the surface normal and the direc-
 tion of the illumination; hence the brightness is related to the dot product
 of these two vectors. For each point source of illumination, there will be a
 different image irradiance equation since there will be a different reflectance
-map. For point source 7, the image irradiance equation will be
+map. For point source \(i\), the image irradiance equation will be
+-->
+\[
+E_i=\rho\hat{\mathbf s}_i\cdot\hat{\mathbf n} \tag{9.45}
+\]
+</p><p>
+点光源の方向ベクトルから \(3×3\) 行列を作成する。
+<!--
+Form a \(3×3\) matrix from the direction vectors for the point sources:
+-->
+\[
+S=
+\begin{pmatrix}
+\hat{\mathbf s}_1 \\
+\hat{\mathbf s}_2 \\
+\hat{\mathbf s}_3
+\end{pmatrix}
+=
+\begin{pmatrix}
+s_{1,x} & s_{1,y} & s_{1,z} \\
+s_{2,x} & s_{2,y} & s_{2,z} \\
+s_{3,x} & s_{3,y} & s_{3,z} 
 
-(9.44)
+\end{pmatrix}
+\tag{9.46}
+\]
+画像内の各ポイントで、3 つの画像放射照度測定値のベクトルが取得される。
+<!--
+A vector of three image irradiance measurements is obtained at each point in the image:
+-->
+\[
+\mathbf E=
+\begin{pmatrix}
+E_1 \\
+E_2 \\
+E_3
+\end{pmatrix}
+\tag{9.47}
+\]
 
-Form a 3 x 3 matrix from the direction vectors for the point sources:
-
-81 Sig Shy Sue
-=| 522 Soy S22 |. (9.46)
-83 S30 §3y $3.2
-
-ie
-Il
-e
-FURTHER READING 273
-
-A vector of three image irradiance measurements is obtained at each point
-in the image:
-Ey
-ree ae (9.47)
-Es
-
-The system of image irradiance equations for each point in the image can be
-written as
-
-E = Sa. (9.48)
-
-Note that E, p, and n depend on the position in the image, but S does not
-depend on position in the image plane and is constant for a given arrange-
+画像内の各点における画像放射照度方程式は次のように表される。
+<!--
+The system of image irradiance equations for each point in the image can be written as
+-->
+\[
+\mathbf E=\rho S\hat{\mathbf n} \tag{9.48}
+\]
+\(\mathbf E, \rho\)、\(\hat{\mathbf n}\) は画像内の位置に依存するが、\(S\) は画像面内の位置に依存せず、光源の配置が与えられた場合一定であることに注意。画像内の各点について、アルベドと表面の向きを表すベクトルを解く。
+<!--
+Note that \(\mathbf E, \rho\), and \(\hat{\mathbf n}\) depend on the position in the image, but \(S\) does not depend on position in the image plane and is constant for a given arrange-
 ment of light sources. For each point in the image, solve for the vector that
 represents albedo and surface orientation:
-
-pa = S'E. (9.49)
-
-The albedo p(z,y) is the magnitude of this vector. The unit normal for
+-->
+\[
+\rho\hat{\mathbf n}=S^{-1}\mathbf E \tag{9.49}
+\]
+アルベド \(\rho(x,y)\) はこのベクトルの大きさである。表面方向の単位法線は、アルベドを除算することで得られる。
+<!--
+The albedo \(\rho(x,y)\) is the magnitude of this vector. The unit normal for
 surface orientation is obtained by dividing out the albedo.
-
-For a given distribution of light sources, the S matrix can be inverted
-once using LU decomposition The inverse matrix does not have to be recom-
-puted for every point in the image. In fact, the inverse of the S matrix can be
+-->
+</p><p>
+与えられた光源分布に対して、\(S\) 行列は \(LU\) 分解を使用して 1 回逆行列を求めることができる。逆行列は、画像内のすべての点に対して再計算する必要はない。実際、\(S\) 行列の逆行列はアプリケーションごとに 1 回決定し、保存された逆行列を後続の表面方向測定に再利用できる。\(\rho\hat{\mathbf n}\) の値は、画像放射照度値のベクトル \(\mathbf E\) から後方代入 [197、pp. 39-45] を使用して決定できる。画像放射照度方程式のセットは、画像放射照度 3 つ組 \((E_1,E_2,E_3)\) をアルベドと表面方向 \((\rho,p,q)\) にマッピングするルックアップ テーブルを使用してすばやく解くことができる。
+<!--
+For a given distribution of light sources, the \(S\) matrix can be inverted
+once using \(LU\) decomposition The inverse matrix does not have to be recom-
+puted for every point in the image. In fact, the inverse of the \(S\) matrix can be
 determined once for the application and the stored inverse reused for subse-
-quent surface orientation measurements. The values of pn can be determined
-from the vector E of image irradiance values using back-substitution [197,
+quent surface orientation measurements. The values of \(\rho\hat{\mathbf n}\) can be determined
+from the vector \(\mathbf E\) of image irradiance values using back-substitution [197,
 pp. 39-45]. The set of image irradiance equations can be solved quickly us-
-ing a lookup table that maps the image irradiance triple (2), H2, E3) into the
-albedo and surface orientation (p, p, q).
-
-Further Reading
-
-The classic paper on the properties of reflectance maps and shading in images
-was written by Horn [108]. Radiometric concepts are also described in detail
-in the book Robot Vision [109]. The first algorithm for shape from shading
-using the method of characteristics was developed by Horn [107]. There
-are several papers on shape from shading algorithms which are compiled
-in book form [112]. Photometric stereo was originally developed by Horn
-and Woodham. A recent reference is the paper by Woodham [256]. Nayar
-274 CHAPTER 9. SHADING
-
-Light direction: perpendicular
-
-ail 2 Radius
-
-(0, 0, 0) of | -Z
-Lens center oe
-
-wa (0, 0, 4)
-
-,
-
-y
-
-Figure 9.6: Diagram of the Lambertian cone for Exercise 9.1.
-
-and Ikeuchi [181] present a photometric stereo algorithm that estimates the
-mixture of Lambertian to specular components in a scene surface.
-
-Exercises
-
-9.1 A Lambertian cone with its axis located along the z axis is illuminated
-by a distant light source as shown in Figure 9.6.
-
-a. Sketch the reflectance map of this illumination condition—in par-
-ticular, the contour with R(p,q) = 0 and R(p,q) = 0.5 (ie., find
-and sketch the equation of the corresponding contours in the (p, g)
-plane).
-
-b. Neglecting off-axis effects, sketch the image projected on the z—
-y plane and identify the contour of maximum brightness in the
-image.
-
-9.2 Equation 9.11 relates the energy emitted in a particular direction to
-the amount of incident energy. Prove that this relationship is a linear
-system. A linear system has the properties of homogeneity and super-
-position. Assume that the incident illumination and the bidirectional
-reflectance distribution function are arbitrary.
-
-a. Show that if the illumination is [ = aJ, for some constant a, then
-the radiance is a£,, where L, is the radiance corresponding to
-illumination J. This property is called homogeneity.
-COMPUTER PROJECTS 275
-
-b. Show that if the illumination is J = J, + Jz, then the radiance
-is L; + Le, where LZ, and Le are the radiances for J, and Io,
-respectively.
-
-These properties show that the radiance for any linear combination of
-light sources is the linear combination of the radiances for the individual
-light sources.
-
-Computer Projects
-9.1 Reflectance map:
-
-a. Consider a camera with the origin of its image plane located at
-(0,0,0). The lens center is located at (0,0,4). Assume that a
-distant Lambertian object is centered around the positive z axis.
-The image plane is limited to (—1, 1) in both a and y directions. A
-distant point source located in the direction (pp, go, ro) illuminates
-the object.
-
-b. Write a program to read the value of po, go, and ro from the key-
-board, calculate the reflectance map, and display it as an image.
-Normalize the values of R(p,q) such that maximum corresponds
-to 255 (for display as white). Locate R(0,0) at the center of the
-display. Note that both p and g are infinite in extent whereas
-the image is 256 x 256. Choose the appropriate truncation and
-scaling.
-
-c. Assume the object is spherical and has a radius of 3. The center
-of the sphere is at (0,0,20). Calculate and display the image of
-the object captured by the camera. Normalize intensity ranges
-so that the image intensity ranges from 0 to 255. To distinguish
-the object from the background, set all background pixels to an
-intensity value of 64. -->
-
+ing a lookup table that maps the image irradiance triple \((E_1, E_2, E_3)\) into the
+albedo and surface orientation \((\rho, p, q)\).
+-->
+</p>
+<center><img src="images/fig9_5.png"></center>
+<p>
+図9.5: 照度差ステレオ法の原理を示す図。画像の放射照度測定値は単位間隔に正規化されている。
+<!--
+Figure 9.5: A diagram illustrating the principle of photometric stereo. The
+image irradiance measurements are normalized to the unit interval.
+-->
 </p>
     </body>
 </html>
