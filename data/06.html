@@ -90,7 +90,7 @@
 輪郭表現の精度は、輪郭をモデル化するために使用される曲線の形状、曲線フィッティングアルゴリズムの性能、そしてエッジ位置の推定精度によって決まる。輪郭の最も単純な表現は、エッジの順序付きリストである。この表現はエッジの位置推定と同等の精度であるが、最も簡潔な表現ではないため、後続の画像解析に効果的な表現を提供できない可能性がある。適切な曲線モデルをエッジにフィッティングすると、平均化によってエッジ位置の誤差が低減されるため精度が向上し、後続の操作により適切かつ簡潔な表現を提供することで効率が向上する。例えば、直線に沿ったエッジの集合は、エッジに直線をフィッティングすることで最も効率的に表現できる。この表現は、直線の方向や長さの決定などの後続の計算を簡素化し、推定された直線と実際の直線との間の平均二乗誤差が、実際の直線と任意のエッジとの間の誤差よりも小さくなるため、精度が向上する。
 <!-- The accuracy of the contour representation is detcrmined by the form of curve used to model the contour, by the performance of the curve fitting algorithm, and by the accuracy of the estimates of edge location. The simplest representation of a contour is an ordered list of its edges. This representation is as accurate as the location estimates for the edges, but is the least compact representation and may not provide an effective representation for subsequent image analysis. Fitting the appropriate curve model to the edges increases accuracy, since errors in cdge location are reduced through averaging, and if increases efficiency by providing a more appropriate and more compact representation for subsequent operations. For example, a set of edges that lie along a line can be represented most efficiently by fitting a line to the edges. This representation simplifies later calculations, such as determining the orientation or length of the line, and increases the accuracy, since the mean squared error between the estimated line and the true line will be smaller than the error between the true line and any of the edges. -->
 </p><p>
-この章の最初のセクションでは、平面曲線の初等微分幾何学について解説する。第2セクションでは、曲線モデルを辺に当てはめることなく、辺のリストから長さ、接線、曲率といった等高線特性を計算する手法を紹介する。残りのセクションでは、曲線モデルと、そのモデルを等高線に当てはめる手法について説明する。
+この章の最初のセクションでは、平面曲線の初等微分幾何学について解説する。第2セクションでは、曲線モデルを辺に当てはめることなく、辺のリストから長さ、接線、曲率といった輪郭特性を計算する手法を紹介する。残りのセクションでは、曲線モデルと、そのモデルを輪郭に当てはめる手法について説明する。
 <!-- The first section in this chapter presents the elementary differential geometry of curves in the plane. The second section gives a collection of techniques for calculating coutour properties such as length, tangent, and curvature from the list of edges, without fitting a curve model to the edges. The remaining sections cover curve models and techniques for fitting the models to contours. -->
 </p><p>
 先に進む前に、いくつかの用語を定義する必要がある。曲線は、点のリストを通過する場合、点のリストを補間する。近似とは、曲線が点の近くを通過するものの、必ずしも点を正確に通過するわけではない、点のリストに曲線をフィッティングすることです。以下のセクションでは、エッジ検出アルゴリズムによって提供されるエッジが正確であると仮定し、補間法を用いて曲線をエッジ点にフィッティングさせる。実際の画像にエッジ検出を適用して提供されるエッジは正確ではない。エッジの推定位置には多少の誤差が生じる。後のセクションでは、曲線近似の方法について説明する。
@@ -148,7 +148,17 @@ the tangent: n(u) = p’(u). -->
 \[
 S=\sum_{i=2}^n\sqrt{(x_i-x_{i-1})^2+(y_i-y_{i-1})^2} \tag{6.3}
 \]
- エッジリストを走査し、辺に沿って2、対角線に沿って3を加え、最終的な合計を2で割ることで、良好な近似値が得られる(???)。輪郭の端点間の距離は
+ エッジリストを走査し、辺に沿って2、対角線に沿って3を加え、最終的な合計を2で割ることで、良好な近似値が得られる。<br>
+<br>
+(ここから蛇足) 重要ではないが気になったので... <br>
+　・輪郭を辿って<br>
+　　水平または垂直に1ピクセル進んだら＋２(後で2で割るので＋１)<br>
+　　斜めに１ピクセル進んだら＋３(後で２で割るので＋1.5\(\approx\sqrt{2}\))<br>
+　　(途中の計算で実数演算したくないので2倍して整数化している)<br>
+　　だけの話だった...<br>
+(ここまで蛇足)<br>
+<br>
+輪郭の端点間の距離は
 <!-- A good approximation is obtained by traversing the edge list and adding 2 along sides and 3 along diagonals, and dividing the final sum by 2. The distance between end points of a contour is -->
 \[
 D=\sqrt{(y_n-y_1)^2+(x_n-x_1)^2} \tag{6.4}
@@ -159,9 +169,21 @@ D=\sqrt{(y_n-y_1)^2+(x_n-x_1)^2} \tag{6.4}
 チェーンコードは、輪郭線に沿ったエッジポイントのリストを記録するための表記法である。チェーンコードは、エッジリスト内の各エッジにおける輪郭線の方向を指定するす。方向は、図6.1に示すように、8つの方向のいずれかに量子化される。リストの最初のエッジから始めて、輪郭線を時計回りに回り、次のエッジへの方向は、8つのチェーンコードのいずれかを使用して指定される。方向は、エッジの8次元のチェーンコードである。チェーンコードは、最初のエッジの座標と、後続のエッジにつながるチェーンコードのリストによってエッジリストを表す。曲線とそのチェーンコードを図6.2に示す。
 <!-- Chain codes are a notation for recording the list of edge points along a contour. The chain code specifies the direction of a contour at each edge in the edge list. Directions are quantized into one of eight directions, as shown in Figure 6.1. Starting at. the first edge in the list and gomg clockwise around the contour, the direction to the next edge is specified using one of the eight chain codes. The direction is the chain code for the 8-netghbor of the edge. The chain code represents an edge list by the coordinates of the first edge and the list of chain codes leading to subsequent edges. A curve and its chain code are shown in Figure 6.2. -->
 </p>
+\[
+\begin{array}{|c|c|c|}
+\hline
+2 & 3 & 4 \\
+\hline
+1 & \cdot & 5 \\
+\hline
+8 & 7 & 6 \\
+\hline
+\end{array}
+\]
 <p>
 <center>図6.1: リンクされたエッジポイント間の方向を表すチェーンコード</center>
 </p>
+<center><img src="images/fig6_2.png"></center>
 <p>
 <center>図 6.2: 曲線とそのチェーンコード</center>
 </p><p>
@@ -170,7 +192,7 @@ D=\sqrt{(y_n-y_1)^2+(x_n-x_1)^2} \tag{6.4}
 </p>
 <h3>6.2.2 傾斜の表現</h3>
 <p>
-輪郭の傾きの表現は \(\Psi-s\) プロットとも呼ばれ、チェーンコードの連続バージョンのようなものである。チェーンコードで許可されている限られた接線方向ではなく、任意の接線方向を使用して等高線を表現する。エッジリストの先頭から始めて、デジタル曲線の式を使用して接線と円弧長を計算するものとする。接線 \(\Psi\) と円弧長 \(s\) をプロットして、\(\Psi-s\) 空間での輪郭の表現を取得する。\(\Psi-s\) プロットは、輪郭の形状の表現である。たとえば、線分と円弧で構成される等高線は、\(\Psi-s\) プロットでは線分の連続のように見える。\(\Psi-s\) プロットの水平線分は、輪郭の線分に対応する。 \(\Psi-s\) プロット内の他の方向の線分は円弧に対応する。\(\Psi-s\) プロット内の直線ではない部分は、他の曲線プリミティブに対応する。
+輪郭の傾きの表現は \(\Psi-s\) プロットとも呼ばれ、チェーンコードの連続バージョンのようなものである。チェーンコードで許可されている限られた接線方向ではなく、任意の接線方向を使用して輪郭を表現する。エッジリストの先頭から始めて、デジタル曲線の式を使用して接線と円弧長を計算するものとする。接線 \(\Psi\) と円弧長 \(s\) をプロットして、\(\Psi-s\) 空間での輪郭の表現を取得する。\(\Psi-s\) プロットは、輪郭の形状の表現である。たとえば、線分と円弧で構成される輪郭は、\(\Psi-s\) プロットでは線分の連続のように見える。\(\Psi-s\) プロットの水平線分は、輪郭の線分に対応する。 \(\Psi-s\) プロット内の他の方向の線分は円弧に対応する。\(\Psi-s\) プロット内の直線ではない部分は、他の曲線プリミティブに対応する。
 <!-- The slope representation of a contour, also called the \(Psi-s\) plot, is like a continuous version of the chain code. We want to represent a contour using arbitrary tangent directions, rather than the limited set of tangent directions allowed by the chain code. Suppose that we start at the beginning of the edge list and compute the tangent and arc length using the formulas presented for digital curves. We may plot the tangent \(\Psi\) versus arc length \(s\) to obtain a representation for the contour in the \(\Psi-s\) space. The \(\Psi-s\) plot. is a representation of the shape of the contour. For example, a contour that consists of line scgments and circular arcs will look like a sequence of line segments in the \(\Psi-s\) plot. Horizontal line segments in the \(\Psi-s\) plot correspond to line segments in the coutour; line segments at other orientations in the \(\Psi-s\) plot correspond to circular arcs. Portions of the \(\Psi-s\) plot that are not straight lines correspond to other curve primitives. -->
 </p><p>
 \(\Psi-s\) プロットを直線に分割することで、輪郭を直線と円弧に分割することができる。この手法は多くの研究者によって使用されており、輪郭を線分に分割するこの手法にはいくつかのバージョンがある。
@@ -179,6 +201,7 @@ D=\sqrt{(y_n-y_1)^2+(x_n-x_1)^2} \tag{6.4}
 \(\Psi-s\) プロットは、元の輪郭の形状を簡潔に記述するために使用できる。図6.3は、輪郭とその \(\Psi-s\) プロットを示している。閉じた輪郭の場合、\(\Psi-s\) プロットは周期的である。
 <!-- One may use the \(\Psi-s\) plot as a compact description of the shape of the original contour. In Figure 6.3, we show a contour and its \(\Psi-s\) plot. For a closed contour, the \(\Psi-s\) plot is periodic. -->
 </p>
+<center><img src="images/fig6_3.png"></center>
 <p>
 <center>図 6.3: 輪郭の傾斜の表現</center>
 </p>
@@ -219,45 +242,75 @@ D=\sqrt{(y_n-y_1)^2+(x_n-x_1)^2} \tag{6.4}
 セクション6.4から6.7では、エッジの位置が十分に正確であり、選択されたエッジ点を用いてフィッティングを決定できるという仮定のもと、曲線モデルをエッジにフィッティングする手法について説明する。セクション6.8では、エッジの位置の誤差を処理できる、より強力な手法を順に紹介する。
 <!-- Sections 6.4 through 6.7 will cover techniques for fitting curve models to edges with the assumption that the edge locations are sufficiently accurate that selected edge points can be used to determine the fit. Section 6.8 will present successively more powerful methods that can handle errors in the edge locations. -->
 </p><p>
-<!-- Let \(d_i\) be the distance of edge point \(i\) from a line. There are several measures of the goodness of fit of a curve to the candidate edge points. All of them depend on the error between the fitted curve and the candidate points forming the curve. Some commonly used methods follow.
+\(d_i\) を、直線からエッジ点 \(i\) までの距離とする。曲線と候補エッジ点の適合度を測る尺度はいくつかある。いずれも、適合曲線と曲線を形成する候補点との間の誤差に依存する。以下に、一般的に用いられる手法をいくつか示す。
 
-Maximum absolute error measures how much the points deviate from
+<!-- Let \(d_i\) be the distance of edge point \(i\) from a line. There are several measures of the goodness of fit of a curve to the candidate edge points. All of them depend on the error between the fitted curve and the candidate points forming the curve. Some commonly used methods follow. -->
 
+<div class="styleBullet">
+<ul>
+<li><strong>最大絶対誤差</strong>は、最悪のケースにおいて点が曲線からどれだけ逸脱するかを測定する。
+\[
+MAE = \max_i |d_i| \tag{6.5}
+\]
+</li>
+<li><strong>平均二乗誤差</strong>は、曲線と端点の偏差の全体的な尺度となる。
+\[
+MSE =\frac{1}{n}\sum_{i=1}^n d_i-2 \tag{6.6}
+\]
+</li>
+<li><strong>正規化最大誤差</strong>は、最大絶対誤差と曲線の長さの比である。
+\[
+\varepsilon=\frac{\max_i|d_i|}{S} \tag{6.7}
+\]
+</li>
+<li><strong>誤差の符号変化回数</strong>は、輪郭内のエッジのモデルとしての曲線の適切さを示す良い指標である。
+</li><br>
+<li><strong>曲線の長さと端点間の距離の比</strong>は、曲線の複雑さを示す良い指標である。</li>
+</ul>
+</div>
+
+<!--
+<div class="styleBullet">
+<ul>
+<li><strong>Maximum absolute error</strong> measures how much the points deviate from 
 the curve in the worst case:
-MAE = max |d,| (6.5)
-
-Mean squared error gives an overall measure of the deviation of the curve
-from the edge points:
-
-LQ y
-MSE = — Sod? (6.6)
-i=1
-
-Normalized maximum error is the ratio of the maximum absolute error
-
-to the length of the curve:
-
-_ max; |d,| -
-c= (6.7)
-
-Number of sign changes in the error is a good indicator of the appropri-
-ateness of the curve as a model for the edges in the contour.
-
-Ratio of curve length to end point distance is a good measure of the
-complexity of the curve.
+\[
+MAE = \max_i |d_i| \tag{6.5}
+\]
+</li>
+<li><strong>Mean squared error</strong> gives an overall measure of the deviation of the curve from the edge points:
+\[
+MSE =\frac{1}{n}\sum_{i=1}^n d_i-2 \tag{6.6}
+\]
+</li>
+<li><strong>Normalized maximum error</strong> is the ratio of the maximum absolute error to the length of the curve:
+\[
+\varepsilon=\frac{\max_i|d_i|}{S} \tag{6.7}
+\]
+</li>
+<li><strong>Number of sign changes</strong> in the error is a good indicator of the appropriateness of the curve as a model for the edges in the contour.
+</li>
+<li><strong>Ratio of curve length to end point distance</strong> is a good measure of the complexity of the curve.</li>
+</ul>
+</div> -->
 
 </p><p>
-The normalized maximum error provides a unitless measure of error in-
+正規化された最大誤差は、曲線の長さに依存しない単位のない誤差の尺度となる。言い換えれば、ある曲線からの所定の偏差は、用途によっては、長さが2倍の曲線からの偏差が2倍であることと同等に重要な場合がある。曲線モデルが線分である場合、円弧の長さを計算する必要はない。端点間の距離Dを使用できる。
+
+<!-- The normalized maximum error provides a unitless measure of error in-
 dependent of the length of the curve. In other words, a given amount of
 deviation from a curve may be equally significant, in some applications, as
 twice as much deviation from a curve that is twice as long. If the curve
 model is a line segment, then it is not necessary to compute the arc length;
-the distance D between the end points can be used:
-
-D= Vn _ yy? + (1 _ #1). (6.8)
+the distance D between the end points can be used: -->
+\[
+D= \sqrt{(y_n-y1)^2+(x_n-x_1)^2} \tag{6.8}
+\]
 
 </p><p>
-Sign changes are a very useful indication of goodness of fit. Fit a list of
+符号の変化は、適合度を示す非常に有用な指標である。エッジ点のリストを直線で近似し、符号の変化の数を調べる。符号の変化が1つであれば、エッジのリストは直線でモデル化できる可能性があり、符号の変化が2つであれば、エッジは2次曲線でモデル化すべきであり、符号の変化が3つであれば、3次曲線でモデル化すべきであることを示す。符号の変化が多数ある場合、曲線の複雑さが少し増加しても適合度は大幅に改善されないことを示す。良好な適合度は、符号の変化にランダムなパターンを示す。同じ符号の誤差が連続して発生する場合、適合度に系統的な誤差があることを示す。これは、おそらく曲線モデルが間違っていることが原因である。
+
+<!-- Sign changes are a very useful indication of goodness of fit. Fit a list of
 edge points with a straight line and examine the number of sign changes. One
 sign change indicates that the list of edges may be modeled by a linc segment,
 two sign changes indicate that the edges should be modeled by a quadratic
@@ -265,15 +318,22 @@ curve, three sign changes indicate a cubic curve, and so on. Numerous sign
 changes indicate that a small increase in the complexity of the curve will
 not improve the fit significantly. A good fit has a random pattern to the
 sign changes. Runs of errors of the same sign indicate a systematic error in
-fitting; possibly due to the wrong curve model.
+fitting; possibly due to the wrong curve model.-->
 </p><p>
+以降の節では、単純な曲線フィッティング法を用いて、折れ線、円弧、円錐曲線、3次スプラインの各モデルの使用方法を説明する。6.8節では、折れ線を主な例として、より強力な曲線フィッティング法を紹介する。ただし、原理的には、以降の節で紹介するモデルはいずれも、6.8節で紹介するどの曲線フィッティング法とも併用できる。
+
+<!--
 In the following sections, we will use simple curve fitting methods to iL
 lustrate the use of the polyline, circular arc, conic section, and cubic spline
 models. Section 6.8 will present more powerful curve fitting methods, using
 polylines as the primary example; but, in principle, any of the models pre-
 sented in the following sections could be used with any of the curve fitting
 methods presented in Section 6.8.
+-->
 </p><p>
+曲線フィッティングモデルの選択は、アプリケーションによって決まる。シーンが直線で構成され、他のモデルのフィッティングの開始点となる場合は、線分（折れ線）の使用が適切である。円弧は、曲線が曲率が区分的に一定であるセクションに分割されるため、曲率を推定するのに便利な表現方法である。円錐曲線は、線分と円弧、楕円弧、双曲弧のシーケンスを表現する便利な方法を提供し、変曲点を明示的に表現する。3次スプラインは滑らかな曲線をモデル化するのに適しており、接線ベクトルと曲率の推定値が区分的に一定である必要はない。
+
+<!--
 The choice of curve fitting model must be guided by the application. The
 use of straight line segments (polylines) is appropriate if the scene consists
 of straight lines and is the starting point for fitting other models. Circular
@@ -283,9 +343,13 @@ provide a convenient way to represent sequences of linc segments and circular
 arcs, as well as elliptic and hyperbolic arcs, and explicitly represent inflection
 points. Cubic splines are good for modcling smooth curves and do not force
 estimates of tangent vectors and curvature to be piecewise constant.
+-->
 </p>
-<h2>6.4 Polyline Representation</h2>
+<h2>6.4 折れ線表現</h2>
 <p>
+折れ線とは、端と端を繋いだ線分の列である。輪郭線の折れ線表現は、線分の列でエッジリストを近似する。折れ線は、エッジリスト内の選択されたエッジ点のサブセットを補間する。各線分の端は、元のエッジリスト内のエッジ点である。各線分は、その端点間の連続する曲線の連なりをモデル化する。線分が繋がっている点は頂点と呼ばれる。折れ線は、この章で説明するすべての曲線と同様に、画像平面上の2次元曲線であり、頂点は画像平面上の点であることに注意。
+
+<!--
 A polyline is a sequence of line segments joined end to end. The polyline
 representation for a contour fits the edge list with a sequence of line segments.
 The polyline interpolates a selected subset of the edge points in the edge list.
@@ -295,53 +359,80 @@ The points where linc segments are joined are called vertices. Note that
 polylines are two-dimensional curves in the image plane, as are all of the
 curves discussed in this chapter, and the vertices are points in the image
 plane.
+-->
 </p><p>
+折れ線アルゴリズムは、エッジポイントの順序付きリスト\(\{(x_1, y_1), (x_2, y_2), ..,(x_n, y_n)\}\)を入力として受け取る。エッジポイントの座標はサブピクセル解像度で計算できる（セクション5.7を参照）。線分は頂点として選択された2つのエッジポイント間に適合されるため、頂点として選択されたエッジの座標のみを正確に計算する必要がある。
+
+<!--
 The polyline algorithm takes as input an ordered list of edge points
-{(21, 91), (22, y2},..+,(2n,¥n)}. The edge point coordinates may be com-
+\(\{(x_1, y_1), (x_2, y_2},..,(x_n,y_n)\}\). The edge point coordinates may be com-
 puted to subpixel resolution (sce Section 5.7). Since line segments are fit
-
-between two edge points selected as vertices, Only the coordinated of the
+between two edge points selected as vertices, only the coordinated of the
 edges that are selected as vertices need to be computed precisely.
+-->
 
+</p>
+<center><img src="images/fig6_4.png"></center>
+<p>
+図6.4: 線分から点までの垂線距離を示す図。値 \(\gamma\) は、点の座標 \((x_i, y_i)\) を線分の式に代入することで計算される。
 
-</p><p>
-
+<!--
 Figure 6.4: Diagram showing the perpendicular distance of a point from a
-line segment. The value -y is computed by plugging the coordinates (2;, y;)
-of the point into the equation for the line segment.
+line segment. The value \(\gamma\) is computed by plugging the coordinates \((x_i, y_i)\) of the point into the equation for the line segment.
+-->
 </p><p>
+端点のリストを近似し、最初の端点と最後の端点 \((x_1,y_1)\) と \((x_k,y_k)\) を結ぶ線分の式は、端点間の直線の傾きが、最初の点と直線上の任意の点間の直線の傾きと同じであることに注目することで導き出せる。
+
+<!--
 The formula for a line segment that approximates a list of edge points
-and joins the first and last edge points (#1, yi) and (%,, y,) can be derived
+and joins the first and last edge points \((x_1,y_1\) and \((x_k,y_k)\) can be derived
 by noting that the slope of the line between the end points is the same as
 the slope of the line between the first point and an arbitrary point along the
 line:
+-->
 
-YT Ye TY (6.9)
+\[
+\frac{y-y_1}{x-x_1}=\frac{y_k-y_1}{x_k-x_1} \tag{6.9}
+\]
 
-Lo Ly) Lp — YL
+項を掛け合わせて並べ替えると、端点の座標でパラメータ化された線分の暗黙的な形が得られる。
 
+<!--
 Multiplying out and rearranging terms gives the implicit form for a line
 segment, parameterized by the coordinates of the end points:
+-->
 
-2(y1 — Ye) + yen — @1) + yner — ye, = 0. (6.10)
+\[
+x(y_1-y_k)+y(x_k-x_1)+y_kx_1-y_1x_k= 0 \tag{6.10}
+\]
+任意の点\((x_i,y_i)\)から直線までの距離は\(d = r/D\)である。ここで\(r\)は、点の座標を線分の式に代入することで計算される。
 
-The distance of any point («;,y;) from the line is d = r/D, where r is
-computed by. plugging the coordinates of the point into the equation for the
+<!--
+The distance of any point \((x_i,y_i)\) from the line is \(d = r/D\), where \(r\) is
+computed by plugging the coordinates of the point into the equation for the
 line segment,
+-->
 
-r= aly — ye) + vile ~ 21) + yeti — yer, (6.11)
+\[
+r=x_i(y_1-y_k)+y_i(x_k-x_1)+y_kx_1-y_1x_k \tag{6.11}
+\]
 
-and D is the distance between the end points. (Refer to Figure 6.4.) The sign
-of r can be used to compute the number of sign changes C’. The normalized
+\(D\)は端点間の距離である（図6.4参照）。\(r\) の符号は符号変化回数 \(C\) を計算するために使用できる。正規化された距離は \(d/D\) である。正規化された最大絶対誤差は \(d/D\) である。
 
+<!-- 
+and \(D\) is the distance between the end points. (Refer to Figure 6.4.) The sign
+of r can be used to compute the number of sign changes \(C\). The normalized
+distance is \(d/D\). The normalized maximum absolute crror is
+-->
 
-distance is d/D. The normalized maximum absolute crror is
+\[
+\varepsilon=\frac{\max_i |d_i|}{D} \tag{6.12}
+\]
 
-max; |d,|
-D a)
+ここで、\(d_i\) は直線とエッジリストの  \(i\) 番目のエッジの位置との間の距離である。正規化された最大誤差は、直線とエッジの集合との適合度の尺度として頻繁に用いられる。これらの式はすべて、点の直線への垂直投影が直線内、つまり直線上と直線の端点間にあることを仮定している。これは本章全体を通して当てはまるが、他の場合には、線分の最も近い端点から点までの距離を計算するために式を修正する必要があるかもしれない。
 
-é= (6.12)
-where d; is the distance between the line and the position of the ith edge
+<!--
+where \(d_i\) is the distance between the line and the position of the ith edge
 in the edge list. The normalized maximum crror is frequently used as the
 measure for the goodness of fit of a line segment to a set of edges. All of
 these formulas assume that the perpendicular projection of a point onto a
@@ -349,12 +440,21 @@ line is wilhin the line segment; that is, both on the line and between the end
 points of the lie segment. This is the case for the situations throughout this
 chapter, but in other cases the formulas may need to be modified to compute
 the distance of the point from the nearest end point of the line segment.
+-->
+
 </p><p>
+折れ線をフィッティングする方法には、トップダウン分割とボトムアップ結合の2つがある。
+
+<!--
 There are two approaches to fitting polylines: top-down splitting and
 bottom-up merging.
+-->
 </p>
-<h3>6.4.1 Polyline Splitting</h3>
+<h3>6.4.1 折れ線分割</h3>
 <p>
+トップダウン分割アルゴリズムは、初期曲線から始めて、頂点を再帰的に追加する。図 6.5 に示す曲線を考えてみよう。初期曲線は、A と B でラベル付けされた最初のエッジ ポイントと最後のエッジ ポイント間の線分である。エッジ リスト内で直線から最も遠い点が検索される。正規化された最大誤差がしきい値を超える場合、線分から最も遠いエッジ ポイント (図 6.5 の点 C) に頂点が挿入される。分割アルゴリズムは、2 つの新しい線分とエッジ リストに再帰的に適用される。エッジ リストは、2 つの線分に対応する 2 つのリストに分割される。リスト内で各線分から最も遠いエッジ ポイントが検索され、ポイントが線分から離れすぎている場合は新しい頂点が追加される。折れ線分割アルゴリズムは、折れ線上のすべてのエッジ ポイントの正規化された最大誤差がしきい値を下回ると終了する。この再帰的な手順は非常に効率的である。セグメント分割は再帰的細分化とも呼ばれる。
+
+<!--
 The top-down splitting algorithm recursively adds vertices, starting with an
 initial curve. Consider the curve shown in Figure 6.5. The initial curve is the
 line segment between the first and last edge points, labeled A and B. The
@@ -369,20 +469,27 @@ too far from the line segments. The polyline splitting algorithm terminates
 when the normalized maximum error, for all cdge points along the polyline,
 is below the threshold. This recursive procedure is very efficient. Segment
 splitting is also called recursive subdivision.
+-->
 </p>
-<h3>6.4.2 Segment Merging</h3>
+<center><img src="images/fig6_5.png"></center>
 <p>
+<center>図 6.5: 折れ線の分割方法</center>
+</p>
+<h3>6.4.2 セグメント併合</h3>
+<p>
+セグメント併合では、エッジリストを走査するにつれて、エッジポイントが線分に追加される。エッジポイントが線分から大きく外れると、新しい線分が開始される。併合アプローチは、折れ線フィッティングのボトムアップアプローチとも呼ばれる。
+
+<!--
 In segment merging edge points are added to line segments as the edge list
 is traversed. New segments are started when the edge points deviale too
 far from the line segment. The merge approach is also called the bottom-up
 approach to polyline fitting.
+-->
 
 </p><p>
+エッジ点が形成中の線分から離れすぎているかどうかを判断するために使用できる手段はいくつかある。1つの方法は、逐次最小二乗法を使用することである。これは、線分をエッジ点に最小二乗近似し、新しいエッジ点が処理されるたびに線分のパラメータを段階的に更新する。この近似アルゴリズムは、線分とエッジ点の間の残差の二乗を計算する。誤差が閾値を超えると、頂点が導入され、最後の線分の終点から新しい線分が開始される。
 
-
-Figure 6.5: Splitting method for polylines.
-</p><p>
-
+<!--
 There are several measures that can be used to determine if an edge
 point is too far from the line segment that is being formed. One methad is
 to use sequential least-squares, which performs a least-squares fit of the line
@@ -391,11 +498,15 @@ incrementally as each new edge point is processed. The fitting algorithm
 calculates the squared residual between the line segment and the edge points.
 When the error exceeds a threshold, a vertex is introduced and a new segment
 is started from the end poiut of the last segment.
+-->
 </p><p>
+許容帯域アルゴリズムは、頂点の配置を決定するために異なる方法を使用する。中心線分から \(\epsilon\) の距離にあるエッジポイントを近似する線分に平行な2つの線分が計算される（図6.6を参照）。\(\epsilon\) の値は、近似直線からの許容される絶対偏差量を表す。新しいエッジは、許容帯域内にある限り、現在の線分に追加される。新しいエッジが線分に追加されるたびに、線分のパラメータが再計算される場合がある。近似線分は、許容帯域の辺に平行である必要はない。線分の端にある頂点は、次の線分の始点となる。このアプローチでは、通常、線分が多くなりすぎる。アルゴリズムが許容帯域の境界までエッジを処理するまで頂点が作成されないため、コーナーの位置と角度は正確に推定されない。
+
+<!--
 The tolerance band algorithm uses a different method for determining
 the placement of vertices. Two line segments that are parallel to the line
-segment approximating the edge points at a distance ¢ from the center line
-segment are computed. (See Figure 6.6.) The value of « represents the
+segment approximating the edge points at a distance \(\epsilon\) from the center line
+segment are computed. (See Figure 6.6.) The value of \(\epsilon\) represents the
 absolute amount of deviation from the fitted line that is tolerated. Edges
 are added to the current line segment as long as the new edges are inside the
 tolerance band. The parameters of the line segment may be recomputed as
@@ -405,21 +516,43 @@ at the end of the segment is the starting point for the next segment. This
 approach usually results in too many segments. Corner locations and angles
 are not accurately estimated since a vertex is not created until the algorithm
 has processed edges up to the boundary of the tolerance band.
-</p><p>
-Figure 6.6: Tolerance band for fitting line segments.
+-->
+
 </p>
-
-
-<h3>6.4.3 Split and Merge</h3>
+<center><img src="images/fig6_6.png"></center>
 <p>
+<center>図 6.6: 線分のフィッティングの許容範囲</center>
+<!-- Figure 6.6: Tolerance band for fitting line segments.-->
+</p>
+<h3>6.4.3 分割(split)と併合(merge)</h3>
+<p>
+トップダウンの再帰的細分化法とボトムアップの併合法は、分割・併合アルゴリズムとして組み合わせることができる。分割・併合法は単独で使用した場合、部分的にしか効果がないが、併合と分割操作を交互に行うことで、エッジリストに対する線分近似の精度を向上させることができる。図6.7は、分割とその後に併合を行うことで、不適切に配置されていた頂点を修復できる例を示している。
 
+<!--
 The top-down method of recursive subdivision and the bottom-up method
 of merging can be combined as the split and merge algorithm. Splitting
 and merging methods are only partially successful when used by themselves,
 but the accuracy of line segment approximations to a list of edges can be
 improved by interleaving merge and split operations. Figure 6.7 shows an
 example where a split followed by a merge can repair a badly placed vertex.
+-->
+</p>
+<center><img src="images/fig6_7.png"></center>
+<p>
+
+図6.7: ボトムアップのエッジ併合によって生成された、真のコーナー位置を逃した不適切なコーナー推定は、分割パスと併合パスによって修復できる。分割パスと併合パスは、最初のセグメントを真のコーナーに近い点で分割し、2つのセグメントを1つの線分に併合する。
+
+<!--
+Figure 6.7: A bad corner estimate produced by a bottom-up edge merge that
+missed the true corner location can be repaired by split and merge passes
+that split the first segment at a point closer to the true corner and then
+merge the two segments into a single line segment.
+-->
 </p><p>
+
+基本的な考え方は、分割パスと併合パスを交互に実行することである。再帰的な細分化の後、新しい線分がより少ない正規化誤差でエッジに適合する場合、隣接する線分を最初の端点と最後の端点の間の単一の線分に置き換えることを許可する。複数の線分は常に、単一の線分よりも少ない誤差でエッジのリストに適合するため、正規化誤差を使用する必要があることに注意。線分の併合後、新しい線分は異なる点で分割される場合がある。分割と併合を交互に適用し、線分が併合または分割されなくなるまで続ける。
+
+<!--
 The basic idea is to interleave split and merge passes. After recursive
 subdivision, allow adjacent segments to be replaced by a single segment be-
 tween the first and last end points if the new segment fits the edges with
@@ -428,15 +561,15 @@ multiple lime segments will always fit a list of edges with less error than for
 a single line segment. After segment merging, the new segment may be split
 at a different point. Alternate applications of split and merge continuc until
 no segments are merged or split.
+-->
 
 
-Figure 6.7: A bad corner estimate produced by a bottom-up edge merge that
-missed the true corner location can be repaired by split and merge passes
-that split the first segment at a point closer to the true corner and then
-merge the two segments into a single line segment.
 </p>
-<h3>6.4.4 Hop-Along Algorithm</h3>
+<h3>6.4.4 ホップアロング(hop-along)アルゴリズム</h3>
 <p>
+ホップアロングアルゴリズムは、上述の分割・併合法と同様に、線分のシーケンスによって輪郭を近似するが、短いエッジのサブリストに対して機能する。アルゴリズムは、エッジポイントのリストの一方の端から開始し、一定数のエッジを取得し、最初のエッジポイントと最後のエッジポイントの間に線分を当てはめる。適合度が悪かった場合、アルゴリズムは最大誤差の点で分割し、実行の開始点に最も近いポイントで繰り返す。言い換えると、アルゴリズムは、初期のエッジシーケンスに適した線分近似が見つかるまでフォールバックする。アルゴリズムは、現在のセグメントを前のセグメントとし、残りのエッジポイントで処理を続ける。また、アルゴリズムは、現在のセグメントを前のセグメントと併合できるかどうかも確認する。このアルゴリズムは分割・併合アルゴリズムに似ているが、エッジのリスト全体から開始せず、多くの分割を行う時間を無駄にしない。このアルゴリズムは、適度な大きさのエッジの連続をホップしながら処理する。このアルゴリズムはアルゴリズム6.1として示されている。
+
+<!--
 The hop-along algorithm approximates a contour by a sequence of line seg-
 ments, like the split and merge method described above, but works on short
 sublists of edges. The algorithin starts at one end of a list of edge points,
@@ -451,9 +584,24 @@ can be merged with the previous segment. The algorithm is like a split and
 merge algorithm, but it does not start with the entire list of edges and does
 not waste time doing lots of splits. The algorithm hops along, working on
 modest-sized runs of edges. The algorithm is given as Algorithm 6.1.
-
+-->
 </p><p>
-Algorithm 6.1 Hop-Along Algorithm for Polyline Fitting
+<strong>アルゴリズム 6.1 折れ線フィッティングのためのホップアロングアルゴリズム</strong>
+<div class="styleBullet">
+<ul>
+</li><br><li>1. リストの最初の \(k\) 個のエッジから開始する。
+</li><br><li>2. サブリストの最初のエッジと最後のエッジの間に線分をフィッティングする。
+
+</li><br><li>3. 正規化された最大誤差が大きすぎる場合は、サブリストを最大誤差の点まで短縮する。手順 2 に戻る。
+
+</li><br><li>4. 線分のフィッティングが成功した場合、現在の線分の方向を前の線分の方向と比較する。2 つの線分の方向が似ている場合は、2 つの線分を 1 つの線分に置き換える。
+
+</li><br><li>5. 現在の線分を前の線分とし、エッジのウィンドウを前進させて、サブリストに \(k\) 個のエッジが含まれるようにする。手順 2 に戻る。</li>
+</ul>
+</div>
+
+<!--
+<strong>Algorithm 6.1 Hop-Along Algorithm for Polyline Fitting</strong>
 1. Start with the first k edges from the list.
 2. Fit a line segment between the first and last edges in the sublist.
 
@@ -466,18 +614,25 @@ orientations, replace the two line segments with a single line segment.
 
 5. Make the current line segment the previous line segment and advance
 the window of edges so that there are k edges in the sublist. Return to
-
 step 2.
+-->
 </p><p>
+このアルゴリズムは、エッジのウィンドウを定数 \(k\) だけ進めながらホップする。線分のエッジへの適合が不十分な場合、アルゴリズムは最大誤差の点に戻る。このアルゴリズムは短いエッジ列のみを考慮するため、純粋な再帰的​​細分化や分割・併合アルゴリズムよりも効率的である。これらのアルゴリズムは、エッジのリスト全体から開始し、エッジリストを管理しやすい部分に分割するのに多くの時間を浪費する。
+
+<!--
 The algorithm hops along, advancing the window of edges by a constant
 k. If the fit of a line segment to the edges is not good enough, the algorithm
 falls back to the point of maximum error. Since the algorithm considers only
 a short run of edges, it is more efficient than pure recursive subdivision or
 the split and merge algorithm, which would start with the entire list of edges
 and waste a lot of time splitting the edge list into manageable pieces.
+-->
 </p>
-<h2>6.5 Circular Arcs</h2>
+<h2>6.5 円弧</h2>
 <p>
+エッジのリストを線分で近似した後、必要に応じて線分のサブシーケンスを円弧に置き換えることができる。線分を円弧に置き換えるには、2つ以上の線分の端点を通る円弧をフィッティングする必要がある。言い換えれば、円弧のフィッティングは折れ線の頂点上で行われる。輪郭線を線分と円弧のシーケンスとして表すと、輪郭線は点ごとに一定の曲率を持つセクションに分割される。多くの画像解析アルゴリズムは曲率情報を使用する。
+
+<!--
 After a list of edges is approximated by line segments, subsequences of the line
 segments can be replaced by circular ares if desired. Replacing line segments
 by circular ares involves fitting circular arcs through the end points of two or
@@ -485,57 +640,97 @@ more line segments. In other words, circular are fitting is done on the vertices
 in the polyline. Representing the contour as a scquence of line segments
 and circular arcs breaks the contour into sections with piccewise constant
 curvature. Many image analysis algorithms use curvature information.
+-->
+
 </p><p>
+2点間の線分の暗黙の公式を導出したのと同様に、3点を通る円の暗黙の公式を導出する必要がある。半径\(r\)、中心\((x_0,y_0)\)の円の暗黙の方程式は、
+
+<!--
 Just as we derived the implicit formula for the line segment between two
 points, we need to derive the implicit formula for a circle through three
-points. The implicit equation for a circle with radius r and center (29, yo) is
+points. The implicit equation for a circle with radius \(r\) and center \((x_0,y_0)\) is
+-->
 
-(2 — ap)? + (y — yo)? = 7°. (6.13)
+\[
+(x-x_0)^2+(y-y_0)^2=r-2 \tag{6.13}
+\]
 
+3点\(\mathbf p_1 = (x_1,y_1), \mathbf p_2 = (x_2,y_)\)、\(\mathbf p_3 = (x_3,y_3)\)を考える。座標系の原点を点pに変換する。新しい座標系では、
 
-Consider three points py = (1,41), Po = (2, ye), and pz = (23, ys). Trans-
-form the origin of the coordinate system to point p,. In the new coodinate
-system,
+<!--
+Consider three points \(\mathbf p_1 = (x_1,y_1), \mathbf p_2 = (x_2,y_)\), and \(\mathbf p_3 = (x_3,y_3)\). Transform the origin of the coordinate system to point p,. In the new coodinate system, -->
 
-goi= 2-2 (6.14)
-yo =y-m (6.15)
-
+\[
+\begin{align}
+x^\prime &= x - x_1 \tag{6.14}
+\\
+y^\prime &= y - y_1 \tag{6.15}
+\end{align} 
+\]
+そして円の方程式は
+<!--
 and the equation for the circle is
-(a! — 6)? + (y' ~ yy)? =r? (6.16)
+-->
+\[
+(x^\prime - x_0^\prime)-2+(y^\prime - y_0^\prime)^2 = r^2 \tag{6.16}
+\]
 
-Substitute the coordinates in the 2’-y’ space for the points p1, po, and ps in
-the implicit equation for a circle:
+円の暗黙方程式の点 \(p_1, p_2\)、\(p_3\) を \(x^\prime-y^\prime\) 空間の座標に代入する。
+<!--
+Substitute the coordinates in the \(x^\prime-y^\prime\) space for the points \(p_1, p_2\), and \(p_3\) in the implicit equation for a circle:
+-->
+\[
+\begin{align}
+{x_0^\prime}^2+{y_0^\prime}^2-r^2 &=0 \tag{6.17} \\
+\\
+{x_2^\prime}^2-2x_2^\prime x_0^\prime+{x_0^\prime}^2+{y_2^\prime}^2-2y_2^\prime  y_0^\prime+{y_0^\prime}^2-r^2 &= 0 \tag{6.18} \\
+\\
+{x_3^\prime}^2-2x_3^\prime x_0^\prime+{x_0^\prime}^2+{y_3^\prime}^2-2y_3^\prime y_0^\prime+{y_0^\prime}^2-r^2 &= 0 \tag{6.19} 
+\end{align}
+\]
 
-zy + yy 7? = 0 (6.17)
-ay — 2ayey + ay + yy — 2yy¥y + yy — 7? = 0 (6.18)
-ay — ese, + oy + yf — yey tus 7 = 0 (6.19)
-
-This yields three nonlinear equations for the three unknowns x0', y0', and r.
-
+これにより、3 つの未知数 \(x_0^\prime、y_0^\prime\)、および \(r\) に対する 3 つの非線形方程式が生成される。
+<!--
+This yields three nonlinear equations for the three unknowns \(x_0^\prime, y_0^\prime\), and \(r\).
+-->
 </p><p>
+最初の方程式から 2 番目と 3 番目の方程式を引く。
+<!--
 Subtract the first equation from the second and third equations:
+-->
+\[
+\begin{align}
+2x_2^\prime x_0^\prime+2y_2^\prime y_0^\prime &= {x_2^\prime}^2+{y_2^\prime}^2 \tag{6.20} \\
+\\
+2x_3^\prime x_0^\prime+2y_3^\prime y_0^\prime &= {x_3^\prime}^2+{y_3^\prime}^2 \tag{6.21}
+\end{align}
+\]
 
-Qxhat + Quy, = af + yf (6.20)
-Qeyey + yyy = af + yf (6.21)
-
-This yields two linear equations in the two unknowns zj and yj, which are
-the coordinates of the center of the circle in the 2’-y’ space. Add (x1, 41)
-to (x, yh) to get the center of the circle in the original coordinate system.
-Compute the radius of the circle from r? = af + y@.
+これにより、2つの未知数 \(x_0^\prime\) と \(y_0^\prime\) に関する2つの線形方程式が得られる。これらは、\(x^\prime - y^\prime\) 空間における円の中心の座標である。\((x_1, y_1)\) を \((x_0^\prime, y_0^\prime)\) に加えると、元の座標系における円の中心が得られる。円の半径は \(r^2 = {x_0^\prime}^2+{y_0^\prime}^2\) から計算する。
+<!--
+This yields two linear equations in the two unknowns \(x_0^\prime\) and \(y_0^\prime\), which are the coordinates of the center of the circle in the \(x^\prime - y^\prime\) space. Add \((x_1, y_1)\) to \((x_0^\prime, y_0^\prime)\) to get the center of the circle in the original coordinate system.
+Compute the radius of the circle from \(r^2 = {x_0^\prime}^2+{y_0^\prime}^2\).
+-->
 </p><p>
+円弧のフィッティング誤差を計算するには、点\(Q\)から円までの距離を、円の中心を通る直線に沿った点\(Q\)から円までの距離と定義する。円の半径を\(r\)とする。点\(Q\)から円の中心\((x_0,y_0)\)までの座標\((x_i, y_i)\)からの距離\(q\)を計算する。
+<!--
 To calculate the error in fitting a circular arc, define the distance of point
-Q from the circle as the distance of @ from the circle along a line passing
-through the center of the circle. Let the radius of the circle be r. Compute
-the distance g with coordinates (2x;, y;) from point @ to the center (xo, yo) of
-
-the circle:
-q = (ai — 20)? + (vi = Yo)? (6.22)
-
-The distance from point Q to the circular arc is
-
-d=q-r (6.23)
+\(Q\) from the circle as the distance of \(Q\) from the circle along a line passing
+through the center of the circle. Let the radius of the circle be \(r\). Compute
+the distance \(q\) with coordinates \((x_i, y_i)\) from point \(Q\) to the center \((x_0,y_0)\) of the circle:
+-->
+\[
+q = \sqrt{(x_i - x_0)^2+(y_i - y_0)^2} \tag{6.22}
+\]
+点\(Q\)から円弧までの距離は
+<!-- The distance from point \(Q\) to the circular arc is -->
+\[
+d=q-r \tag{6.23}
+\]
 
 </p><p>
+3点に円弧を当てはめる公式が得られたので、次は適合度を評価する方法が必要である。円弧が線分よりもエッジに近似しているかどうかを判断できるからである。輪郭線の長さと、最初の端点と最後の端点間の距離の比が閾値より大きい場合、線分を円弧に置き換えることができるかもしれない。円弧は、最初の端点と最後の端点、そしてもう1点の間に当てはめられる。円弧を折れ線のシーケンスに当てはめる方法はいくつかあり、中心点の選び方によって次のように異なる。
+<!--
 Now that we have a formula for fitting a circular arc to three points, we
 need a method for evaluating the goodness of fit so we can determine whether
 or not the circular arc is a better approximation to the edges than the linc
@@ -545,7 +740,21 @@ replace the line segments with a circular are. The circular arc is fit between
 the first and last end points and one other point. There are several methods
 for fitting a circular arc to a sequence of polylines, depending on how the
 middle point is chosen:
+-->
 
+<div class="styleBullet">
+<ul>
+<li>1. 最初の端点と最後の端点を結ぶ線から最も遠い折れ線の頂点を使用する。
+
+</li><br><li>2. 最初の端点と最後の端点を結ぶ線から最も遠いエッジ点を使用する。
+
+</li><br><li>3. 最初の端点と最後の端点の間にある頂点列の中央にある折れ線の頂点を使用する。
+
+</li><br><li>4. 最初の端点と最後の端点の間にあるエッジのリストの中央にあるエッジ点を使用する。</li>
+</ul>
+</div>
+
+<!--
 1. Use the polyline vertex that is farthest from the line joining the first
 and last end points.
 
@@ -557,15 +766,41 @@ between the first and last end points.
 
 4. Use the edge point that is in the middle of the list of edges between
 the first and last end points.
-
+-->
+</p><p>
+すべてのエッジ点と円弧との間の符号付き距離を計算する。
+最大絶対誤差と符号変化回数を計算する。正規化された最大誤差が閾値を下回り、符号変化回数が大きい場合は円弧を受け入れる。それ以外の場合は、折れ線近似を維持する。線分を円弧に置き換えるアルゴリズムは、アルゴリズム6.2に概説されている。
+<!--
 Calculate the signed distance between all edge points and the circular arc.
 Compute the maximum absolute error and the number of sign changes. If
 the normalized maximum error is below a threshold and the number of sign
 changes is large, then accept the circular arc; otherwise, retain the polyline
 approximation. The algorithm for replacing linc segments with circular arcs
 is outlined in Algorithin 6.2.
+-->
 </p><p>
-Algorithm 6.2 Replacing Line Segments with Circular Arcs
+<strong>アルゴリズム 6.2 線分を円弧に置き換える</strong>
+<div class="styleBullet">
+<ul>
+<li>1. 折れ線の最初の2つの線分の3つの端点を頂点ウィンドウとして初期化する。
+
+</li><br><li>2. 2つの線分に対応する輪郭線の部分の長さと端点間の距離の比を計算する。比が小さい場合は、最初の線分はそのままにして、頂点ウィンドウを1頂点分進め、この手順を繰り返す。
+
+</li><br><li>3. 3つの頂点を通る円を描く。
+
+</li><br><li>4. 正規化された最大誤差と符号の変化回数を計算する。
+
+</li><br><li>5. 正規化された最大誤差が大きすぎる場合、または符号変化の数が少なすぎる場合は、最初の線分は変更せずに頂点のウィンドウを進め、手順2に戻る。
+
+</li><br><li>6. 円近似が成功した場合は、次の線分を円弧に含めるようにする。この手順を、この円弧に包含される線分がなくなるまで繰り返す。</li>
+
+
+</li><br><li>7. ウィンドウを円弧の端から次の3つの折れ線頂点まで進め、手順2に戻る。</li>
+</ul>
+</div>
+
+<!--
+<strong>Algorithm 6.2 Replacing Line Segments with Circular Arcs</strong>
 
 1. Initialize the window of vertices to the three end points of the first two
 Line segments in the polyline.
@@ -573,8 +808,7 @@ Line segments in the polyline.
 2. Compute the ratio of the length of the part of the contour corresponding
 to the two line segments to the distance between the end points. If the
 ratio is small, then leave the first line segment unchanged, advance the
-
-WINONA TILEY OC ETE, CCUG A ey,
+window of verices by one vertex, and repeat this step.
 
 3. Fit a circle through the three vertices.
 
@@ -590,7 +824,10 @@ subsumed by this circular arc.
 
 7. Advance the window to the nezt three polyline vertices after the end of
 the circular are and return to step 2.
+-->
 </p><p>
+折れ線に対してアルゴリズム6.2を実行すると、輪郭線は線分と円弧の連続によって表現される。表現に2つの異なる曲線プリミティブが含まれるのは不便かもしれない。次のセクションでは、線分、円弧、その他のプリミティブを同じ表現で共存させることができる円錐曲線について説明する。円錐曲線は、必要に応じて断面間の滑らかな遷移を提供し、コーナーを明示的に表現することもできる。
+<!--
 After running Algorithm 6.2 over the polyline, the contour will be rep-
 rescnted by a sequence of line segments and circular ares. It may be incon-
 venient to have two different curve primitives in the representation. In the
@@ -598,133 +835,203 @@ next section, we will present conic sections, which allow line segments, cir-
 cular ares, and other primitives to coexist in the same representation. Conic
 sections also provide smooth transitions between sections, if desired, as well
 as the explicit representation of corners.
+-->
 </p>
-<h2>6.6 Conic Sections</h2>
+<h2>6.6 円錐曲線</h2>
 <p>
+このセクションでは、端点のリストを円錐曲線で近似する方法について説明する。円弧の場合と同様に、この方法では、まず端点が折れ線で近似され、線分のサブシーケンスが円錐曲線に置き換えられると仮定する。
+<!--
 This section describes how to approximate lists of edge points with conic
 sections. As with circular arcs, the method assumes that the edge points are
 first approximated by a polyline and replaces subsequences of line segments
 by conics.
+-->
 </p><p>
-The implicit (algebraic) form of a conic is
-
-fla,y) = ax? + Qhay + by" + 2ex + 2gy+e= 0. (6.24)
-
+双曲線の暗黙的（代数的）形式は
+<!-- The implicit (algebraic) form of a conic is -->
+\[
+f(x,y)=ax^2+2hxy+by^2+2ex+2gy+c= 0 \tag{6.24}
+\]
+円錐曲線には、双曲線、放物線、楕円の3種類がある。円は楕円の特殊な例である。幾何学的には、円錐曲線は図6.8に示すように、円錐と平面の交差によって定義される。
+<!--
 There are three types of conic sections: hyperbolas, parabolas, and ellipses.
 Circles are a special case of ellipses. Geometrically, conic sections are defined
 by intersecting a cone with a plane as shown in Figure 6.8.
+-->
+</p>
+<center><img src="images/fig6_8.png"></center>
+<p>
+<center>図 6.8: 円錐曲線は円錐と平面を交差させることによって定義される。</center>
+<!-- Figure 6.8: Conic sections are defined by intersecting a cone with a plane. -->
+
 </p><p>
+円錐曲線は、輪郭への折れ線近似において、3つの頂点間にフィットさせることができる。円錐曲線が結合されている箇所はノットと呼ばれる。円錐スプラインは、ノットにおける接線が等しく、曲線の隣接するセクション間の滑らかな遷移を実現する、端と端を繋いだ円錐曲線の列である。折れ線の頂点を \(V_i\) とする。円錐曲線近似は図6.9に示されている。
+<!--
 Conic sections can be fit between three vertices in the polyline approxi-
 mation to a contour. The locations where conic sections are joined are called
 knots. Conic splines are a sequence of conic sections that are joined end to
 end, with equal tangents at the knots to provide a smooth transition be-
-tween adjacent sections of the curve. Let the polyline vertices be V;. The
+tween adjacent sections of the curve. Let the polyline vertices be \(V_i\). The
 conic approximation is shown in Figure 6.9.
-</p><p>
-Figure 6.8: Conic sections are defined by intersecting a cone with a plane.
+-->
 
+</p>
+<center><img src="images/fig6_9.png"></center>
+<p>
+<center>図 6.9: 円錐曲線は 3 点間で定義される近似値である。</center>
+<!-- Figure 6.9: Conic sections are approximations defined between three points. -->
 
 </p><p>
+円錐スプラインの各円錐曲線は、2つの端点、2つの接線、および1つの追加点によって定義される。ノット \(K_i\) は、折れ線の頂点間に配置できる。
+<!--
 Each conic section in a conic spline is defined by two end points, two
-tangents, and one additional point. The knots A; can be located between
+tangents, and one additional point. The knots \(K_i\) can be located between
 the vertices of the polyline:
+-->
+\[
+K_i=(1-\nu_i)V_i+\nu_iV_{i+1} \tag{6.25}
+\]
 
-where v; is between 0 and 1. The tangents arc defined by the triangle with
-vertices Vj, Viei, and Vj42. The additional point is
+ここで\(\nu_i\)は0と1の間である。接線は、頂点\(V_i, V_{i+1}\)、\(V_{i+2}\)を持つ三角形によって定義される。追加の点は図6.10に示すように以下となる。
+<!--
+where \(nu_i\) is between 0 and 1. The tangents arc defined by the triangle with
+vertices \(V_i, V_{i+1}\), and \(V_{i+2}\). The additional point is
+-->
+\[
+Z_i=\gamma_i V_{i+1}+(1-\gamma_i)\frac{K_i+K_{i+1}}{2} \tag{6.26}
+\]
 
-A= WVini + 1 — ne (6.26)
-as shown in Figure 6.10.
-</p><p>
-There are several special cases of the conic section that can be handled
-in a uniform way by this representation. If y,4, = 0, then the ith section of
-the conic spline is the line segment from A; to Viai. lf = 1 and 421 = 0,
-then Aj, Ay41, and ¥j41 collapse to the same point and there is a corner in
-the sequence of conic sections. These special properties allow line segments
-and corners to be represented explicitly in a conic spline, without resorting
-
-to different primitives or special flags.
-</p><p>
-The algorithm presented here for computing conic splines uses the guided
-form of a conic section, which represents a conic section using three lincs that
-
-
-
-</p><p>
-Figure 6.9: Conic sections are approximations defined between three points.
-</p><p>
-
+<!-- as shown in Figure 6.10. -->
+</p>
+<center><img src="images/fig6_10.png"></center>
+<p>
+図6.10: 円錐曲線は、折れ線近似の3つの頂点から得られる2つの端点と接線、および1つの追加点によって定義される。
+<!--
 Figure 6.10: A conic section is defined by the two end points and tangents ob-
 tained from three vertices of the polyline approximation, plus one additional
 point.
+-->
+
 </p><p>
-Figure 6.11: The guided form for a conic.
+この表現によって統一的に扱える円錐曲線の特殊なケースがいくつかある。\(\nu_{i+1}= 0\) の場合、円錐スプラインの \(i\) 番目の断面は \(K_i\) から \(V_{i+1}\) までの線分である。\(\nu_i = 1\) かつ \(\nu_{i+1}= 0\) の場合、\(K_i, K_{i+1}\)、および \(V_{i+1}\) は同じ点に収束し、円錐曲線の列にコーナーが存在する。これらの特殊な特性により、異なるプリミティブや特殊なフラグに頼ることなく、円錐スプラインで線分とコーナーを明示的に表現できる。
+<!--
+There are several special cases of the conic section that can be handled
+in a uniform way by this representation. If \(\nu_{i+1}= 0\), then the \(i\)th section of
+the conic spline is the line segment from \(K_i\) to \(V_{i+1}\). lf \(\nu_i = 1\) and \(\nu_{i+1}= 0\), then \(K_i, K_{i+1}\), and \(V_{i+1}\) collapse to the same point and there is a corner in
+the sequence of conic sections. These special properties allow line segments
+and corners to be represented explicitly in a conic spline, without resorting
+to different primitives or special flags.
+-->
+</p><p>
+ここで提示する円錐スプラインを計算するアルゴリズムは、円錐曲線のガイド形式を使用する。これは、3つの線で円錐曲線を表す。
+<!--
+The algorithm presented here for computing conic splines uses the guided
+form of a conic section, which represents a conic section using three lincs that
+-->
 
-bound the conic. (See Figure 6.11.) The equation of a line is
-ag + ayx + agy = 0. (6.27)
+円錐曲線の境界を定めた。（図6.11を参照）直線の方程式は
+<!-- bound the conic. (See Figure 6.11.) The equation of a line is -->
 
-Let the first and last vertices in a polyline be A and B, and let point C be
+\[
+a_0 + a_1x + a_2y = 0  \tag{6.27}
+\]
+
+</p>
+<center><img src="images/fig6_11.png"></center>
+<p>
+<center>図 6.11: 円錐曲線のガイド付きフォーム</center>
+<!-- Figure 6.11: The guided form for a conic. -->
+
+</p><p>
+折れ線の最初と最後の頂点をそれぞれ \(A\) と \(B\) とし、点 \(C\) を折れ線の中間の頂点とする。最初と最後の頂点は弦 \(AB\) で結ばれている。円錐曲線の有向形は、端点が \(A\) と \(B\) で、接線 \(AC\) と \(BC\) が次の式で定義される円錐曲線の族である。
+<!--
+Let the first and last vertices in a polyline be \(A\) and \(B\), and let point \(C\) be
 an intermediate vertex in the polyline. The first and last vertices are joined
-by the chord AB. The guided form of conic is the family of conics with end
-points al A and B and tangents AC’ and BC defined by the equation
+by the chord \(AB\). The guided form of conic is the family of conics with end
+points at \(A\) and \(B\) and tangents \(AC\) and \(BC\) defined by the equation
+-->
+\[
+(a_0 + a_1x + a_2y) (b_0 + b_1x + b_2y) = \rho(u_0+u_1x+u_2y)^2  \tag{6.28}
+\]
 
-(ap + aya + agy) (bo + bie + boy) = plug + me + uy)’, (6.28)
+ここで
+\[
+a_0+a_1x + a_2y = 0  \tag{6.29}
+\]
+は、線分\(AC\)を含む線分であり、
+<!-- is the line containing the line segment \(AC\), -->
 
-where
-ay + ax + agy = 0 (6.29)
+\[
+b_0 + b_1x + b_2y =0 \tag{6.30}
+\]
 
-is the linc containing the line segment AC,
-bo + bye + boy =0 (6.30)
-is the line containing the line segment BC’, and
+は、線分\(BC\)を含む直線であり、
+<!-- is the line containing the line segment \(BC\), and -->
 
-ug tue tuy =0 (6.31)
+\[
+u_0+u_1x+u_2y =0 \tag{6.31}
+\]
 
-is the line containing the chord AB. The family of conic sections is parame-
+は、弦\(AB\)を含む直線である。円錐曲線族は\(\rho\)によってパラメータ化される。
+<!--
+is the line containing the chord \(AB\). The family of conic sections is parame-
 terized by \(\rho\)
+-->
 
 </p><p>
+円錐曲線をエッジ点のリストに当てはめるアルゴリズムは、折れ線から始まり、頂点をコーナー、ソフト頂点、またはノットに分類する。ソフト頂点は角度が \(180°\) に近い値を持ち、隣接する線分はほぼ同一直線上にあるため、円錐曲線に置き換えることができる。ソフト頂点のシーケンスは、滑らかな曲線に沿ってサンプリングされたエッジ点に当てはめられた可能性が高い、方向が徐々に変化する線分のシーケンスに対応する。コーナーは、頂点角度が \(180° + T_1\) を超えるか \(180°-T_1\) を下回る (\(T_1\) は閾値)。そのため、円錐曲線の一部である可能性は低くなる。ノットは、両端に反対方向に角度が付いたソフト頂点を持つ線分に沿って配置される。円錐曲線は屈曲点を持たないため、2つの円錐曲線は結び目で繋がる必要がある。線分に沿った結び目の配置は、線分の両端のソフト頂点の相対的な角度によって決まる。2つのソフト頂点 \(V_i\) と \(V_{i+1}\) の角度をそれぞれ \(A_i\) と \(A_{i+1}\) とする。\(A_i = A_{i+1}\) の場合、結び目は頂点間の中間に配置される。これは、式 6.25 において \(\nu = 1/2\) を意味する。角度が同じでない場合、円錐曲線が線分から十分に速く曲がらず、角をたどらない可能性があるため、結び目の位置は角度の大きい頂点から離れた位置にする必要がある。式6.25のvの値は、次の式で設定できる。
+<!--
 The algorithm for fitting a conic section to a list of edge points starts
 with a polyline and classifies the vertices as corners, soft vertices, or knots.
-Soft vertices have angles near 180°, and the adjaccut linc seginents are nearly
+Soft vertices have angles near \(180°\), and the adjaccut linc seginents are nearly
 collinear and may be replaced with a conic section. A sequence of soft. vertices
 corresponds to a sequence of line segments with gradually changing orien-
 tation that most likely were fitted to cdge points sampled along a smooth
-curve. Corners have vertex angles above 180° + 7) or below 180° — T,, where
-T, is a threshold, and are unlikely to be part of the conic. Knots are placed
+curve. Corners have vertex angles above \(180° + T_1\) or below \(180°-T_1\), where
+\(T_1\) is a threshold, and are unlikely to be part of the conic. Knots are placed
 along a line segment that has soft vertices at either end that are angled in
 opposite directions. A conic section cannot have an inflection, so two conic
 sections must be joined at the knot. The placement of the knot along the
 line segment is determined by the relative angles of the soft vertices at the
-ends of the line segment. Let the angles of the two soft vertices V¥; and Vi+i
-be A; and Aj;.1, respectively. If A; = Ajit, then the knot is placed halfway
-between the vertices, which means that y = 1/2 in Equation 6.25. If the an-
+ends of the line segment. Let the angles of the two soft vertices \(V_i\) and \(V_{i+1}\)
+be \(A_i\) and \(A_{i+1}\), respectively. If \(A_i = A_{i+1}\), then the knot is placed halfway
+between the vertices, which means that \(\nu = 1/2\) in Equation 6.25. If the an-
 gles are not the same, then the knot location should be biased away from the
 vertex with the larger angle, since the conic may not bend away from the line
 segment fast enough to follow the corner. The value for v in Equation 6.25
 can be set using the formula
-= At
-~ Ay + Ag’
+-->
+\[
+\nu_i=\frac{A_1}{A_1+A_2} \tag{6.32}
+\]
 
 </p><p>
+ソフト頂点で結ばれた線分のシーケンスはそれぞれ、最初と最後の頂点（またはノット）を通る誘導円錐曲線に置き換えられる。接線は、最初と最後の線分の方向によって定義される。接線と端点は、円錐曲線の5つの自由度のうち4つを決定する。円錐曲線は、シーケンスの途中にあるソフト頂点を通過することで完全に指定される。
+<!--
 Each sequence of line segments joined by soft vertices is replaced by a
 guided conic through the first and last vertices (or knots). The tangents are
 defined by the orientation of the first and last line segments. The tangents
 and end points determine four of the five degrees of freedom for the conic.
 The conic is fully specified by having it pass through the soft vertex in the
 middle of the sequence.
-
-(6.32)
-
+-->
 </p>
-<h2>6.7 Spline Curves</h2>
+<h2>6.7 スプライン曲線</h2>
 <p>
+スプラインという用語は、区分多項式を用いて表現される関数を指す。
+スプラインは多くの応用分野で用いられる。データ解析においては、関数モデルが利用できない場合に、スプラインはデータ点の集合を近似するために使用される[245]。コンピュータグラフィックスやコンピュータ支援設計においては、スプラインは自由曲線を表現するために使用される。マシンビジョンにおいては、より単純なモデルが適切でない場合に、スプラインは曲線の汎用的な表現を提供する。
+<!--
 The term spline refers to a function represented using piecewise polynomials.
 Splines occur in many applications. In data analysis, splines are used to fit
 a set of data points when no function model is available [245]. In computer
 graphics and computer-aided design, splines are used to represent free-form
 curves. In machine vision, splines provide a general-purpose representation
 for curves when no simpler model is adequate.
+-->
 </p><p>
-
+スプラインは、任意のクラスの関数を端から端まで結合することで作成できる。
+最も一般的なスプラインの形式は3次スプラインで、区分3次多項式の列である。前のセクションで示した線分、円弧、円錐曲線などの曲線表現もスプラインの例である。3次スプラインを使用すると、より複雑な曲線をより少ないスプラインセグメントで表現できる。3次スプラインは、コンピュータ描画プログラムで周波数曲線やフォントの文字アウトラインを表現するために広く使用されている。3次スプラインは広く使用されているため、マシンビジョンプログラムでは、この曲線モデルをエッジリストに適合させる必要がある場合がある。3次スプライン曲線を操作するための対話型グラフィックスインターフェースは広く知られているため、3次スプラインとして表現された輪郭は、必要に応じてユーザーが手動で変更できる。これは非常に重要な考慮事項である。なぜなら、曲線をエッジに適合させた結果が完璧になることは決してないからである。
+<!--
 A spline can be made from any class of functions joined end to end.
 The most common form of spline is the cubic spline, which is a sequence of
 piecewise cubic polynomials. The curve representations presented in previous
@@ -738,7 +1045,10 @@ Since interactive graphics interfaces for manipulating cubic spline curves are
 well known, a contour represented as a cubic spline can be modified manually
 by the user if necessary. This is a very important consideration, since the
 results of fitting a curve to edges may never be perfect.
+-->
 </p><p>
+明確にしておきたい点の一つは、幾何学的等価性とパラメトリック等価性の違いである。2つの曲線が同じ点集合を辿る場合、それらの曲線は幾何学的に等価である。言い換えれば、2つの曲線は空間内の同じ形状（または点集合）に対応する場合、幾何学的に等価である。2つの曲線は、方程式が同一である場合、パラメトリック等価である。言い換えれば、2つの曲線の表現が同じパラメータを持つ同じ式である場合、それらの曲線はパラメトリック等価である。パラメトリック等価性は幾何学的等価性よりも強い。
+<!--
 One point to make clear is the difference between geometric and para-
 metric equivalence. Two curves are geometrically equivalent if they trace
 the same set of points. In other words, the two curves are geometrically
@@ -747,7 +1057,10 @@ Two curves are parametrically equivalent if their equations are identical. In
 other words, two curves are parametrically equivalent if their representation
 uses the same formula with the same parameters. Parametric equivalence is
 stronger than geometric equivalence.
+-->
 </p><p>
+2つの曲線は幾何学的には等価であっても、パラメトリック表現が異なることがある。これは、マシンビジョンにおける曲線フィッティングにおいて重要な概念である。マシンビジョンシステムは、物体境界の真の表現に（幾何学的には）非常に近い3次スプラインに基づく表現を生成するかもしれないが、その表現はパラメトリック感覚では全く類似していない可能性がある。物体認識や工業部品の画像とそのモデルの比較などのアプリケーションでは、3次スプライン曲線のパラメトリック形式を比較することはできない。比較は幾何学的等価性に基づいて行う必要がある。
+<!--
 Two curves can be geometrically equivalent but have different parametric
 representations. This is an important concept for fitting curves in machine
 vision. A machine vision system might produce a representation bascd on
@@ -757,28 +1070,35 @@ parametric sensc. Tn applications such as object recognition or comparing
 the image of an industrial part with its model, it is not possible to compare
 the parametric forms of the cubic spline curves. The comparison must be
 based on geometric equivalence.
+-->
 </p><p>
+3次スプラインは、エッジ断片の方向を近似に用いるのに十分な自由度を持っている。ほとんどのエッジ検出アルゴリズムは、エッジの位置だけでなく、エッジの方向（勾配角）の推定値も提供できることを思い出してもらいたい。線分、円弧、円錐曲線のフィッティングアルゴリズムでは、エッジの位置のみが使用されていた。3次スプラインを用いて、エッジ検出器によって生成された方向情報の使用方法の例を紹介しよう。平面上の3次曲線の方程式は、
+<!--
 Cubic splines have cnough degrees of freedom to allow the orientation of
 edge fragments to be used in the approximation. Recall that most edge de-
 tection algorithms can provide estimates of edge orientation (gradient angle)
 as well the position of the edge. Only the positions of edges were used in the
 algorithms for fitting line seginents, circular arcs, and conic sections. With
-
 cubic splines, we can introduce an example of how to use the orientation
 information produced by an edge detector.
-
-
 The equation for a cubic curve in the plane is
-P(t) = (e(u), y(u)) = ao + aut agu’ + age’, (6.33)
+-->
+\[
+\mathbf p(u) = (x(u), y(u)) = \mathbf a_0 + \mathbf a_1u+\mathbf a_2u^2+\mathbf a_3u^3 \tag{6.33}
+\]
 
-where the coefficients ag, a1, a2, and az are two-element vectors (points in the
-image plane} and the parameter u covers the interval [0,1]. The cubic curve
-begins at point p(0) = (#(0}, y(0)) and ends at point p(1) = (z{1), y(1)}). The
-cubic spline is a sequence of cubic curves p,(w), po(u),...,p,(z), defined over
-successive intervals [0,1], [1,2],...,[m%—1,n] and joined at the end points so
-that p,(¢) = p,,,(¢). Each of the cubic curves in the spline is called a spline
+ここで、係数 \(a_0, a_1, a_2\)、\(a_3\) は2要素ベクトル（画像平面上の点）であり、パラメータ \(u\) は区間 \([0,1]\) をカバーする。3次曲線は点 \(\mathbf p(0) = (x(0), y(0))\) で始まり、点 \(\mathbf p(1) = (x(1), y(1))\) で終わる。 3次スプラインは、連続する区間 \([0,1], [1,2],...,[n-1,n]\) 上で定義され、端点で \(\mathbf p_i(i) = \mathbf p_{i+1}(i)\) となるように結合された3次曲線の列 \(\mathbf p_1(u), \mathbf p_2(u),...,\mathbf p_n(u)\) である。スプライン内の各3次曲線はスプライン線分と呼ばれ、線分が結合される端点は結び目(節点, ノット)と呼ばれる。
+<!--
+where the coefficients \(a_0, a_1, a_2\), and \(a_3\) are two-element vectors (points in the image plane) and the parameter \(u\) covers the interval \([0,1]\). The cubic curve
+begins at point \(\mathbf p(0) = (x(0), y(0))\) and ends at point \(\mathbf p(1) = (x(1), y(1))\). The
+cubic spline is a sequence of cubic curves \(\mathbf p_1(u), \mathbf p_2(u),...,\mathbf p_n(u)\), defined over
+successive intervals \([0,1], [1,2],...,[n-1,n]\) and joined at the end points so
+that \(\mathbf p_i(i) = \mathbf p_{i+1}(i)\). Each of the cubic curves in the spline is called a spline
 segment, and the edge points where the segments are joined are called knots.
+-->
 </p><p>
+前のセクションで説明した曲線フィッティングアルゴリズムと同様に、エッジ点のシーケンスはサブシーケンスに分割され、各サブシーケンスにスプラインセグメントがフィッティングされる。スプラインの各3次曲線セグメントには、8つのパラメータが必要である。サブシーケンスの最初と最後のエッジ点の位置は、4つの制約条件を提供する。ノットにおける1次連続性（等しい接線ベクトル）は、さらに2つの制約条件を提供する。ノットにおけるエッジの方向は、隣接するセグメントによってエッジが共有されるため、各セグメントに1つの追加制約条件のみを提供する。ノットにおける2次連続性（等しい曲率）は、さらに2つの制約条件を提供するが、そうすると、各3次スプラインセグメントの8つのパラメータに対する方程式が多すぎる。
+<!--
 As with the curve fitting algorithms prescnted in previous scctions, the
 sequence of edge points is partitioned into subsequences and a spline segment
 is fit to each subsequence. Each cubic curve segment in the spline requires
@@ -790,7 +1110,10 @@ since the edge is shared by adjacent segments. Second-order continuity (equal
 curvature) at the knots would provide two more constraints, but then there
 would be too many equations for the eight parameters of each cubic spline
 segment.
+-->
 </p><p>
+スプライン線分がノットで滑らかに接続されることが重要であり、コンピュータグラフィックスでは、2次連続性を必須とすることでこれを実現する。2次連続性を必須とすると、各スプライン線分は既にエッジの方向によって方向（接線角）が制約された状態で選択されたエッジを通過するように制約されているため、過剰な制約となる。しかし、ノットにおける2次不連続性の大きさを最小化することで、さらにもう1つの制約を与えることができる。言い換えれば、ノットにおける曲率の差を最小化するということである。
+<!--
 It is important for the spline segments to be joined smoothly at the knots,
 and this is achieved in computer graphics by requiring second-order conti-
 nuity. Requiring second-order continuity would overconstrain each spline
@@ -799,36 +1122,50 @@ edges with the orientation (tangent angle} constrained by the orientation of
 the edge; but one additional constraint can be provided by minimizing the
 magnitude of the second-order discontinuity at the knot. In other words,
 minimize the difference in curvature at the knots.
+-->
 </p><p>
+3次スプライン曲線全体について、\(n-1\)ノットにおける2次導関数の差の2乗の合計を最小化する。
+<!--
 For the entire cubic spline curve, minimize the sum of the squared mag-
-nitude of the difference in the second derivative at the n — 1 knots:
+nitude of the difference in the second derivative at the \(n-1\) knots:
+-->
+\[
+\chi^2=\sum_{i=1}^{n-1}(\Delta\ddot{\mathbf p}) \tag{6.34}
+\]
 
-nal
-
-x= YO (AB), (6.34)
-
-i=1
-
+ここで、2つのスプラインセグメントの共通節点における2次導関数の差は
+<!--
 where the difference in the second derivatives of two spline segments at their
 common knot is
-210 CHAPTER 6. CONTOURS
+-->
+\[
+\begin{align}
+\Delta\ddot{\mathbf p} &= \ddot{\mathbf p}_{i-1}(1)-\ddot{\mathbf p}_i(0) \tag{6.35} \\
+\\
+&=2\left(\mathbf t_{i-1}+4\mathbf t_i+\mathbf t_{i+1}+3(\mathbf p_{i-1}-\mathbf p_i)\right) \tag{6.36}
+\end{align}
+\]
 
-Ap = B_1(1) — B,(0) (6.35)
-=2 (tia + dt; + tia + 30; — P,)) . (6.36)
+変数\(\mathbf t_i\)は、節点\(i\)における接線ベクトルである。接線ベクトルの向き\(\hat{\mathbf t}_i\)は、エッジの向き（勾配角）によって与えられ、大きさ\(\gamma_i\)は未知である。
+<!--
+The variable \(\mathbf t_i\) is the tangent vector at knot \(i\). The tangent vector has an orientation \(\hat{\mathbf t}_i\) given by the edge orientation (gradient angle) and a signed magnitude \(\gamma_i\) which is unknown:
+-->
+\[
+\mathbf t_i = \gamma_i\hat{\mathbf t}_i  \tag{6.37}
+\]
 
-The variable t; is the tangent vector at knot i. The tangent vector has an
-orientation t; given by the edge orientation (gradient angle) and a signed
-magnitude +; which is unknown:
-
-ty = ti. (6.37)
-
+言い換えれば、結び目におけるエッジの向きは単位接線ベクトルとしてモデル化されるが、3次スプラインでは、曲線がどの方向からどの速度で結び目を通過するかを示すために、符号と大きさを持つ接線が必要である。このアルゴリズムは、節点間の3次スプライン線分を構築するために必要な情報を提供する \(n\) 個の未知数\(\gamma_i\)について、連立一次方程式を解く。
+<!--
 In other words, the orientation of an edge at the knot is modeled as a unit
 tangent vector, but the cubic spline requires a tangent with sign and magni-
 tude to indicate from which direction the curve should pass through the knot
 and at what speed. The algorithm solves a system of linear cquations for the
-n unknowns y; which provide the missing information for constructing the
+n unknowns \(\gamma_i\) which provide the missing information for constructing the
 cubic spline segments between the knots.
-
+-->
+</p><p>
+このアルゴリズムには追加のパラメータや閾値はないが、前のセクションで紹介した折れ線、円弧、円錐曲線のフィッティングアルゴリズムと同様に、節点はエッジリストから選択する必要がある。節点トの位置は、輪郭線の折れ線近似を計算するために上記で説明した折れ線アルゴリズムのいずれかを使用して決定できる。折れ線の頂点は節点の位置として使用できる。節点の数と配置を調整することで、3次スプラインのエッジ点全体へのフィッティングを向上させることができる。
+<!--
 This algorithm docs not have any additional parameters or thresholds,
 but, as with the algorithms for fitting polylines, circular arcs, and conics
 presented in previous sections, the knots must be chosen from the edge list.
@@ -837,21 +1174,28 @@ described above to compute a polyline approximation to the contour. The
 polyline vertices can be used as the knot Jocations. The number and place-
 ment of knots can be adjusted to improve the fit of the cubic spline to the
 entire set of edge points.
-
+-->
+</p><p>
+3次スプラインフィッティングアルゴリズムは非常に効率的である。解を求めるには、接線と正弦波、振幅を求める小さな連立一次方程式を解くだけで済む。必要に応じて、ユーザーが3次スプライン曲線を簡単に調整できる対話型グラフィックインターフェースが数多く存在する。
+<!--
 The cubic spline fitting algorithm is very efficient, since the solution only
 requires solving a small system of linear equations for the tangent sigus and
 magnitudes. There are many interactive graphics interfaces that allow the
 user to easily adjust the cubic spline curve, if necessary.
-
-6.8 Curve Approximation
-
+-->
+</p>
+<h2>6.8 曲線近似</h2>
+<p>
+前のセクションで説明した曲線フィッティング手法では、曲線をエッジの部分集合を通して補間していた。特定のエッジを通過させない近似値を計算すると、より高い精度が得られる。
+<!--
 The curve fitting methods described in previous sections interpolated the
 curve through a subset of the edges. Higher accuracy can be obtained by
 computing an approximation that is not forced to pass through particular
-
-ll
-6.8. CURVE APPROXIMATION 211
-
+edges.
+-->
+</p><p>
+この節では、曲線を近似する方法を紹介する。曲線を近似する方法はいくつかあり、エッジ点を輪郭にグループ化できる信頼性によって異なる。輪郭に連結されたすべてのエッジ点が実際にその輪郭に属していることが確実な場合は、全最小二乗回帰法を使用してエッジ点に曲線を当てはめることができる。グループ化に誤差がある場合は、ロバスト回帰法を使用して曲線近似を計算できます。最後に、エッジを輪郭にグループ化する信頼性が非常に低い場合、またはエッジが散在しているために前述のエッジ連結法やそれに続く方法を使用して簡単にグループ化できない場合は、クラスター分析手法を使用してグループ化と曲線フィッティングを同時に実行する必要がある。散在するエッジ点をグループ化してフィッティングするアルゴリズムの優れた例として、ハフ変換がある。これらの方法については、以降の節で説明する。
+<!--
 This section presents methods for approximating a curve. There are sev-
 eral ways to approximate curves, depending on the reliability with which
 edge points can be grouped into contours. If it is certain that all of the
@@ -865,7 +1209,10 @@ previously, then cluster analysis techniques must be used to perform group-
 ing and curve fitting simultaneously. An cxcellent cxample of an algorithm
 for grouping and fitting scattercd edge points is the Hough transform. All of
 these methods will be presented in the following sections.
-
+-->
+</p><p>
+セクション 6.4 から 6.7 で紹介した、線分、円弧、円錐曲線、および 3 次スプラインをエッジ点にフィッティングする方法は、端点間の曲線セグメントをフィッティングする単純な回帰問題である。これらのアルゴリズムは、エッジの位置がサブピクセル法などを用いて正確に計算できることを前提としている。端点間のエッジ点は回帰では使用されない。曲線近似の精度は、セグメントの端点として選択されたエッジ点の位置の精度によって決まる。このセクションで紹介する方法では、すべてのエッジ点を使用して、エッジ点に対する曲線の最良近似を計算する。
+<!--
 The methods for fitting line segments, circular arcs, conic sections, and
 cubic splines to edge points presented in Sections 6.4 through 6.7 are trivial
 regression problems that fit curve segments between end points. These algo-
@@ -875,88 +1222,131 @@ in the regression. The accuracy of the curve approximation is determined by
 the accuracy of the location of the edge points chosen as the segment end
 points. The methods presented in this section will use all of the edge points
 to calculate the best approximation of the curve to the edge points.
-
+-->
+</p><p>
+一般的な曲線フィッティング問題は、曲線を暗黙方程式でモデル化した回帰問題である。
+<!--
 The general curve fitting problem is a regression problem with the curve
 modeled by the implicit equation
-
-F(@,Y; G1, @2,..- Ap) = 0 (6.38)
-
-with p parameters. The curve estimation problem is to fit the curve model
-to a set of edge points {(a1, yi), (©2, y2),-+ +) (fn, Yn) fe
-
+-->
+\[
+f(x,y;a_1,a_2,\cdots,a_p)=0 \tag{6.38}
+\]
+\(p\) 個のパラメータを持つ。
+曲線推定問題は、曲線モデルをエッジ点の集合 \(\{(x_1, y_1), (x_2, y_2), \cdots,(x_n, y_n)\}\) に適合させることである。
+<!--
+with \(p\) parameters. The curve estimation problem is to fit the curve model
+to a set of edge points \(\{(x_1, y_1), (x_2,y_2), \cdots,(x_n,y_n)\}\).
+-->
+</p><p>
+ノイズがない場合、\(p\) 個の観測値を用いて \(p\) 個の未知の曲線パラメータに対する\(p\) 個の方程式を定式化できる。残念ながら、ほとんどのアプリケーションでは、ノイズのためにこの直接的なアプローチは適切ではない。実際のアプリケーションでは通常、エッジリスト内のすべての情報を用いてパラメータ値の最良の推定値を求める必要がある。
+<!--
 In the noise-free case, one can use p observations to formulate p equations
 for the p unknown curve parameters. Unfortunately, in most applications this
 direct approach is not suitable due to noise. Real applications usually require
 the best estimate of the parameter values using all of the information in the
 edge list.
-
+-->
+</p><p>
+次のセクションでは、マシンビジョンにおける曲線フィッティングに用いられる最小二乗回帰について説明する。最小二乗法は、誤差が正規分布する場合に適している。セクション6.8.3では、エッジ点の一部が誤って輪郭線にリンクされている場合に有効な、堅牢な曲線フィッティング手法を紹介する。これらの誤ってリンクされた点は外れ値と呼ばれる。
+<!--
 The next section will cover least-squares regression as it is used for curve
 fitting in machine vision. Least-squares methods are appropriate when the
 errors are normally distributed. Section 6.8.3 will present robust methods
-212 CHAPTER 6. CONTOURS
-
-for curve fitting that are useful when somc of the cdge points have been
+for curve fitting that are useful when some of the edge points have been
 incorrectly linked into the contour. These incorrectly assigned points are
 called outliers.
-
-6.8.1 Total Regression
-
+-->
+</p>
+<h3>6.8.1 全回帰</h3>
+<p>
+古典的な線形回帰は、データポイントとモデルの差を、従属変数の次元のみで最小化する。例えば、次のような関数モデルは、
+<!--
 Classical linear regression minimizes the difference between a data point and
 the model in only one dimension, the dimension of the dependent variable.
 For example, a functional model of the form
+-->
+\[
+y=f(x,a_1,\cdots,a_p) \tag{6.39}
+\]
 
-y = f(x,aq,..., a) (6.39)
-
-relating the dependent variable y to the independent variable zx, with the
-p model parameters a; through @,, assumes that there are no errors in the
-independent variable x. In machine vision, crrors in the x and y coordinates
+従属変数 \(y\) を独立変数 \(x\) に、\(p\) モデルパラメータ \(a_1\) から \(a_p\) までを用いて関連付ける場合、独立変数 \(x\) には誤差がないものと仮定する。マシンビジョンでは、位置座標 \(x\) と \(y\) の誤差は等確率で発生し、曲線モデルは例えば関数形式では表現できない垂直線になることがある。マシンビジョンでは、直線やその他の曲線モデルは、回帰モデルからのデータポイントの垂直距離の二乗和を最小化する全回帰を用いてエッジにフィッティングされる。この手法の利点は、\(x\) 方向と \(y\) 方向の両方の誤差を補正できることである。全回帰は実際には既に第2章で紹介されており、ブロブの方向を決定するための式を導くために使用されていましたが、その時は「全回帰」という用語は使用していなかった。
+<!--
+relating the dependent variable \(y\) to the independent variable \(x\), with the
+\(p\) model parameters \(a_1\) through \(a_p\), assumes that there are no errors in the
+independent variable \(x\). In machine vision, crrors in the \(x\) and \(y\) coordinates
 of location are equally likely and the curve model may be a vertical line, for
 instance, which cannot be represented in functional form. In machine vision,
 lines and other curve models are fitted to edges using total regression, which
 minimizes the sum of the squares of the perpendicular distances of the data
 points from the regression model. The advantage of this technique is that it
-compensates for errors in both the ¢ and y directions. Total regression has
+compensates for errors in both the \(x\) and \(y\) directions. Total regression has
 actually already been presented in Chapter 2 where it was used to derive the
 equations for determining the orientation of a blob, although the term total
 regression was not used at the time.
-
+-->
+</p><p>
+直線が垂直な場合の問題を回避するには、直線の方程式を極座標を使用して表す。
+<!--
 To avoid problems when the line is vertical, represent the equation for a
 line by using polar coordinates:
-
-xcos@+ysinéd —p=0. (6.40)
-
-Minimize the sum of the squared perpendicular distances of points (2;, y,)
+-->
+\[
+x\cos\theta+y\sin\theta^\rho = 0 \tag{6.40}
+\]
+直線からの点 \((x_i,y_i)\) の垂直距離の二乗の合計を最小化する。
+<!--
+Minimize the sum of the squared perpendicular distances of points \((x_i,y_i)\)
 from the line:
-x° = So (a; cos # + y, sin O — p)?. (6.41)
-
-a
-
+-->
+\[
+\chi^2=\sum_i (x_i\cos\theta+y_i\sin\theta-\rho)^2 \tag{6.41}
+\]
+全回帰問題の解は
+<!--
 The solution to the total regression problem is
+-->
+\[
+\rho = \overline{x}\cos\theta+\overline{y}\sin\theta \tag{6.42}
+\]
+ここで
+\[
+\begin{align}
+\overline{x} &=\frac{1}{n}\sum_{i=1}^n x_i \tag{6.43} \\
+\\
+\overline{y} &=\frac{1}{n}\sum_{i=1}^n y_i \tag{6.44}
+\end{align}
+\]
+全回帰直線の方向は\(\theta\)で、次のように表される。
+<!--
+The orientation of the total regression line is \(\theta\), given by
+-->
+\[
+\tan 2\theta=\frac{a}{b} \tag{6.45}
+\]
 
-p= #cosé + ysind (6.42)
-6.8. CURVE APPROXIMATION 213
+ここで
+\[
+\begin{align}
+a &= 2\sum_{i=1}^n x_i^\prime y_i^\prime \tag{6.46} \\
+\\
+b &= \sum_{i=1}^n {x_i^\prime}^2-\sum_{i=1}^n{y_i^\prime}^2 \tag{6.47}
+\end{align}
+\]
 
-with
-zaty 6.43
-as ea
-1 nr
-y= nh (6.44)
+および
 
-The orientation of the total regression line is #, given by
+\[
+\begin{align}
+x_i^\prime &= x_i - \overline{x} \tag{6.48} \\
+\\
+y_i^\prime &= y_i - \overline{y} \tag{6.49}
+\end{align}
+\]
 
-tan 20 = i (6.45)
-
-with
-a= 25> ay (6.46)
-
-i=l
-b= Sah - Sy? (6.47)
-i=l i=L
-
-and
-
-Y=u-$. (6.49)
-
+</p><p>
+全回帰では、誤差が正規分布に従う場合には最適な最小二乗誤差ノルムを使用するが、データに外れ値が存在する場合には適していない。曲線モデルをエッジデータにフィッティングする場合、エッジリンク手順によって、他の輪郭線から1つ以上のエッジが輪郭線のエッジリストに組み込まれると、外れ値が発生する。エッジリンク手順が完璧に実行されたとしても、外れ値が発生する可能性がある。例えば、矩形の隣接する2辺のエッジのリストを考えてみよう。エッジに線をフィッティングする前に、エッジを2辺に分割するためには、コーナーを特定する必要がある。コーナーポイントが正しく特定されない場合、一部のエッジが間違った辺に割り当てられ、それらのエッジが外れ値になる可能性がある。
+<!--
 Total regression uses a least-squares error norm that is optimal if the
 errors are from a normal distribution, but is not suitable if there are outliers
 present in the data. In the case of fitting a curve model to edge data, outliers
@@ -967,75 +1357,90 @@ list of edges from two adjacent sides of a rectangle. The corner must be
 identified in order to segment the edges into the two sides before fitting a
 line to the edges. If the corner point is not identified correctly, some edges
 may be assigned to the wrong side, and these edges are outliers.
-
+-->
+</p><p>
+一般的に、分類における誤差は、回帰問題に正規分布しない誤差をもたらす。そのような場合、誤差は、正規誤差をモデル化するためのガウス分布と、不完全な分類による外れ値をモデル化するための裾野の広い分布を組み合わせた混合分布によってモデル化される場合がある。
+<!--
 In general, errors in classification introduce errors into the regression
 problem that are not normally distributed. In such a case, the errors may
 be modeled by a mixture distribution that combincs a Gaussian distribution
 for modeling the normal errors with a broad-tailed distribution for modeling
 the outliers due to imperfect classification.
-214 CHAPTER 6. CONTOURS
+-->
+</p>
 
-6.8.2 Estimating Corners
-
+<h3>6.8.2 コーナーの推定</h3>
+<p>
+コーナーを推定する最良の方法は、エッジ点に直線をフィッティングする手法を1つだけ使用し、その直線の交点を計算することである。この手法は、コーナーを丸めるコーナー検出演算子によって生じる誤差を補正し、局所情報のみを使用するコーナー検出器を使用するよりも正確である。
+<!--
 The best method for estimating corners is to use onc of the methods for fitting
 a line to edge points and then compute the intersection of the lincs. This
 method compensates for the crror introduced by cdge detection opcrators
 that round off the corners and is more accurate than using a corner detector
 which only uses local information.
-
+-->
+</p><p>
+２本の直線に対する暗黙の方程式が与えらると、
+<!--
 Given the implicit equations for two lines,
-
-axrthyt+ea = 0 (6.50)
-aga + boy ten = 0, (6.51)
-the location of the intersection is
-cya — CaQy
-= 6.52
-¥ abo _ agby, ( ° )
-Coby — ede
-= ——. 6.53
-* ay bg _ agby ( )
-
-If ayb. — aod, is close to zero, then the lines are nearly parallel and cannot
+-->
+\[
+\begin{align}
+a_1x+b_1y+c_1&= 0 \tag{6.50} \\
+\\
+a_2x+b_2y+c_2 &= 0 \tag{6.51}
+\end{align}
+\]
+交点の位置は
+<!-- the location of the intersection is -->
+\[
+\begin{align}
+y &= \frac{c_1a_2-c_2a_1}{a_1b_2-a_2b_1} \tag{6.52} \\
+\\
+x &= \frac{c_2b_1-c_1b_2}{a_1b_2-a_2b_1} \tag{6.53}
+\end{align}
+\]
+\(a_1b_2-a_2b_1\) がゼロに近い場合、直線はほぼ平行であり、交差させることはできない。
+<!--
+If \(a_1b_2-a_2b_1\) is close to zero, then the lines are nearly parallel and cannot
 be intersected.
-
+-->
+</p><p>
+コーナーを検出する良い方法は、輪郭線に沿った \(2n + m\) 個のエッジ点の連続するサブリストに直線のペアを当てはめることである。パラメーター \(n\) は、正確な直線の当てはめに必要なエッジ点の数であり、パラメーター \(m\) は、コーナーの辺の間でスキップするエッジ点の数である。ギャップは、コーナーの丸みを帯びた部分にあるエッジ点をスキップする。コーナーは、\(a_1b_2-a_2b_1\) の大きさを閾値と比較することで検出される。
+<!--
 A good method for detecting corners is to try to fit pairs of lines over suc-
-cessive sublists of 2n +m edge points along the contour. The parameter n is
+cessive sublists of \(2n +m\) edge points along the contour. The parameter \(n\) is
 the number of edge points required for an accurate line fit, and the parameter
 m is the number of edge points to skip between the sides of the corner. The
 gap skips over the edge points in the rounded part of the corner. A corner is
-detected by testing the magnitude of aib, — agb, against a threshold.
-
-6.8.3 Robust Regression
-
+detected by testing the magnitude of \(a_1b_2-a_2b_1\) against a threshold.
+-->
+</p>
+<h3>6.8.3 ロバスト回帰</h3>
+<p>
+誤差が正規分布から生じていない場合、最小二乗法は最適な適合基準ではない。図6.12は、データセットに外れ値が含まれている場合に最小二乗回帰が遭遇する問題の例を示している。1つの外れ値だけでも、回帰直線は正しい位置から大きく離れてしまう。ロバスト回帰法では、データポイントのさまざまなサブセットを試し、最も適合度の高いサブセットを選択する。
+<!--
 If the errors are not from a normal distribution, then least-squares is not
 the best fitting criterion. Figure 6.12 shows an example of the problems
 encountered by least-squares regression when the data set contains outliers.
 Even a single outlier is enough to pull the regression line far away from its
 correct. location. Robust regression methods try various subsets of the data
 points and choose the subset that provides the best fit.
-
-Thc sll ATIVE NTE
-
-clear. Imagine that you want to find the center of mass of a sct of points
-6.8. CURVE APPROXIMATION
-
-215
-
-Least-squares regression
-
-Least-median-squares
-
+-->
+</p>
+<center><img src="images/fig6_12.png"></center>
+<p>
+図6.12: 外れ値を含むデータセットに最小二乗回帰法とロバスト手法を用いて曲線を当てはめた場合の違いを示す図解。
+<!--
 Figure 6.12: Hlustration of the difference between fitting a curve using least-
 squares regression and fitting a curve using robust methods to a data set that
-
 contains outliers.
-
-Figure 6.13: A physical analogy that illustrates the sensitivity of least-squares
-methods to outliers. Even a single outlier renders a least-squares solution
-
-useless.
-216 CHAPTER 6. CONTOURS
-
+-->
+</p><p>
+図6.13に示す物理的なアナロジーは、この議論をより明確にするかもしれない。平面上の点群の重心を求めたいと想像してもらいたい。同じバネ定数を持つバネを、固定点と自由に移動できる小さな物体に取り付ける。物体は、点の位置の平均に引っ張られる。バネは、位置エネルギーのバネ方程式を通じて、最小二乗ノルムを実現する。この物理的なアナロジーは、各点と平均の差である残差の二乗和を最小化するという基準から平均の計算を導くことに対応している。ここで、点の1つが移動可能だと仮定する。この点をてこ点と呼ぶ。てこ点を十分に遠くに引っ張ることで、平均の位置を任意の点に移動させることができる。これは、最小二乗基準に基づく推定値が外れ値に対して極めて敏感であることを示している。たった1つの外れ値でも、推定値が台無しになる可能性がある。理想的には、外れ値に接続されたバネを壊して推定値に影響を与えないようにしたい。バネ定数を変更して遠く離れた点が推定値にほとんど影響を与えないようにすることは、影響関数に基づくロバスト推定量の実装に相当する。外れ値に接続されたバネを壊すことは、サンプルの一貫性のあるサブセットを決定するリサンプリング方式に相当する。リサンプリング方式では、ランダムなサブセットを繰り返し抽出し、最良の推定値をもたらすサブセットを選択する。リサンプリングアルゴリズムの例としては、ランダムサンプルコンセンサス法、最小中央値二乗回帰法、その他の回帰におけるコンピュータ集約型手法などがある。
+<!--
+The Physical analogy shown in Figure 6.13 may make this discussion more
+clear. Imagine that you want to find the center of mass of a sct of points
 in the plane. Attach springs with equal spring constants to the fixed points
 and to a small object that can move freely. The object will be pulled to
 the average of the locations of the points. The springs implement a lcast-
@@ -1057,43 +1462,71 @@ determined. Resampling plans repeatedly draw random subsets and choose
 the subset that yields the best estimate. Examples of resampling algorithms
 include random sample consensus, least-median-squares regression, and other
 computer-intensive methods in regression.
+-->
+</p>
+<center><img src="images/fig6_13.png"></center>
+<p>
 
+図6.13: 最小二乗法が外れ値に対してどれほど敏感であるかを示す物理的なアナロジー。たとえ1つの外れ値であっても、最小二乗法は役に立たなくなる。
+<!--
+Figure 6.13: A physical analogy that illustrates the sensitivity of least-squares
+methods to outliers. Even a single outlier renders a least-squares solution
+useless.
+-->
+</p><p>
+バネのアナロジーは線型回帰にも適用でき、同じ結論が得られる。つまり、たった一つの外れ値でも回帰推定値は歪むということだ。\(n\) 次の線型多変量モデルは次式で表される。
+<!--
 The spring analogy also extends to linear regression with the same con-
 clusions: even a single outlier will distort the regression estimate. A linear,
 multivariate model of order n is represented by the equation
+-->
+\[
+\hat{y}_i=\hat{\theta}_1x_{i1}+\hat{\theta}_2x_{i2}+\cdots+\hat{\theta}_nx_{in} \tag{6.54}
+\]
 
-for the ¢th data point, where 6; are the estimates of the model parameters 6;.
+\(i\)番目のデータポイントについて、\(\hat{\theta}_i\)はモデルパラメータ\(\theta_i\)の推定値である。各データポイントの残差（推定モデルからのデータポイントの偏差）は\(r_i=y_i-\hat{y}_i\)です。最小二乗回帰では、モデルパラメータの推定値は、残差の二乗和を最小化することで与えられる。
+<!--
+for the \(i\)th data point, where \(\hat{\theta}_i\) are the estimates of the model parameters \(\theta_i\).
 The residual for cach data point (the deviation of the data point from the
-estimated model) is 7; = y; — y%;. In least-squares regression, the estimates of
+estimated model) is \(r_i=y_i-\hat{y}_i\). In least-squares regression, the estimates of
 the modcl paramcters are given by minimizing the sum of the squares of the
 residuals:
+-->
+\[
+\min_\hat{\theta}\sum_{i=1}^n r_i^2 \tag{6.55}
+\]
 
-min Sor}. (6.55)
-@ Gel
+上で説明したバネの例えでわかるように、データポイントの1つだけが外れ値であれば、モデルパラメータは任意に設定できる。
+<!--
 As demonstrated by the spring analogy described above, the model parame-
 
 ters can be arbitrary if only one of the data points is an outlier.
-
-| ture deere
-Often, the noise and outlicrs can be modeled as a mixture distri ato: a
+-->
+</p><p>
+多くの場合、ノイズと外れ値は混合分布としてモデル化できる。これは、ノイズをモデル化する正規分布と外れ値を考慮する裾の広い分布の線形結合である。この場合、小さな誤差については線形二乗ノルムに似たノルムを持ち、大きな誤差には鈍感なノルムを持つ推定値を定式化することで外れ値を無視することが理にかなっている。これは影響関数アプローチと呼ばれる。
+<!--
+Often, the noise and outlicrs can be modeled as a mixture distribution: a
 linear combination of a normal distribution to model the noise and a broad-
-6.8. CURVE APPROXIMATION 217
-
 tailed distribution to account for outliers. In this case, it makes sense to
 formulate an estimator with a norm that resembles a lcast-squares norm for
 small errors but is insensitive to large errors so that outliers are ignored. This
 is called the influcnce function approach.
-
+-->
+</p><p>
+ブレークダウンポイントとは、任意の程度に誤りがあっても推定アルゴリズムが任意の誤った推定値を生成することのない、データポイントの最小割合のことである[207]。\(Z\)を\(n\)個のデータポイントの集合とする。集合\(Z^\prime\)は、集合\(Z\)の\(m\)個のポイントを任意の値に置き換えたものであるとする。回帰推定量を\(\hat{\theta}=T(Z)\)と表記する。外れ値による推定値のバイアスは、次のように与えられる。
+<!--
 The breakdown point is the smallest percentage of data points that can
 be incorrect to an arbitrary degree and not cause the estimation algorithm
-to produce an arbitrarily wrong estimate [207]. Let Z be a sct of n data
-points. Suppose that the sct Z’ is a version of sct Z with m points replaced
-with arbitrary values. Let a regression estimator be denoted by @ = T(Z).
-The bias in an estimate due to outliers is given by
+to produce an arbitrarily wrong estimate [207]. Let \(Z\) be a sct of \(n\) data
+points. Suppose that the sct \(Z^\prime\) is a version of set \(Z\) with \(m\) points replaced with arbitrary values. Let a regression estimator be denoted by 
+\(\hat{\theta}=T(Z)\). The bias in an estimate due to outliers is given by
+-->
+\[
+Bias = \sup_{Z^\prime} ||T(Z^\prime) - T(Z) ||  \tag{6.56}
+\]
 
-Bias = sup || T(Z') — T{(Z) || . (6.56)
-zi
-
+ブレークダウンポイントの背後にある考え方は、外れ値の数 \(m\) がデータ点数 \(n\) に対する割合として増加するにつれて、バイアスがどうなるかを考えることである。データ点は任意の値に置き換えられるため、\(m\) と \(n\) の比率によっては、バイアスは潜在的に無制限になる可能性がある。これがブレークダウンポイントである。ブレークダウンポイントより下の場合、回帰推定値は外れ値を完全に棄却できるか、外れ値が推定値にわずかな影響しか与えないかのどちらかである。ブレークダウンポイントを超えると、外れ値によって推定値は任意の答えを導き出す可能性がある。つまり、答えは外れ値に依存し、正当なデータには依存しないということである。言い換えれば、推定値によって得られる結果は予測不可能である。ブレークダウンポイントは次のように定義される。
+<!--
 The idea behind the breakdown point is to consider what happens to the bias
 as the number of outlicrs m as a percentage of the number of data points
 n is increased. Since the data points can be replaced with arbitrary values,
@@ -1105,105 +1538,149 @@ the estimator to produce an arbitrary answer in the sense that the answer
 will depend on the outliers and not on the legitimate data. In other words,
 the result provided by the estimator is unpredictable. The breakdown point
 is defined as
-e = min {m : Bias(m;T, Z) is infinite} . (6.57)
+-->
+\[
+\epsilon_n^* = \min \Big\{\frac{m}{n} : Bias(m;T, Z)\; is\; infinite\Big\} \tag{6.57}
+\]
 
-For least-squares regression, ¢~ = 1/n, and in the limit as the number of data
-points becomes large, «&, = 0. In other words, least-squares regression has
-uo immunity to outliers; a single outlier can completely ruin the result.
-
+最小二乗回帰では\(\epsilon_n^* = 1/n\)となり、データ点数が増えると極限では\(\epsilon_\infty^*= 0\)となる。言い換えれば、最小二乗回帰は外れ値に対する耐性がなく、たった一つの外れ値でも結果を完全に台無しにする可能性がある。
+<!--
+For least-squares regression, \(\epsilon_n^* = 1/n\), and in the limit as the number of data
+points becomes large, \(\epsilon_\infty^*= 0\). In other words, least-squares regression has
+no immunity to outliers; a single outlier can completely ruin the result.
+-->
+</p><p>
+最小中央値二乗回帰は実装が非常に簡単な手法であり、外れ値の割合が高い場合の回帰問題の解決に非常に効果的であることが証明されている。最小中央値二乗回帰は、データセット内の最大50%の外れ値を許容する。つまり、データセット内のデータポイントの最大半分は、回帰結果に大きな影響を与えることなく、任意の値を取ることができる。
+<!--
 Least-median-squares regression is a very simple technique to implement
 and has proven to be very powerful in solving regression problems when there
 is a large percentage of outliers. Least-median-squares regression can tolerate
 up to 50 percent outliers in a data set. What this means is that up to half of
 the data points in a data set can be arbitrary without significantly affecting
 the regression result.
+-->
+</p><p>
+最小中央値二乗回帰では、モデルパラメータの推定値は
+残差の二乗の中央値を最小化することで与えられる。
+<!--
+are given by minimizing the median of the squares of the residuals:
+-->
 
-In least-median-squares regression, the estimates of the model parameters
-218 CHAPTER 6. CONTOURS
+\[
+\min_{\hat{\theta}} \underset{i}{med}\; r_i^2 \tag{6.58}
+\]
 
-Algorithm 6.3 Least-Median-Squares Regression
-Assume that there are n data points and p parameters in the linear model.
+最小中央値二乗回帰アルゴリズムは、アルゴリズム 6.3 で説明されている。
+<!-- The least-median-squares algorithm is described in Algorithm 6.3. -->
+
+</p><p>
+<strong>アルゴリズム 6.3　最小中央値二乗回帰</strong><br>
+線形モデルには \(n\) 個のデータ点と \(p\) 個のパラメータがあると仮定する。
+<div class="styleBullet">
+<ul>
+<li>1. \(n\) 個のデータ点集合から \(p\) 点をランダムに選択する。
+</li><br><li>2. \(p\) 点に対するモデルの適合度を計算する。
+</li><br><li>3. 残差の二乗の中央値を計算する</li>
+</ul>
+</div>
+<!--
+In least-median-squares regression, the estimates of the model parameters<br>
+<br>
+<strong>Algorithm 6.3 Least-Median-Squares Regression</strong><br>
+Assume that there are n data points and \(p\) parameters in the linear model.
 
 1. Choose p points at random from the set of n data points.
 2. Compute the fit of the model to the p points.
 3. Compute the median of the square of the residuals.
+-->
+</p><p>
+フィッティング手順は、残差の二乗の中央値が十分に小さいフィッティングが見つかるまで、または事前に決定した再サンプリングステップ数まで繰り返される。
 
+<!--
 The fitting procedure is repeated until a fit is found with sufficiently small me-
 dian of squared residuals or up to some predetermined number of resampling
 steps.
+-->
 
-are given by minimizing the median of the squares of the residuals:
 
-min med rp. (6.58)
-8
-The least-median-squares algorithm is described in Algorithm 6.3.
-
+</p><p>
+中央値には50%の破綻点があり、この性質は最小中央値二乗回帰[207]にも当てはまる。言い換えれば、たとえデータ点の半分が外れ値であっても、回帰推定値は深刻な影響を受けない。もしデータ点の50%以上が外れ値である場合、最小中央値二乗回帰はうまく機能しない可能性があり、ハフ変換などのより強力な手法を使用する必要がある。
+<!--
 The median has a 50 percent breakdown point, and this property carries
 over to least-median-squares regression [207]. In other words, cven if as many
 as half of the data points are outlicrs, the regression estimate is not seriously
 affected. If more than 50 percent of the data points are outliers, then least-
 median-squares regression may not work well, and more powerful techniques,
 such as the Hough transform, must be used.
-
-6.8.4 Hough Transform
-
+-->
+</p>
+<h3>6.8.4 ハフ変換</h3>
+<p>
+ここ数年、投票メカニズムを用いたパラメータ推定手法の利用が増加している。最も一般的な投票手法の一つがハフ変換である。ハフ変換では、曲線上の各点が複数のパラメータの組み合わせに投票し、過半数の票を獲得したパラメータが勝者と宣言される。この手法を用いてデータに直線を当てはめることを考えてみよう。直線の方程式を考える。
+<!--
 The last few years have seen increasing use of parameter estimation tech-
 niques that use a voting mechanism. One of the most popular voting meth-
 ods is the Hough transform. In the Hough transform, each point on a curve
 votes for several combinations of parameters; the parameters that win a ma-
 jority of votes are declared the winners. Let us consider this approach for
 fitting a straight line to data. Consider the equation of a straight line:
+-->
+\[
+y=mx+c \tag{6.59}
+\]
 
-y=met+e. (8.59)
-
-In the above equation, x and y are observed values, and m and ¢ represent
-
-the parameters. | (, d. | |, parametcrs are given, |, ttl
-6.8. CURVE APPROXIMATION 219
-
-0 a 0 a
-
-Figure 6.14: Image-to-parameter space mapping of a point in the Hough
-transform.
-
+上記の式において、\(x\) と \(y\) は観測値、\(m\) と \(c\) はパラメータを表している。パラメータの値が与えられれば、点の座標間の関係が明確に指定される。上記の式を次のように書き直してみよう。
+<!--
+In the above equation, \(x\) and \(y\) are observed values, and \(m\) and \(c\) represent the parameters. If the values of the parameters are given, the relationship
 between the coordinates of the point is clearly specified. Let us rewrite the
-
 above equation as
-c=—rmty. (6.60)
+\[
+c=-xm+y \tag{6.60}
+\]
 
-Now, in the above equation, Ict us assume that m and c are variables of
-interest, and x and y are constants. The equation above represents a straight
-line in the m-e space. The slope and intercept of this line are determined
-by 2 and y. A point (x, y) corresponds to a straight line in m-c space. This
+さて、上の式において、\(m\) と \(c\) は注目する変数、\(x\) と \(y\) は定数であると仮定する。上の式は \(m-c\) 空間における直線を表している。この直線の傾きと切片は \(x\) と \(y\) によって決まる。点 \((x, y)\) は \(m-c\) 空間における直線に対応する。このマッピングは図 6.14 に示されている。ここで、パラメータ空間における曲線の形状は、曲線を表すために使用された元の関数に依存することに注意。実際には、直線の極形式は
+
+<!--
+Now, in the above equation, Iet us assume that \(m\) and \(c\) are variables of
+interest, and \(x\) and \(y\) are constants. The equation above represents a straight
+line in the \(m-c\) space. The slope and intercept of this line are determined
+by \(x\) and \(y\). A point \((x, y)\) corresponds to a straight line in \(m-c\) space. This
 mapping is shown in Figure 6.14, It should be mentioned here that the shape
 of the curve in the parameter space depends on the original function used to
 represent the curve. In practice, the polar form of the line
+-->
 
-p= xcos@+ ysin@ (6.61)
+</p><p>
 
+
+\[
+\rho= x\cos\theta+ y\sin\theta \tag{6.61}
+\]
+
+ほぼ垂直な線に関する問題を回避するため、明示的な形式ではなく \((x,y)\) が使用される。エッジ点 \((\rho,\theta)\) は \((\rho,\theta)\) パラメータ空間にマッピングされる。
+<!--
 is used rather than the explicit form to avoid problems with lines that are
-nearly vertical. Edge points (x,y) are mapped into the (p,@) parameter
+nearly vertical. Edge points \((x,y)\) are mapped into the \((\rho,\theta)\) parameter
 space.
-
+-->
+</p><p>
+直線の場合、上に示したように、この直線上に \(n\) 個の点があるとすると、これらの点は図6.14に示すように、パラメータ空間における直線の族に対応する。これらの直線はすべて、パラメータ空間の点\((m,c)\)を通る。この点は、元の直線のパラメータを与える。
+<!--
 In the case of a straight line, as represented above, if there are n points
 lying on this straight line, then these points will correspond to a family of
 straight lines in the parameter space, as shown in Figure 6.14. All these lines
-will pass through the point (m,c} in the parameter space. ‘This point gives
+will pass through the point \((m,c)\) in the parameter space. ‘This point gives
 the parameters of the original straight line.
-220 CHAPTER 6. CONTOURS
+-->
+</p>
+<center><img src="images/fig6_14.png"></center>
+<p>
 
-Algorithm 6.4 Hough Transform Algorithm
-1. Quantize the parameter space appropriately.
-
-2. Assume that each cell in the parameter space is an accumulator. Ini-
-tialize all cells to sera.
-
-3. For each point (x,y) in the image space, increment by 1 each of the
-accumulators that satisfy the equation.
-
-4. Maaima in the accumulator array correspond to the parameters of model
-instances.
-
+<center>図 6.14: ハフ変換における点の画像からパラメータ空間へのマッピング</center>
+<!-- Figure 6.14: Image-to-parameter space mapping of a point in the Hough transform. -->
+</p><p>
+画像内の \(n\) 点に最もよく合う直線を見つけたい場合、画像空間からパラメータ空間への上記のマッピングを使用できる。ハフ変換と呼ばれるこのアプローチでは、パラメータ空間を離散パラメータ値を表す累算器の配列として表現する。画像内の各点は、変換式に従って複数のパラメータを選択する。直線を特徴付けるパラメータを見つけるには、パラメータ空間のピークを検出する必要がある。この基本的な考え方は、アルゴリズム6.4で詳しく説明されている。
+<!--
 If we are interested in finding the straight line that best fits n points in
 an image, then we can use the above mapping from the image space to the
 parameter space. In this approach, called the Hough transform, we repre-
@@ -1212,7 +1689,37 @@ parameter values. Each point in the image votes for several parameters, ac-
 cording to the transformation equation. ‘lo find parameters that characterize
 the line, we should detect peaks in the parameter space. This general idea is
 highlighted in Algorithm 6.4.
+-->
+</p><p>
+<strong>アルゴリズム 6.4 ハフ変換アルゴリズム</strong>
+<div class="styleBullet">
+<ul>
+<li>1. パラメータ空間を適切に量子化する。
 
+</li><br><li>2. パラメータ空間の各セルをアキュムレータ(累算器)と仮定する。全てのセルを \(0\) に初期化する。
+
+</li><br><li>3. 画像空間の各点 \((x,y)\) について、式を満たすアキュムレータをそれぞれ 1 ずつ増加させる。
+
+</li><br><li>4. アキュムレータ配列内の 最大値は、モデルインスタンスのパラメータに対応する。</li>
+</ul>
+</div>
+<!--
+<strong>Algorithm 6.4 Hough Transform Algorithm</strong>
+
+1. Quantize the parameter space appropriately.
+
+2. Assume that each cell in the parameter space is an accumulator. Ini-
+tialize all cells to sera.
+
+3. For each point \((x,y)\) in the image space, increment by 1 each of the
+accumulators that satisfy the equation.
+
+4. Maxima in the accumulator array correspond to the parameters of model
+instances.
+-->
+</p><p>
+ハフ変換では、エッジ点を事前にグループ化したりリンクしたりする必要がなく、対象の曲線に沿って存在するエッジ点は、画像内のエッジのごく一部に過ぎない場合がある。特に、実際に曲線に沿って存在するエッジの数は、シーン内のエッジ数の半分未満である可能性があり、ほとんどのロバスト回帰法は適用できない。ハフ変換の背後にある仮定は、大量のノイズが存在する場合、画像内のエッジの最大数を満たすパラメータ空間内の点を見つけることが最善の策であるというものである。パラメータ空間のピークが複数のアキュムレータをカバーする場合、ピークを含む領域の重心がパラメータの推定値となる。
+<!--
 The Hough transform does not require prior grouping or linking of the
 edge points, and the edge points that lie along the curve of interest may
 constitute a small fraction of the edges in the image. In particular, the
@@ -1224,19 +1731,20 @@ parameter space that satisfies the maximum number of cdges in the image.
 If the peak in the parameter space covers more than one accumulator, then
 the centroid of the region that contains the peak provides an estimate of the
 parameters.
-
-ff there are several curves in the image that are matched by the model,
+-->
+</p><p>
+画像内にモデルに一致する曲線が複数ある場合、パラメータ空間には複数のピークが存在することになる。各ピークを検出し、ピークに対応する曲線インスタンスに関連付けられたエッジを削除し、残りの曲線の検出を、ピークが有意でなくなるまで続けることは可能である。ただし、ピークが有意かどうかを判断するのは難しい場合がある。
+<!--
+If there are several curves in the image that are matched by the model,
 then there will be several peaks in the parameter space. It is possible to detect
 each peak, remove the edges associated with the curve instance corresponding
-
 to the peak, and continue to detect the remaining curves, until the peaks are
-1
-
-not doatteant Vlowever. IK can ke 1 ealt to determine vibelher a peak is
-
+not significant. however, it can be difficult to determine whether a peak is
 significant.
-6.8. CURVE APPROXIMATION 221
-
+-->
+</p><p>
+ハフ変換のもう一つの問題は、離散パラメータ空間のサイズがパラメータ数の増加に伴って急速に増大することである。円弧の場合、パラメータ空間は3次元だが、他の曲線の場合、次元数はさらに高くなることがある。アキュムレータの数は空間の次元とともに指数関数的に増加するため、複雑なモデルではハフ変換の計算効率が非常に悪くなる可能性がある。ハフ変換の性能を向上させるための手法がいくつか提案されている。1つの手法は、境界の勾配情報を用いてパラメータ空間における計算量を削減する。曲線モデルが円であると仮定する。このモデルには3つのパラメータがある。円の中心に関するパラメータが2つ、円の半径に関するパラメータが1つである。エッジの勾配角度が利用可能な場合、これは自由度の数を減少させる制約となり、パラメータ空間の必要サイズも削減される。円の中心から各辺へのベクトルの方向は勾配角によって決定され、半径の値だけが未知パラメータとなる。パラメータ空間のサイズを縮小するために使用できる他の方法もある。
+<!--
 Another problem with the Hough transform is that the size of the discrete
 paramcter space increases very quickly as the number of parameters increases.
 For a circular arc, the parameter space has three dimensions; for other curves
@@ -1254,497 +1762,230 @@ of the vector from the center of the circle to cach edge is determined by
 the gradicnt angle, leaving the value of the radius as the only unknown
 parameter. There are othcr methods that may be used to reduce the size of
 the paramcter space.
-
+-->
+</p><p>
+勾配角度を用いてパラメータ空間のサイズを縮小する方法の詳細は、円フィッティングで説明されている。アルゴリズムの詳細はアルゴリズム6.5に記載されている。円の暗黙方程式は
+<!--
 The details of using the gradient angle to reduce the size of the parameter
 space are explained for circle fitting. The algorithm is detailed in Algorithm
 6.5. The implicit equation for a circle is
-
-(2 —a)? +(y— bY =7". (6.62)
-
-The parametric equations for a circle in polar coordinates are
-z = at+rcosd (6.63)
-y = b+rsind. (6.64)
-
+-->
+\[
+(x-a)^2+(y-b)^2=r^2 \tag{6.62}
+\]
+極座標における円の媒介変数方程式は
+<!-- The parametric equations for a circle in polar coordinates are -->
+\[
+\begin{align}
+x &= a+r\cos\theta \tag{6.63} \\
+\\
+y &= b+r\sin\theta \tag{6.64}
+\end{align}
+\]
+円のパラメータを解いて次の方程式を得る。
+<!--
 Solve for the parameters of the circle to obtain the equations:
-
-a= e—rcosé (6.65)
-b = y—rsiné. (6.66)
-Given the gradient angle @ at an edge point (x, y), compute cos@ and sin é.
+-->
+\[
+\begin{align}
+a &= x-r\cos\theta \tag{6.65} \\
+\\
+b &= y-r\sin\theta \tag{6.66}
+\end{align}
+\]
+エッジ点 \((x, y)\) における勾配角度 \(\theta\) が与えられたとき、\(\cos\theta\) と \(\sin\theta\) を計算する。<br>
+これらの値は、エッジ検出の副産物として既に得られている可能性があることに注意。上記の2つの式から半径を消去すると、次の式が得られる。
+<!--
+Given the gradient angle \(\theta\) at an edge point \((x, y)\), compute \(\cos\theta\) and \(\sin\theta\).
 
 Note that these quantities may already be availabic as a by-product of edge
 detection. Eliminate the radius from the pair of equations above to yield
+-->
+\[
+b=a\tan\theta-x\tan\theta+y \tag{6.67}
+\]
 
-b=atané6—xtanOt+y. (6.67)
-222 CHAPTER 6. CONTOURS
+</p><p>
+<strong>アルゴリズム 6.5 円フィッティングアルゴリズム</strong>
+<div class="styleBullet">
+<ul>
+<li>1. パラメータ \(a\) と \(b\) のパラメータ空間を量子化する。
+</li><br><li>2. 累積器配列 \(M(a, b)\) をゼロにする。
+</li><br><li>3. 勾配の大きさ \(G(x, y)\) と角度 \(\theta(x, y)\) を計算する。
 
-Algorithm 6.5 Circle Fitting Algorithm
+</li><br><li>4. \(G(x, y)\) の各エッジ点について、累積器配列 \(M(a, b)\) 内のすべての点を直線 \[
+b=a\tan\theta-x\tan\theta+y \tag{6.68}
+\] に沿って増分する。
 
-1. Quantize the parameter space for the parameters a and b.
-2. Zero the accumulator array M(a, 6).
-8. Compute the gradient magnitude G(x, y) and angle 6(z,y).
+</li><br><li>5. 累積器配列の極大値は、画像内の円の中心に対応する。</li>
+</ul>
+</div>
 
-4. For each edge point in G(z, y), increment all poinis in the accumulator
-array M(a,b) along the line
+<!--
+<strong>Algorithm 6.5 Circle Fitting Algorithm</strong>
 
-b=atané —xrtand+ y. (6.68)
+1. Quantize the parameter space for the parameters \(a\) and \(b\).
+2. Zero the accumulator array \(M(a, b)\).
+8. Compute the gradient magnitude \(G(x, y)\) and angle \(\theta(x,y)\).
+
+4. For each edge point in \(G(x, y)\), increment all poinis in the accumulator
+array \(M(a,b)\) along the line
+\[
+b=a\tan\theta-x\tan\theta+y \tag{6.68}
+\]
 
 5. Local maxima in the accumulator array correspond to centers of circles
 in the image.
-
+-->
+</p><p>
+これは、パラメータ空間における累算器を更新するための式である。
+位置 \((x, y)\) にあるエッジの方向 \(\theta\) の各エッジ点について、式 6.67 で示されるリンクに沿って、\((a, b)\) パラメータ空間における累算器を増分する。
+<!--
 This is the equation for updating the accumulators in the parameter space.
-For each edge point at position (x, y) with edge oricntation 8, increment the
-accumulators along the linc given by Equation 6.67 in the (a, 8) parameter
+For each edge point at position \((x, y)\) with edge oricntation \(\theta\), increment the
+accumulators along the linc given by Equation 6.67 in the \((a, b)\) parameter
 space.
-
+-->
+</p><p>
+半径が分かっている場合は、次のように与えられる点\((a, b)\)の累算器を増分するだけでよい。
+<!--
 If the radius is known, then it is only necessary to increment the accu-
-mulator for the point {a, b) given by
-
-a= x2—rcosé (6.69)
-b = y—rsiné. (6.70)
-
+mulator for the point \((a, b)\) given by
+-->
+\[
+\begin{align}
+a &= x-r\cos\theta \tag{6.69} \\
+\\
+b &= y-r\sin\theta \tag{6.70}
+\end{align}
+\]
+</p><p>
+ハフ変換によって検出される曲線は、媒介変数方程式で記述される必要はない。ハフ変換は、テンプレートマッチングを効率的に実装する投票アルゴリズム（アルゴリズム6.6を参照）に一般化できる。
+<!--
 It is not necessary that the curves to be detected by the Hough transform
 be described by a parametric equation. The Hough transform can be gener-
 alized into a voting algorithm (see Algorithm 6.6) that implements template
 matching efficiently.
+-->
+</p><p>
+アルゴリズム6.6は、効率的なアクセスのために、物体境界の形状をテーブルに符号化する。物体上の1点が参照点として選択される。定義により、画像内の参照点の位置は物体の位置となる。画像上の勾配点(x, y)における勾配角θの各点について、参照点の可能な位置は次のように与えられる。
 
+<!--
 Algorithm 6.6 encodes the shape of the object boundary in a table for
 efficient access. One point on the object is chosen as the reference point. By
 definition, the location of the reference point in the image is the location of
 the object. For each image gradient point at (x, y) with gradient angle 6, the
 possible locations of the reference point are given by
+-->
+\[
+\begin{align}
+a &= x-r(\theta)\cos\left(\alpha(\theta)\right) \tag{6.71}\\
+\\
+b &= y-r(\theta)\sin\left(\alpha(\theta)\right)  \tag{6.72}
+\end{align}
+\]
 
-a = x—7(8)cos(a(6)) (6.71)
-b = y—r(9)sin(a(6)). (6.72)
-6.9. FOURIER DESCRIPTORS 223
+</p><p>
+<strong>アルゴリズム 6.6 一般化ハフ変換</strong>
+<div class="styleBullet">
+<ul>
+<li>1. 物体上の参照点を選択する。
+</li><br><li>2. 物体の境界に沿った勾配角度 \(\theta_i\) を計算する。
 
-Algorithm 6.6 Generalized Hough Transform
+</li><br><li>3. 各勾配点 6; について、参照点からの距離 \(r_i\) と角度 \(\alpha_i\) を保存する。</li>
+</ul>
+</div>
+<!--
+<strong>Algorithm 6.6 Generalized Hough Transform</strong>
 1. Pick a reference point on the object.
-2. Compute the gradient angles 6; along the object boundary.
+2. Compute the gradient angles \(\theta_i\) along the object boundary.
 
-8, For each gradient point 6;, store the distance r; and angle a; from the
+3. For each gradient point 6;, store the distance \(r_i\) and angle \(\alpha_i\) from the
 reference point,
-
+-->
+</p><p>
+それぞれの参照点の位置は増加します。パラメータ空間におけるピークの位置が、物体の位置の推定値となる。この手法をスケールや回転の変化に適応させるように一般化することは容易ではない。
+<!--
 Each possible reference point location is incremented. The location of the
 peak in the parameter space is the estimate for the location of the object.
 It is not easy to generalize this technique to incorporate changes in scale or
 rotation.
-
-6.9 Fourier Descriptors
-
+-->
+</p>
+<h2>6.9 フーリエ記述子</h2>
+<p>
+閉じた輪郭線上の位置は周期関数であるため、フーリエ級数を用いて輪郭線を近似することができる。輪郭線近似の分解能は、フーリエ級数の項数によって決まる。
+<!--
 Since the position along a closed contour is a periodic function, Fourier series
 may be used to approximate the contour. The resolution of the contour
 approximation is determined by the number of terms in the Fourier series.
-
+-->
+</p><p>
+物体の境界が座標列\(\mathbf u(n) = [x(n), y(n)],\; for\; n = 0,1,2,..., N-1\)で表されるとする。各座標ペアは複素数として表すことができ、
+<!--
 Suppose that the boundary of an object is expressed as a sequence of
-coordinates u(n) = [z(n), y(n)}], for n = 0,1,2,..., N — 1. We can represent
+coordinates \(\mathbf u(n) = [x(n), y(n)],\; for\; n = 0,1,2,..., N-1\). We can represent
 each coordinate pair as a complex number so that
-
-u(n) = a(n) + J u(r) (6.73)
-
-for n = 0,1,2,...,N —1. In other words, the x axis is treated as the real
-axis, and the y axis is treated as the imaginary axis of a serics of complex
+-->
+\[
+u(n) = x(n) +jy(n) \tag{6.73}
+\]
+\(n = 0,1,2,...,N-1\) の場合。言い換えれば、\(x\) 軸は実軸として扱われ、\(y\) 軸は複素数列の虚軸として扱われる。閉境界の場合、この列は周期 \(N\) で周期的であり、境界は1次元で表現されることに注意。
+<!--
+for \(n = 0,1,2,...,N-1\). In other words, the \(x\) axis is treated as the real
+axis, and the \(y\) axis is treated as the imaginary axis of a serics of complex
 uumbers. Note that for a closed boundary, this sequence is periodic with
-period N and that now the boundary is represented in one dimension.
-
+period \(N\) and that now the boundary is represented in one dimension.
+-->
+</p><p>
+1次元シーケンス \(u(n)\) の離散フーリエ変換（DFT）表現は次のように定義される。
+<!--
 The diserete Fouricr transform (DFT) representation of a one-dimensional
 sequence u(n) is defined as
-
-uln) = > a(k)eoF*, O<n<N-1 (6.74)
-k=0
-1 N=1 —j3ekn r
-
-alk) = 53 Dou(nje*™, O<k<N-1. (6.75)
-224 CHAPTER 6. CONTOURS
-
-The complex coefficients a(k) are called the Fourier descriptors of the bound-
+-->
+\[
+\begin{align}
+u(n) &= \sum_{k=0}^{N-1} a(k)e^{\frac{j2\pi kn}{N}}　0\leq n\leq N-1 \tag{6.74} \\
+\\
+a(k) &= \frac{1}{N}\sum_{n=0}^{N-1} u(n)e^{\frac{-j2\pi kn}{N}}　0\leq k\leq N-1 \tag{6.75}
+\end{align}
+\]
+複素係数\(a(k)\)は境界のフーリエ記述子と呼ばれる。
+<!--
+The complex coefficients \(a(k)\) are called the Fourier descriptors of the bound-
 ary.
-
+-->
+</p><p>
+フーリエ記述子は閉曲線の簡潔な表現である。しかし、級数の低次の項のみを用いた低解像度近似は、さらに簡潔な表現として用いることができる。最初の\(M\)個の係数のみを用いる場合（\(k > M-1\)に対して\(a(k) = 0\)と設定することと等価）、\(u(n)\)の以下の近似が得られる。
+<!--
 Fourier descriptors are compact representations for closed contours. How-
 ever, low-resolution approximations, using only the low-order terms in the
 series, can be used as an even more compact representation. If only the first
-M coefficients are used, which is equivalent to setting a(k) = 0 fork > M—1,
-the following approximation to u(n)} is obtained:
+\(M\) coefficients are used, which is equivalent to setting \(a(k) = 0\) for \(k > M-1\),
+the following approximation to \(u(n)\) is obtained:
+-->
+\[
+\hat{u}(n)=\sum_{k=0}^{M-1} a(k) e^{\frac{j2\pi kn}{N}}　0\leq n\leq N-1 \tag{6.76}
+\]
 
-M-1 omhn
-Bln) = SD ake ¥", O<n<N-1 (6.76)
-k=0
+境界の各要素 \(u(n)\) を得るのに \(M\) 個の項しか使用されないが、\(n\) は依然として \(0\) から \(N-1\) の範囲にある。言い換えれば、近似境界には同じ数の点が含まれるが、各点を再構築する際に使用される項の数はそれほど多くない。
 
-Although only M terms are used to obtain cach component of the boundary
-u{n), n still ranges from 0 to N — 1. In other words, the same number of
+<!--
+Although only \(M\) terms are used to obtain cach component of the boundary
+\(u(n)\), \(n\) still ranges from \(0\) to \(N-1\). In other words, the same number of
 points are in the approximated boundary, but not as many terms are used
 in reconstructing each point.
-
+-->
+</p><p>
+境界の単純な幾何学的変換（並進、回転、拡大縮小など）は、境界のフーリエ記述子（演習6.18参照）の単純な演算と関連している。そのため、境界マッチングにおいてフーリエ記述子を用いることは魅力的である。しかし、フーリエ記述子は遮蔽された形状を扱う際に問題を抱えている。他の境界表現を用いて同様の記述子を得る方法は他にもある。
+<!--
 Simple geometric transformations of a boundary, such as translation, ro-
 tation, and scale, are related to simple operations of the boundary’s Fourier
 descriptors (sec Exercise 6.18). This makes the use of Fourier descriptors at-
 tractive for boundary matching. However, Fourier descriptors do have prob-
 lems with occluded shapes. There are other methods for obtaining similar
 descriptors, using other boundary representations.
-
-Further Reading
-
-The Hough transform is an efficient method for detecting lines and other
-features from imperfect edges. A discussion of generalized Hough transform
-methods is given in the paper by Ballard [18]. Generalizing the Hough trans-
-form to detect arbitrary shapes, Stockman used Hough transform techniques
-for pose clustering in 2-D and 3-D problems in object recognition and localiza-
-tion [228]. Asada and Brady [45, 10] present a rigorous approach to contour
-and region descriptors. Work on measuring the deviation from roundness of
-a circle has been reported by Van-Ban and Lee [243].
-
-The hop-along algorithm approximates a coutour by a sequence of line
-segments but works on short subsequences of edges and is given in [193].
-Curve fitting using line segments (polylines) and circular arcs is adapted
-
-Lon atl Uh sda A
-
-orientation was published by Tehrani, Weymouth, and Schunck [231).
-EXERCISES 225
-
-Algorithms for fitting a circle to three points have been developed in
-computer graphics [204].
-
-A discussion of robust regression using M-estimators is provided in nu-
-merical recipes [197, pp. 558-565]. Another robust regression technique is
-least-median-squares regression {207|. The influence function approach was
-pioneered by Huber [115, 97]. For resampling algorithms including random
-sample consensus, see [38, 80]. Least-median squares regression is discussed
-by Rousseeuw and Leroy [207], and another good source for information on
-computer-intensive methods in regression is a review article by Efron [71].
-
-The Fourier descriptor technique has becn applied to medical imagery by
-Staib and Duncan [227].
-
-Exercises
-
-6.1 What is a contour? How is it related to a region’? What does an open
-coutour represent?
-
-6.2 List the criterion you will consider in selecting a contour representation.
-Discuss the implications of these factors for object recognition.
-
-6.3 What is the difference between interpolation and approximation meth-
-ods? Which one is better?
-
-6.4 To implement rotation by n x 22.5°, one may use a chain code using 16
-directions. How can you implement such a code? Why is the 8-direction
-chain code almost always used?
-
-6.5 Theo Dg distance with respect to the origin is defined as max(z, y). Us-
-ing this measure, find the signature of the contour in Figure 6.15 by
-plotting the Dg distance as a function of pixel number. In addition, find
-the 8-dircetion chain code and difference code measured in the coun-
-terclockwise direction for the following object. Note that the starting
-point is an empty circle as opposed to a solid dot.
-
-6.6 What are the criteria for choosing the threshold for normalized max-
-imum error? (Hint: Consider the variance in the estimate of edge
-location.)
-226
-
-6.7
-
-6.8
-
-6.9
-
-6.10
-
-6.11
-
-6.12
-
-Ould
-
-CHAPTER 6. CONTOURS
-
-y
-
-8
-
-7 oe |
-
-6 = r
-
-5 ° ‘
-
-4 —e
-
-gl-t o4 4
-
-9 r’
-
-1 a o +
-
-—o— ~x
-
-(0,0) 123 45 678
-
-Figure 6.15: Contour for Exercise 6.5,
-
-Consider the method for estimating the location of a corner presented
-in Section 6.8.2. What is the valuc of ab. — ag6, when the lines are
-at right angles? What is the value when the lines mect at an angle @?
-This is the formula to use for sctting the threshold for corner detection.
-
-Consider the method for estimating the location of a corner presented
-in Section 6.8.2. Assume that the error in the x and y coordinates of
-the edge locations has a normal distribution with variance c?. What is
-the error distribution for the location of the corner? How is the error
-affected by the angle of the corner?
-
-Why is the W-s representation considered a continuous chain code?
-What are its most attractive features?
-
-How can you compare two objects using their U-s representations?
-
-Discuss different error measures that you can use in approximation.
-What is the role of an error measure in an approximation technique?
-
-What is a conic section? How many types of conic sections are possible?
-Are there mathematical conditions that define types of a conic section?
-
-YUL OpLinc YU G1 er Wo YY a0 biG pi ii
-
-ered more powerful representations than polylines and conic sections?
-EXERCISES 227
-
-6.14 Discuss the difference betwcen geometric equivalence and parametric
-equivalence.
-
-6.15 Why is the least-squares measure used in total regression? List its
-advantages and disadvantages.
-
-6.16 How docs robust regression overcome limitations of the total regres-
-sion’? Why is robust regression not very popular in approximation?
-
-6.17 What are the strengths and weaknesses of Fourier descriptors for ap-
-proximating aud representing closed contours?
-
-6.18 Several geometric transformations of object boundaries are related to
-simple operations on the Fourier descriptors as follows:
-
-Transformation Boundary Fourier descriptor
-Identity u(n) alk)
-
-Translation ti(n) = u(n) + uo a(k) = afk) + upd(k)
-Scaling or zooming = ti(n) = au(n) a(k) = aa(k)
-
-Starting point fi(n) = uln — 10) a(k) = a(kje
-Rotation a(n) = ul(njei a(k) = a(k)e%%
-
-Reflection a(n) = u(nei? +24 G(k) = a*(—k)e?? + 2y6(k)
-
-Consider a simple square object with coordinates of boundary points
-A= (0,0), B = (0,1),C = (1,1), and D = (1,0).
-
-a. Find its Fourier descriptors when the starting point is A and the
-boundary is traversed in the order A, B,C, D.
-
-b. Find the descriptors when the object translates such that A is at
-(2,3).
-
-c. Find the descriptors of the translated object if the length of the
-sides of the square is changed to 2.
-
-d. Find the descriptors of the translated and scaled object if the
-starting point is changed to B.
-228 CHAPTER 6. CONTOURS
-
-6.19 The Fourier descriptors of a simple square object with coordinates
-of boundary points given by A = (—0.5,—0.5),B = (—0.5,0.5),C =
-(0.5, 0.5), D = (0.5, —0.5) are given by
-
-a(0) = a(1) = a(2) = 0 (6.77)
-a(3) = -0.5—j 0.5. (6.78)
-
-Starting with this data and using the properties of the Fourier descrip-
-tors given in the above problem, find the Fourier descriptors for the
-
-object given by P = (0,1),Q = (-1,2), R = (0,3), S = (1,2).
-6.20 What is the Hough transform? Is it related to robust regression? How?
-
-6.21 Can you extend the Hough transform to detect an arbitrary shape?
-How will you develop a Hough transform that detects an object in its
-rotated and scaled versions?
-
-6.22 Find the Hough transform of the lines cnclosing an object with vertices
-A = (2,0),B = (2,2), and C = (0,2). Sketch the modified object
-enclosed by lines obtained by replacing (p,@) of the object lines by
-(p*, 8+ 90°). Calculate the arca of the modified object.
-
-6.23 The two-dimensional Hough transform for line detection can be gener-
-alized to the 3-D case to detect planes. The Hough domain parameters
-are then specified by the three variables p, 6, and ¢, where the angles
-are measured as shown in Figure 6.16. Consider a unit cube whose di-
-agonal corners, A and G, are located at (1,1, 1) and (2, 2,2) as shown.
-Find the Hough transform of the plane passing through the vertices
-C”,H, and F.
-
-Computer Projects
-
-6.1 Develop an algorithm to find the chain code of a given curve. Can you
-determine corners using chain code? If so, implement this algorithm
-and test it on several images.
-
-6.2 Develop a program to start with an image and find the slope—arclength
-
-plot of the largest rect tn the nage. Levent ilk dled I, I. Waco
-and circular segments.
-COMPUTER PROJECTS 229
-
-6.3
-
-6.4
-
-6.5
-
-6.6
-
-6.7
-
-Figure 6.16: Diagram for Exercise 6.23.
-
-Develop an algorithm to accept given points and provide a cubic spline.
-Apply this algorithm to the output of an edge detector.
-
-Develop a Hough transform algorithm to detect straight lines in images.
-Use this to approximate an image by finding all lines that are above a
-fixed size, say 20 points.
-
-Four binary objects are shown in Figure 6.17(a). Scaled versions of
-the same objects are shown in Figure 6.17(b), and scaled and rotated
-versions are shown in Figure 6.17(c). Consider various contour repre-
-sentation methods and comment on their suitability for matching scaled
-and scaled-rotated versions of objects with their corresponding original
-images. Implement one of the methods as a computer program.
-
-Create a synthetic image of a rectangle with uniform intensity against a
-uniform background. Compute the edges using any edge detector from
-Chapter 5. Fit polylines to the edges. How close are the vertices to the
-true corner locations? Is the error consistently biased in one direction?
-
-Create a synthetic image of a rectangle with rounded corners, modeled
-as quarter circles. Use edge detection and polyline fitting, and then re-
-place runs of polylines with circular arcs using the algorithm presented
-230 CHAPTER 6. CONTOURS
-
-(c)
-
-Figure 6.17: Binary objects used in Computer Project 6.5. (a) Four reference
-binary objects. (b) Scaled versions of the objects in (a). (c) Scaled and
-
-rotated versions of the objects in (a).
-COMPUTER PROJECTS 231
-
-6.8
-
-6.9
-
-6.10
-
-6.11
-
-6.12
-
-in this chapter for fitting circular arcs. Measure the crror in the com-
-puted end points of the circles. Are the errors symmetrical, or are the
-corners unevenly distorted so that the rectangle appears skewed?
-
-Experiment with the corner fitting algorithm described in Section 6.8.2.
-Create a synthetic image of a rectangle, adding noise from a normal
-distribution and scattered edges to simulate false positives in edge de-
-tection. Plot the error in the corner estimates versus the noise level.
-
-Implement least-median-squares regression for fitting a line to a list of
-edge points. Add false edges to the list to simulate grouping crrors.
-Plot the maximum distance of the estimated line from the truce lme
-versus the number of false edges.
-
-Consider an object that is symmetrical about a vertical axis. Suppose
-that two lists of edge fragments along the left and right sides of the
-object are available. Adapt the algorithm for fitting cubic splines to
-edges to enforce the symmetry constraint. Gcneralize the algorithm so
-that the axis can be at any oricntation.
-
-Suppose that the list of edge points along the contour of an object is
-available and that the object is symmetric about some axis. Process the
-edge list into a sequence of linc segments and circular arcs. Develop an
-algorithm for matching line scgments and circular arcs to detect that
-the object is symmetric and estimate the axis of symmetry. After the
-axis of symmetry has been detcrmined, this information can be used
-to improve the estimates of the line segments and circular arcs. De-
-velop an algorithm for refining the contour representation. Experiment
-with an iterative algorithm that detccts the axis of symmetry, uses
-this information to refine the contour representation, and then uses the
-improved contour representation to refine the axis estimate, repeating
-these steps until the axis and contour representations converge.
-
-Consider an image of two rectangles. The task is to measure the gap
-between the two rectangles. The facing sides of the two rectangles are
-parallel, so the width of the gap is constant along its length. Explore
-different algorithms for measuring the gap.
-232
-
-6.13
-
-CHAPTER 6. CONTOURS
-
-a. Develop a formula for the average distance between two line seg-
-ments that are nearly parallel and approximately of the same
-length. (Hint: Represent each line segment in parametric form
-on the interval (0, 1].)
-
-b. Compute the polyline representation for the rectangles, Are the
-line segments that bound the gap skewed due to poor estimates
-of the corner locations? Use the formula from part a to estimate
-the width of the gap.
-
-c. Modify the algorithm to use improved techniques for estimating
-the locations of the corners. Measure the improvement in the
-estimate of the gap width.
-
-d. Implement least-median-squares regression and repeat the mea-
-surements of the gap width, comparing the results using least
-median squares regression with the previous techniques.
-
-e. Repeat the experiment using lines estimated with the Hough trans-
-form.
-
-Synthetic noise, including noise from a normal distribution and scat-
-tered edges that model false positives in edge detection, can be added
-to the image to test the accuracy of gap measurement at various noise
-levels. Prepare a plot of the crror in gap width measurement versus
-the noise level for each of the techniques.
-
-Consider a line of text on a printed page that has been scanned into
-the computer. The task is to fit a line through the bascline of the text.
-The estimated baseline can guide algorithms for charactcr recognition.
-Note that the baseline is not necessarily horizontal since the page may
-not be exactly vertical when scanned.
-
-a. Suppose that edge detection has reduced the line of text to a
-list of edge points. Compare line fitting with least-squares, least-
-median-squares, and the Hough transform.
-
-b. Consider multiple lines of text, reduced to multiple cdge lists. As-
-sume that the baseline separation is constant and that the base-
-
-he are veal ll. ae sandra | let & more accu-
-
-rate algorithin for determining the baselines.
-COMPUTER PROJECTS 233
-
-c. Suppose that the baselines are parallel, but the baseline separation
-varies between lines. How does this change the algorithm?
-
-6.14 Consider a list of edge points that form a circle. The task is to esti-
-mate the position and radius of the circle. Use nonlinear regression to
-fit a cirele to the edge points, assuming that the radius of the circle
-is known. Modify the algorithm to determine both the position and
-radius. Finally, modify the algorithm to determine both the position
-and radius of the circle, but include a penalty term for variation in the
-estimated radius from a nominal valuc. -->
+-->
 </p>
     </body>
 </html>
