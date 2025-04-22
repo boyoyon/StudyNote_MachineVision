@@ -75,7 +75,7 @@
     </style>
     </head>
     <body>
-        <h1><center>10章 色(準備中)</center></h1>
+        <h1><center>10章 色</center></h1>
 <p>
 本書の別の箇所で述べたように、光には強度(輝度)があり、画像にはグレー値がある。しかし、光は波長のスペクトルで構成されており、画像にはチャンネルと呼ばれる複数の波長のサンプルが含まれることがある。知覚される色は、以下の3つの要素によって決まる。
 <div class="styleBullet">
@@ -135,8 +135,8 @@ sensors could respond to energy in the infrared, ultraviolet, or X-ray por-
 tions of the electromagnetic spectrum, for example. This is the reason why
 the radiometric quantities used in the equations presented in Chapter 9 on
 shading were based on energy rather than visible light. -->
-
 </p><p>
+撮像システムは、各センサーごとに1つずつ、チャンネルと呼ばれる複数の画像を作成する。カラー画像では通常、可視スペクトル（RGB空間）の赤、緑、青の領域をカバーする分光感度を持つ3つのセンサーがある。撮像システムで捉えられる、またはディスプレイで再現できるすべての色の範囲は、RGB空間の正八分円内にある。正規化されたRGB値を使用するのが一般的であるため、すべての色の集合は、RGB空間において(0, 0, 0)と(1, 1, 1)を頂点とする単位立方体となる。
 <!-- The imaging system will create multiple images, called channels, one for
 each sensor in the imaging system. In color imagery, there are usually three
 sensors with spectral responses that cover the red, green, and blue regions
@@ -145,446 +145,322 @@ can be captured by an imaging system or reproduced on a display is in the
 positive octant of the RGB space. It is common to work with normalized
 RGB values, so the set of all possible colors is a unit cube with corners at
 (0, 0,0) and (1,1, 1) in the RGB space.
-
-10.2 Color Terminology
-
-The physics of how colored light is reflected from surfaces is based on spec-
-tral distributions, but a practical imaging system, including the human vision
-system, works with a small number of samples from the distribution of wave-
-lengths. The infinite-dimensional vector space of spectral distributions is
-reduced to a finite-dimensional vector space of samples (Equation 10.2). For
-any finite set of spectral response functions {R,(),k = 1,...,p}, there is
-an infinite number of spectral distributions that are filtered to the same set
-278 CHAPTER 10. COLOR
-
-of response values {p,,k = 1,...,p}. For example, the spectral distribution
-at wavelengths where R,(A) = 0 can be varied arbitrarily without affecting
-the value of the response. For color imagery, the perceptually meaningful
-differences in spectral distributions are captured by the quantities of hue,
-saturation, and brightness (luminance).
-
-Hue is determined by the dominant wavelength in the spectral distribu-
-tion of light wavelengths. The spectral hues are single wavelengths in the
-visible spectrum. For example, the primary colors (red, green, and blue) are
-located at specific positions in the visible spectrum. Nonspectral hues are
-mixtures of wavelengths; for example; purple is a mixture of red and blue.
-
-Saturation is the magnitude of the hue relative to the other wavelengths:
-
-gat (10.3)
-82
-where s, is the amount of light at the dominant wavelength and s2 is the
-amount of light at all wavelengths. For example, a deep red color has satura-
-tion close to 1; but as other wavelengths are added, the color approaches the
-distribution of white light, the proportion of red and hence the saturation is
-reduced, and the color is desaturated to a shade of pink.
-
-The brightness is a measure of the overall amount of light that passes
-through all of the spectral response functions. You can think of the brightness
-as a scale factor that is applied to the entire spectral distribution. The
-hue is the location of the peak in the spectral distribution (or the location
-and relative magnitudes of two peaks in the case of nonspectral hues such
-as purple). The saturation is the height of the peak relative to the entire
-spectral distribution. The location and shape of the peak in the spectral
-distribution (hue and saturation) determine the characteristics of light that
-are normally thought of as color.
-
-10.3. Color Perception
-
-The CIE (Commission Internationale de l’Eclairage—the International Com-
-mission on Illumination) color system is based on three spectral curves for
-the CIE primaries. Colors are specified by the relative amounts of the CIE
-primaries X, Y, and Z that match a given color. The Y value is lumi-
-nance, a measure of the amount of light at all wavelengths that corresponds
-10.3. COLOR PERCEPTION 279
-
-to perceived brightness. The chromaticity values depend on the dominant
-wavelength and saturation, independent of the luminance:
-
-xX
-
-* = X4YS2 (10.4)
-Y
-
-Y" XEY4Z (20.5)
-Z
-
-7 = aS 008)
-
-Since « + y +z = 1, only two chromaticity values are needed. Colors are
-conveniently represented by the ¢ and y chromaticities and luminance Y.
-
-The x and y chromaticities represent the components of color independent
-of luminance. Two colors, such as dark green and light green, may appear
-different but may actually have the same relative distribution of wavelengths.
-If the spectral distribution is scaled by a constant, the color may appear
-lighter or darker, but the shape of the spectral distribution is not changed
-and the hue (dominant wavelength) and saturation (relative amount of the
-dominant wavelength) are not changed.
-
-The perceptually significant chromaticities lie inside the arch-shaped re-
-gion in Figure 10.1. White light is at the center of the chromaticity diagram.
-Draw a line from white at position W, through a particular color P, to a
-position H along the outer boundary of the chromaticity diagram. The hue
-is H, and the saturation S is the length of WP relative to WH. You can
-think of a color as an additive mixture of white light and pure spectral hue,
-
-P=SH+(1-S)W, (10.7)
-
-where the saturation $ controls the relative proportions of white tint and
-hue.
-
-Hue, saturation, and Juminance are encoded in the RGB color values in
-a way that makes it hard to use hue and saturation in vision algorithms. For
-example, it may be easy to identify objects with different hues by setting
-thresholds on the range of hues (spectral wavelengths) that bracket the ob-
-jects. But where are these thresholds in the RGB cube, what is the shape of
-
-1 Technically, the chromaticities are calculated from luminance and the other CIE val-
-ues, but the chromaticities are normalized and used in a way that describes color inde-
-pendent of, or at least conceptually separate from, luminance [a1].
-280 CHAPTER 10. COLOR
-
-520
-
-Spectral energy locus
-340 (wavelength in nanometers)
-
-y axis
-
-Point of
-equal energy
-
-iO 4. 1 1 1 1 1 1
-Oo 1 2 3 4 5 6 7F 8
-
-x axis
-
-Figure 10.1: The diagram of CIE chromaticities. White light is at the center
-of the arch-shaped region. Fully saturated colors are along the outer edge
-of the diagram. The hue for a specific color is obtained by extending a line
-from white to the edge of the diagram passing through the color.
-
-the surfaces that divide the color regions corresponding to different objects,
-and what is the formula for applying the thresholds to the RGB values in
-an image? These questions are hard to answer in the RGB color space but.
-become simple when the RGB values are converted to hue, saturation, and
-luminance.
-
-10.4 Color Processing
-
-The HSI color model represents a color in terms of hue, saturation, and
-intensity. The intensity is the gray level of the pixels in a monochrome (black
-and white) image, such as the images used as examples for the machine vision
-algorithms presented in other chapters of this book.
-10.4. COLOR PROCESSING 281
-
-Blue
-Magenta Cyan
-RY
-H
-Red Green
-Yellow
-
-Figure 10.2: The HS] triangle represents the combinations of colors that can
-be represented by a linear combination of the primary colors at the corners
-of the triangle.
-
-The HSI color triangle, shown in Figure 10.2, represents the combinations
-of hue and saturation that can be represented by combinations of the RGB
-primaries. The corners of the triangle correspond to the maximum amounts
-of each primary color (red, green, and blue) available from the imaging sys-
-tem. Achromatic (colorless) pixels are shades of gray, corresponding to equal
-amounts of the primary colors, and lie at the center of the HSI triangle.
-
-The HSI solid adds the dimension of image intensity (Figure 10.3), with
-black at the bottom of the solid and white at the top. Shades of gray run
-along the axis of the solid. Each cross section of the solid is an HSI triangle
-with the proportions of the primary colors constrained to produce a particular
-intensity value. The HSI solid narrows to a point at the top and bottom
-because white and black can only be represented by unique combinations of
-the RGB primaries.
-
-The RGB components of an image can be converted to the HSI color
-representation. Assume that the RGB components have been normalized to
-1. This allows the derivation to be done in device-independent units. The
-intensity is the sum of the RGB values normalized to 1:
-
-I= s(R+G+B). (10.8)
-282 CHAPTER 10. COLOR
-
-ro]
-
-o
-
-a
-Intensity
-
-Figure 10.3: The HSI solid bounds the range of colors that can be represented
-by combinations of the primary colors.
-
-The derivation of the formulas for hue and saturation begins by removing
-intensity from the RGB values:
-
-R
-
-"= ByGsB (10.9)
-G
-
-9" RTGTB (10.10)
-B
-
-- REGGE (10.11)
-
-The locus of all possible values for r, g, and } is the triangle in the positive
-octant of rgb-space with corners (1,0,0), (0,1,0), and (0,0,1). Let point P
-on the triangle denote the position in rgb-space of some color. Let p = (r, g, 6)
-be the vector to point P on the triangle, w be the vector to the point at the
-center of the triangle that represents white, and p, be the vector to the corner
-of the triangle that corresponds to fully saturated red. The hue is the angle
-from vector p, — w to vector p — w, counterclockwise around the triangle as
-seen from the side of the triangle away from the origin. This is the right-hand
-rule with the thumb aligned along the normal to the triangle pointing away
-10.4. COLOR PROCESSING 283
-
-from the origin. The cosine of the hue is
-(pw) - (p, = w)
-lp — w|[Ilp- — wl]
-
-Vector w to the center of the triangle is (1/3,1/3,1/3). The magnitude of
-vector p — w is
-
-IIp — wl) = yr — 1/3)? + (g — 1/3)? + (8 = 1/3)?. (10.13)
-Since p, = (1,0, 0) and w = (1/3, 1/3, 1/3), the magnitude of p, — w is
-
-\Ipr — wll = o/2/3. (10.14)
-
-The dot product between p — w and p, — w is
-
-ar = 1/3) - (g - 1/3) - @-1/3)
-3 .
-Divide this dot product by ||p — w|| and |p, — w||, substitute Equations 10.9
-
-through 10.11, and simplify to get the formula for computing the hue from
-the R, G, and B values:
-
-cos H = (10.12)
-
-(p—w)- (p, — w) = (10.15)
-
-cos H = 2k = GOB . (10.16)
-2\/(R- GY + (R- B)(G- B)
-
-In order to have the value for hue in the range from 0 to 360 degrees, it is
-necessary to subtract H from 360 when B/I > G/I. Even though this deriva-
-tion began with normalized RGB values, the formula in Equation 10.16 will
-work with RGB values on any scale since the scale factors in the numerator
-and denominator will cancel.
-
-The saturation is the distance on the triangle in the rgb-space from white
-relative to the distance from white to the fully saturated color with the same
-hue. Fully saturated colors are on the edges of the triangle. Let d, be the
-distance from point W at the center of the triangle to point P for some color,
-and let d, be the distance to point Q at the edge of the triangle along the line
-from W to @ passing through P. The saturation is the ratio of the distances,
-d,/d,. The formula for the saturation is
-
-3 .
-
-The derivation is provided by Gonzalez and Woods [91].
-284 CHAPTER 10. COLOR
-
-Equations 10.16, 10.17, and 10.18 can be used to convert the RGB image
-from a color image acquisition system to the HSI representation for further
-processing. The hue is not defined when the saturation is zero, that is, for
-any colors along the axis of the HSI solid. Saturation is not defined when
-the intensity J = 0.
-
-The transformation from RGB to HSI is used to convert color images
-into a form appropriate for machine vision. Gray-level algorithms can be
-performed on the J component of the HSI representation. Segmentation can
-be performed on the H component to discriminate between objects with
-different hues. However, hue is not reliable for discrimination when the sat-
-uration is low, so the segmentation algorithms must be modified to leave
-pixels with low saturation unassigned. Region growing algorithms can use
-thresholds on hue to form core regions, leaving unassigned any pixels that
-have low saturation or are outside the threshold boundaries. The algorithms
-for growing core regions by assigning neighboring pixels are unchanged.
-
-More general algorithms can divide the HSI solid into regions using thresh-
-olds on hue, saturation, and intensity. These thresholds are easier to formu-
-late and apply in the HSI representation than in the RGB representation
-provided by the imaging system.
-
-10.5 Color Constancy
-
-The color content of outdoor light varies considerably, yet people are able
-to correctly perceive the colors of objects in the scene independent, for the
-most part, from the color of the ambient illumination. This phenomenon is
-called color constancy.
-
-Ambient light has the spectral distribution H(A), which describes the
-power at each wavelength. Assume that scene surfaces are opaque, so that
-scene coordinates can be specified using the coordinates of the corresponding
-point (z, y) on the image plane. The fraction of light at wavelength A reflected
-from the surface point at location (2, y) is S(z,y,A). The light arriving at
-each location in the image is determined by the spectral distribution of the
-ambient light that falls on the scene surfaces and the fraction of light reflected
-at various wavelengths:
-
-S(a,y, A)E(A). (10.18)
-10.5. COLOR CONSTANCY 285
-
-Assume that there are p sensors at each image location (x,y) and each
-sensor has a different spectral response function. The spectral response of
-sensor k is R,(A). Each sensor at location (z, y) samples a different distribu-
-tion of light:
-
-pe(z,y) = ft Ra(A)S(2, y, YE(A) ad. (10.19)
-
-The information about the color (spectral reflectance) of a point on the scene
-surface corresponding to location (z,y) in the image plane is encoded in
-the values p1(2,y), P2(#,y),---,Pp(2, y) obtained from the p sensors at that
-location. Color constancy is the problem of recovering the spectral reflectance
-S(x,y, A) of scene surfaces from the sensor responses {p;(z, y),k =1,...,p}
-independent of the spectral distribution of the ambient light E().
-
-In principle, the color constancy problem can be formulated as an inverse
-problem in a finite-dimensional linear space and solved using matrix methods.
-Assume that the surface reflectance is a linear combination of basis functions,
-
-S(z,y, A) = Sola, y)Si(A). (10.20)
-i=l
-
-The number n of basis functions is the number of degrees of freedom in the
-surface reflectance. Assume that the basis functions $;(A) are known. Linear
-models with as few as three basis functions may be sufficient to account for
-typical surface reflectances.
-
-Represent the ambient light by a linear model with m degrees of freedom:
-
-B(\) = 32 6 Bi(0). (10.21)
-
-Assume that the spectral distributions Z,(A) of the basis lights are known.
-Only three or four basis lights are needed to model natural daylight under a
-wide variety of weather conditions and times of day.
-
-The color determination problem can be represented in matrix notation.
-Combine the m values of €; into a column vector €, and combine the n values
-of o; into a column vector o. Substitute the column vectors into Equation
-10.19 to yield a matrix model for each pixel in the image:
-
-p=A.o. (10.22)
-286 CHAPTER 10. COLOR
-
-The lighting matrix A, is a p by n matrix, and the ¢j entry is
-f * RA(A)S)(A)B(A) dd. (10.23)
-
-If the ambient illumination is known, then the lighting matrix A, is known.
-If the number of sensors equals the number of degrees of freedom in the
-surface reflectivity, p =n, then the lighting matrix can be inverted to obtain
-the coefficients of the surface spectral reflectivity o at each point in the
-image which characterizes the color of the corresponding points on the scene
-surfaces.
-
-If the ambient illumination is not known, then solving the problem will
-require more sensors than the number of degrees of freedom in surface re-
-flectance. Since it was assumed that the ambient illumination is the same
-for all points in the scene, the information at multiple scene points can be
-used to estimate the ambient illumination. Suppose p = n+1. From s differ-
-ent spatial locations, sp = s(n +1) different measurements can be obtained.
-There are sn unknowns for the surface reflectance and m unknowns for the
-ambient. light spectrum. It is necessary to sample at s > m locations to have
-more data than unknowns. This analysis suggests that the problem of color
-constancy can be solved without knowing the ambient illumination if there
-are n + 1 sensors.
-
-The matrix A, maps an n-dimensional surface space into an (n + 1)-
-dimensional sensor space. For example, if p = 3 and n = 2, then the sub-
-space is a plane in a three-dimensional space. This suggests the following
-two-step algorithm for determining surface reflectivity independent of scene
-illumination:
-
-1. Determine the plane (subspace) spanning the data points in the sensor
-space to recover the ambient light vector e.
-
-2. Determine the lighting matrix A, from the ambient light vector « and
-invert it to obtain the surface reflectivity vector oc.
-
-10.6 Discussion
-
-This chapter has barely scratched the surface of the topic of color vision.
-The intention has been to introduce the minimum number of formulas and
-FURTHER READING 287
-
-concepts required to generalize the material on shading (Chapter 9) to cover
-colored light, reflectance, and imaging. The brief presentation on color ter-
-minology and the CIE color model provides an introduction to color the-
-ory sufficient to allow the reader to pursue the topic in other sources. The
-presentation of the HSI color model gives the reader some glimpse of the
-transformations that can be applied to multispectral imagery to allow the
-segmentation and edge detection algorithms covered elsewhere in this text
-to be used. The key concept in segmenting multispectral imagery is to find
-a transformation that reduces the dimensionality (number of channels) and
-makes it easy to use thresholds to determine core regions.
-
-Image processing algorithms have been developed for correcting differ-
-ences in the color capabilities of various displays and printers, and realistic
-graphics renderings require approximations to the spectral distributions for
-ambient illumination and spectral reflectivity. There are many image en-
-hancement techniques that use color to highlight interesting features in im-
-ages. Since this text is not concerned with the generation, reproduction, or
-enhancement of images, many interesting topics in color imagery have been
-omitted; the reader is encouraged to pursue the topic in the many excellent
-texts on image processing and computer graphics that are widely available.
-
-Further Reading
-
-There are many sources in computer graphics that provide very readable
-accounts of color theory [81]. Image processing texts provide extensive cov-
-erage of color representations, including the CMY color model used in color
-printing and the YIQ'color model used in broadcast television. The HSI
-color model and the derivation of the formulas for converting RGB values
-to HSI values was adapted from Gonzalez and Woods [91]. The material on
-color constancy was adapted from the work of Maloney and Wandell (see
-
-Wandell (246)]).
-
-Exercises
-
-10.1 What determines color at a point in an image? What is the role of the
-illumination in color images?
-288 CHAPTER 10. COLOR
-
-10.2 How is a color image represented in an image? Why are the particular
-frequencies of the electromagnetic spectrum selected for use in color
-vision? Name the basic colors used in defining characteristics at a
-point.
-
-10.3 Define Hue, Saturation, and Brightness. Which of these is important
-in characterizing color at a point? Why?
-
-10.4 How can you compute HSI characteristics from RGB characteristics?
-Why would you want to convert data in one representation to the other?
-
-10.5 In machine vision, which color representation is more suitable? Justify
-your answer.
-
-10.6 Design an edge detector that will detect prominent edges in a color
-image. Apply this to edge images. How will you combine the outputs
-of the different channels to provide you with edges in color images?
-
-10.7 What are subtractive and additive models of color? Which one will be
-more suitable for displays, photos, and printers? Why?
-
-10.8 What is the HSI solid? Where and how is it used in color processing?
-
-10.9 Define and explain color constancy. Can machine vision systems display
-color constancey?
-
-10.10 Why has color not been used much in machine vision? Do you think
-its application will increase? If so, what will be the leading application?
 -->
 </p>
+<h2>10.2 色の用語</h2>
+<p>
+色光が表面から反射される物理的性質はスペクトル分布に基づいているが、人間の視覚システムを含む実際の画像化システムは、波長分布からの少数のサンプルで動作する。スペクトル分布の無限次元ベクトル空間は、サンプルの有限次元ベクトル空間に縮小される (式 10.2)。スペクトル応答関数の有限集合 \(\{R_k(\lambda),k = 1,...,p\}\) に対して、同じ応答値集合 \(\{\rho_k,\;k = 1,...,p\}\) にフィルター処理されるスペクトル分布は無限にある。たとえば、\(R_k(\lambda) = 0\) となる波長でのスペクトル分布は、応答値に影響を与えずに任意に変更できる。カラー画像の場合、スペクトル分布の知覚的に意味のある違いは、色相、彩度、明度 (輝度) の量によって捉えられる。
+<!--
+The physics of how colored light is reflected from surfaces is based on spectral distributions, but a practical imaging system, including the human vision system, works with a small number of samples from the distribution of wave-lengths. The infinite-dimensional vector space of spectral distributions is reduced to a finite-dimensional vector space of samples (Equation 10.2). For any finite set of spectral response functions \(\{R_k(\lambda),k = 1,...,p\}\), there is an infinite number of spectral distributions that are filtered to the same set of response values \(\{\rho_kp,k = 1,...,p\}\). For example, the spectral distribution at wavelengths where R,(A) = 0 can be varied arbitrarily without affecting the value of the response. For color imagery, the perceptually meaningful differences in spectral distributions are captured by the quantities of hue, saturation, and brightness (luminance).
+-->
+</p>
+<p>  
+色相(Hue)は、光の波長のスペクトル分布における主波長によって決まる。(分光された)スペクトル状の色相は、可視スペクトル内の単一の波長である。たとえば、原色 (赤、緑、青) は、可視スペクトルの特定の位置にある。(分光されていない)非スペクトル状の色相は波長の混合である。たとえば、紫は赤と青の混合である。
+<!--
+Hue is determined by the dominant wavelength in the spectral distribu-  tion of light wavelengths. The spectral hues are single wavelengths in the  visible spectrum. For example, the primary colors (red, green, and blue) are  located at specific positions in the visible spectrum. Nonspectral hues are  mixtures of wavelengths; for example; purple is a mixture of red and blue.    Saturation is the magnitude of the hue relative to the other wavelengths: 
+-->
+</p>
+<p>
+彩度(Saturation)は他の波長に対する色相の大きさである:
+\[
+S=\frac{s_1}{s_2} \tag{10.3}
+\]
+ここで、\(s_1\)  は主波長での光の量、\(s_2\)  はすべての波長での光の量である。たとえば、濃い赤色の彩度は 1 に近くなるが、他の波長が追加されるにつれて、色は白色光の分布に近づき、赤の割合、つまり彩度が減り、色はピンク色の色合いまで彩度が低下する。
+<!--
+where s, is the amount of light at the dominant wavelength and s2 is the  amount of light at all wavelengths. For example, a deep red color has satura-  tion close to 1; but as other wavelengths are added, the color approaches the  distribution of white light, the proportion of red and hence the saturation is  reduced, and the color is desaturated to a shade of pink.  
+-->
+</p>
+<p>  
+明度は、すべてのスペクトル応答関数を通過する光の総量を表す尺度である。明度は、スペクトル分布全体に適用されるスケール係数と考えることができる。色相は、スペクトル分布におけるピークの位置（紫などの非スペクトル色相の場合は、2つのピークの位置と相対的な大きさ）である。彩度は、スペクトル分布全体に対するピークの高さである。スペクトル分布（色相と彩度）におけるピークの位置と形状は、通常色として考えられる光の特性を決定する。
+<!--
+The brightness is a measure of the overall amount of light that passes  through all of the spectral response functions. You can think of the brightness  as a scale factor that is applied to the entire spectral distribution. The  hue is the location of the peak in the spectral distribution (or the location  and relative magnitudes of two peaks in the case of nonspectral hues such  as purple). The saturation is the height of the peak relative to the entire  spectral distribution. The location and shape of the peak in the spectral  distribution (hue and saturation) determine the characteristics of light that  are normally thought of as color.  
+-->
+</p>
+
+  <h2>10.3. 色覚</h2>
+  
+<p>  
+CIE（国際照明委員会）表色系は、CIE原色の3つのスペクトル曲線に基づいている。色は、特定の色に対応するCIE原色 \(X、Y、Z\) の相対量によって規定される。\(Y\) 値は輝度で、知覚される明るさに対応する全波長における光量の尺度である。色度値は、主波長と彩度に依存し、輝度とは無関係である<sup>1</sup>。
+<!--
+The CIE (Commission Internationale de l’Eclairage—the International Com-  mission on Illumination) color system is based on three spectral curves for  the CIE primaries. Colors are specified by the relative amounts of the CIE  primaries \(X, Y\), and \(Z\) that match a given color. The Y value is lumi-  nance, a measure of the amount of light at all wavelengths that corresponds  to perceived brightness. The chromaticity values depend on the dominant  wavelength and saturation, independent of the luminance <sup>1</sup>
+-->
+\[
+\begin{align}
+x &= \frac{X}{X+Y+Z} \tag{10.4} \\
+\\
+y &= \frac{Y}{X+Y+Z} \tag{10.5} \\
+\\
+z &= \frac{Z}{X+Y+Z} \tag{10.6}
+\end{align}
+\]
+\(x + y + z = 1\) なので、必要な色度は2つだけである。色は便宜上、\(x\) と \(y\) の色度と輝度 \(Y\) で表される。
+<!--
+Since \(x + y +z = 1\), only two chromaticity values are needed. Colors are  conveniently represented by the \(x\) and \(y\) chromaticities and luminance Y.  
+-->
+</p>
+  <p class="margin-large">  <sup>1</sup>
+技術的には、色度は輝度と他のCIE値から計算されるが、色度は正規化され、輝度とは独立して、または少なくとも概念的には輝度とは切り離して色を記述する方法で使用される[a1]。
+<!--
+ Technically, the chromaticities are calculated from luminance and the other CIE val-  ues, but the chromaticities are normalized and used in a way that describes color inde-  pendent of, or at least conceptually separate from, luminance [a1].  
+-->
+</p>
+<p>
+\(x\) と \(y\) の色度は、輝度とは独立した色の成分を表す。例えば、濃い緑と薄い緑のような2つの色は、見た目は異なっていても、実際には波長の相対的な分布は同じである場合がある。スペクトル分布を定数でスケーリングすると、色は明るく見えたり暗く見えたりすることがあるが、スペクトル分布の形状は変化せず、色相（主波長）と彩度（主波長の相対的な量）も変化しない。
+<!--
+  The \(x\) and \(y\) chromaticities represent the components of color independent  of luminance. Two colors, such as dark green and light green, may appear  different but may actually have the same relative distribution of wavelengths.  If the spectral distribution is scaled by a constant, the color may appear  lighter or darker, but the shape of the spectral distribution is not changed  and the hue (dominant wavelength) and saturation (relative amount of the  dominant wavelength) are not changed.  
+-->
+</p>
+<p>  
+知覚的に重要な色度は、図10.1のアーチ状の領域内にある。白色光は色度図の中心にある。位置\(W\) の白色から特定の色 \(P\) を通り、色度図の外側の境界に沿って位置 \(H\) まで線を引く。色相は \(H\)、彩度 \(S\) は \(WP\) と \(WH\) の相対的な長さである。色は、白色光と純粋なスペクトル色相の加法混合と考えることができる。
+<!--
+The perceptually significant chromaticities lie inside the arch-shaped region in Figure 10.1. White light is at the center of the chromaticity diagram.  Draw a line from white at position \(W\), through a particular color \(P\), to a  position \(H\) along the outer boundary of the chromaticity diagram. The hue  is \(H\), and the saturation \(S\) is the length of \(WP\) relative to \(WH\). You can  think of a color as an additive mixture of white light and pure spectral hue,
+-->
+\[
+
+    P=SH+(1-S)W \tag{10.7}
+\]    
+ここで、彩度 \(S\) は白の色合いと色相の相対的な割合を制御する。
+<!--
+where the saturation \(S\) controls the relative proportions of white tint and  hue.  
+-->
+</p>
+
+<center><img src="images/fig10_1.png"></center>
+<p class="margin-large">    
+図10.1：CIE色度図。白色光はアーチ状の領域の中心に位置する。彩度の高い色は図の外側の縁に沿って配置される。特定の色の色相は、白色からその色を通る線を図の縁まで延長することで得られる。
+<!--
+Figure 10.1: The diagram of CIE chromaticities. White light is at the center  of the arch-shaped region. Fully saturated colors are along the outer edge  of the diagram. The hue for a specific color is obtained by extending a line  from white to the edge of the diagram passing through the color.    
+-->
+</p>
+
+
+<p>  
+色相、彩度、輝度はRGBカラー値にエンコードされているため、視覚アルゴリズムで色相と彩度を使用することは困難である。例えば、物体を囲む色相（スペクトル波長）の範囲に閾値を設定することで、異なる色相を持つ物体を識別するのは簡単かもしれない。しかし、これらの閾値はRGBキューブのどこにあるのか、異なる物体に対応する色領域を分割する面の形状はどのようなものか、そして画像内のRGB値に閾値を適用する式はどのようなものか？これらの疑問はRGBカラースペースでは答えるのが難しいが、RGB値を色相、彩度、輝度に変換すると簡単に答えられる。
+<!--
+Hue, saturation, and Juminance are encoded in the RGB color values in  a way that makes it hard to use hue and saturation in vision algorithms. For  example, it may be easy to identify objects with different hues by setting  thresholds on the range of hues (spectral wavelengths) that bracket the ob-  jects. But where are these thresholds in the RGB cube, what is the shape of  the surfaces that divide the color regions corresponding to different objects,  and what is the formula for applying the thresholds to the RGB values in  an image? These questions are hard to answer in the RGB color space but.  become simple when the RGB values are converted to hue, saturation, and  luminance.  
+-->
+</p>
+
+<h2>10.4 色処理</h2>
+
+<p>  
+HSIカラーモデルは、色相、彩度、明度を用いて色を表現する。明度は、本書の他の章で紹介されているマシンビジョンアルゴリズムの例として使用されている画像のような、モノクロ（白黒）画像におけるピクセルのグレーレベルである。
+<!--
+The HSI color model represents a color in terms of hue, saturation, and  intensity. The intensity is the gray level of the pixels in a monochrome (black  and white) image, such as the images used as examples for the machine vision  algorithms presented in other chapters of this book.    
+-->
+</p>
+<p>    
+図10.2に示すHSI色三角形は、RGB原色の組み合わせで表現できる色相と彩度の組み合わせを表している。三角形の頂点は、撮像システムで利用可能な各原色（赤、緑、青）の最大量に対応している。無彩色（無色）のピクセルは、各原色の等量に対応するグレーの階調であり、HSI三角形の中心に位置する。
+<!--
+The HSI color triangle, shown in Figure 10.2, represents the combinations  of hue and saturation that can be represented by combinations of the RGB  primaries. The corners of the triangle correspond to the maximum amounts  of each primary color (red, green, and blue) available from the imaging sys-  tem. Achromatic (colorless) pixels are shades of gray, corresponding to equal  amounts of the primary colors, and lie at the center of the HSI triangle.  
+-->
+</p>
+<center><img src="images/fig10_2.png"></center>
+<p class="margin-large">  
+図 10.2: HSI 三角形は、三角形の頂点にある原色の線形結合で表すことができる色の組み合わせを表している。
+<!--
+Figure 10.2: The HS] triangle represents the combinations of colors that can  be represented by a linear combination of the primary colors at the corners  of the triangle.  
+-->
+</p>
+<p>  
+HSI立体は画像の強度の次元を追加する（図10.3）。立体の下部は黒、上部は白である。灰色の陰影は立体の軸に沿って走っている。立体の各断面はHSI三角形で、原色の比率は特定の強度値を生成するように制限されている。HSI立体は上部と下部で点状に狭くなっている。これは、白と黒はRGB原色の一意の組み合わせでしか表現できないためである。
+<!--
+The HSI solid adds the dimension of image intensity (Figure 10.3), with  black at the bottom of the solid and white at the top. Shades of gray run  along the axis of the solid. Each cross section of the solid is an HSI triangle  with the proportions of the primary colors constrained to produce a particular  intensity value. The HSI solid narrows to a point at the top and bottom  because white and black can only be represented by unique combinations of  the RGB primaries.  
+-->
+</p>
+<center><img src="images/fig10_3.png"></center>
+<p class="margin-large">  
+図 10.3: HSI 立体は、原色の組み合わせで表現できる色の範囲を示している。
+<!--
+Figure 10.3: The HSI solid bounds the range of colors that can be represented  by combinations of the primary colors.  
+-->
+</p>
+<p>  
+画像のRGB成分はHSIカラー表現に変換できる。RGB成分が1に正規化されていると仮定する。これにより、デバイスに依存しない単位での導出が可能になる。輝度は、1に正規化されたRGB値の合計である。
+<!--
+The RGB components of an image can be converted to the HSI color  representation. Assume that the RGB components have been normalized to  1. This allows the derivation to be done in device-independent units. The  intensity is the sum of the RGB values normalized to 1: 
+-->
+\[
+I= \frac{1}{3}(R+G+B) \tag{10.8}
+\]
+</p>
+<p>    
+色相と彩度の式の導出は、RGB 値から強度を除去することから始まる。
+<!--
+The derivation of the formulas for hue and saturation begins by removing  intensity from the RGB values:
+-->
+\[
+\begin{align}
+r &= \frac{R}{R+G+B} \tag{10.9}\\
+\\
+g &= \frac{G}{R+G+B} \tag{10.10} \\
+\\
+b &= \frac{B}{R+G+B} \tag{10.11}
+\end{align}
+\]
+\(r, g, b\) のすべての可能な値の軌跡は、rgb 空間の正の八分円にある三角形で、その頂点は \((1,0,0))、(0,1,0)\)、\((0,0,1)\) である。三角形上の点 P が、rgb 空間におけるある色の位置を表す。\(p = (r, g, b)\) を三角形上の点 \(P\) へのベクトル、\(w\) を三角形の中心にある白を表す点へのベクトル、\(p_r\) を三角形の頂点で完全に飽和した赤へのベクトルとする。色相は、三角形の原点から離れた辺から見たときに、ベクトル \(p_r - w\) からベクトル \(p-w\) への角度で、三角形の周りを反時計回りに回した角度で​​す。これは右手の法則で、親指を三角形の法線に沿わせ、原点から遠ざかる方向に向ける。色相の余弦は
+<!--
+The locus of all possible values for \(r, g\), and \(b\) is the triangle in the positive  octant of rgb-space with corners \((1,0,0), (0,1,0)\), and \((0,0,1)\). Let point P  on the triangle denote the position in rgb-space of some color. Let \(p = (r, g, b)\)  be the vector to point \(P\) on the triangle, \(w\) be the vector to the point at the  center of the triangle that represents white, and \(p_r\) be the vector to the corner  of the triangle that corresponds to fully saturated red. The hue is the angle  from vector \(p_r - w\) to vector \(p-w\), counterclockwise around the triangle as  seen from the side of the triangle away from the origin. This is the right-hand  rule with the thumb aligned along the normal to the triangle pointing away    from the origin. The cosine of the hue is
+-->
+\[
+\cos H=\frac{(p-w)\cdot(p_r-w)}{||p-w||\,||p_r-w||} \tag{10.12}
+\]
+三角形の中心へのベクトル \(w\) は (1/3,1/3,1/3) である。ベクトル \(p-w\) の大きさは
+<!--
+Vector \(w\) to the center of the triangle is (1/3,1/3,1/3). The magnitude of  vector \(p-w\) is
+-->
+\[
+||p-w||=\sqrt{(r -1/3)^2+ (g-1/3)^2+ (b-1/3)^2} \tag{10.13}
+\]
+\(p_r= (1,0, 0)\) かつ \(w = (1/3, 1/3, 1/3)\) なので、\(p_r- w\) の大きさは
+<!--
+Since \(p_r= (1,0, 0)\) and \(w = (1/3, 1/3, 1/3)\), the magnitude of \(p_r- w\) is  
+-->
+\[
+||p_r-w||= \sqrt{2/3} \tag{10.14}
+\]
+\(p-w\)と\(p_r-w\) のドット積は
+<!--
+The dot product between \(p-w\) and \(p_r-w\) is
+-->
+\[
+(p-w)\cdot(p_r-w)=\frac{2(r-1/3)-(g-1/3)-(b-1/3)}{3} \tag{10.15}
+\]
+このドット積を \(||p-w||\) と \(||p_r-w||\) で割り、式 10.9 から 10.11 を代入して簡略化すると、\(R, G, B\) の値から色相を計算する式が得られる。
+<!--
+ Divide this dot product by \(||p-w||\) and \(||p_r-w||, substitute Equations 10.9    through 10.11, and simplify to get the formula for computing the hue from  the \(R, G\), and \(B\) values:
+-->
+\[
+    \cos H =\frac{2R-G-B}{2\sqrt{(R-G)^2+(R-B)(G-B)}} \tag{10.16}
+\]
+0度から360度の範囲で色相の値を得るには、\(B/I > G/I\)のときに360からHを引く必要がある。この導出は正規化されたRGB値から始まりましたが、分子と分母のスケール係数が打ち消されるため、式10.16の式は任意のスケールのRGB値に適用できる。
+<!--
+In order to have the value for hue in the range from 0 to 360 degrees, it is  necessary to subtract H from 360 when \(B/I > G/I\). Even though this deriva-  tion began with normalized RGB values, the formula in Equation 10.16 will  work with RGB values on any scale since the scale factors in the numerator  and denominator will cancel.    
+-->
+</p>
+<p>  
+彩度は、RGB空間における三角形上の白からの距離と、白から同じ色相の完全に飽和した色までの距離との相対関係である。完全に飽和した色は三角形の辺にある。三角形の中心にある点Wからある色の点Pまでの距離をdとする。また、\(W\)から\(Q\)までの距離（\(P\)を通る）に沿った三角形の辺にある点 \(Q\) までの距離を \(d\) とする。彩度はこれらの距離の比、\(d_p/d_q\) である。彩度の計算式は以下のとおり。
+<!--
+The saturation is the distance on the triangle in the rgb-space from white  relative to the distance from white to the fully saturated color with the same  hue. Fully saturated colors are on the edges of the triangle. Let d, be the  distance from point W at the center of the triangle to point P for some color,  and let d, be the distance to point Q at the edge of the triangle along the line  from \(W\) to \(Q\) passing through \(P\). The saturation is the ratio of the distances,  \(d_p/d_q\). The formula for the saturation is
+-->
+\[
+S=1-\frac{3}{R+G+B}\min(R,G,B) \tag{10.17}
+\]
+この導出はゴンザレスとウッズ[91]によって提供された。
+<!--
+The derivation is provided by Gonzalez and Woods [91].
+-->
+</p>
+<p>  
+式10.16、10.17、および10.18は、カラー画像取得システムからのRGB画像をHSI表現に変換し、さらに処理するために使用できる。彩度が0の場合、つまりHSI立体の軸に沿った任意の色の場合、色相は定義されない。また、明度 \(I=0\) の場合、彩度は定義されない。
+<!--
+Equations 10.16, 10.17, and 10.18 can be used to convert the RGB image  from a color image acquisition system to the HSI representation for further  processing. The hue is not defined when the saturation is zero, that is, for  any colors along the axis of the HSI solid. Saturation is not defined when  the intensity I= 0.  
+-->
+</p>
+<p>  
+RGBからHSIへの変換は、カラー画像をマシンビジョンに適した形式に変換するために使用される。HSI表現の \(I\) 成分に対しては、グレーレベルアルゴリズムを実行できる。\(H\) 成分に対しては、色相の異なる物体を区別するためにセグメンテーションを実行できる。ただし、彩度が​​低い場合、色相は識別に信頼性がないため、彩度の低いピクセルを割り当てないようにセグメンテーションアルゴリズムを変更する必要がある。領域拡張アルゴリズムは、色相のしきい値を使用してコア領域を形成し、彩度の低いピクセルやしきい値の境界外にあるピクセルを割り当てないようにすることができる。隣接するピクセルを割り当てることでコア領域を拡張するアルゴリズムは変更されていない。
+<!--
+The transformation from RGB to HSI is used to convert color images  into a form appropriate for machine vision. Gray-level algorithms can be  performed on the J component of the HSI representation. Segmentation can  be performed on the H component to discriminate between objects with  different hues. However, hue is not reliable for discrimination when the sat-  uration is low, so the segmentation algorithms must be modified to leave  pixels with low saturation unassigned. Region growing algorithms can use  thresholds on hue to form core regions, leaving unassigned any pixels that  have low saturation or are outside the threshold boundaries. The algorithms  for growing core regions by assigning neighboring pixels are unchanged.  </p>
+-->
+<p>  
+より一般的なアルゴリズムでは、色相、彩度、明度の閾値を用いてHSI立体を領域に分割することができる。これらの閾値は、画像処理システムが提供するRGB表現よりもHSI表現の方が定式化と適用が容易である。
+<!--
+More general algorithms can divide the HSI solid into regions using thresh-  olds on hue, saturation, and intensity. These thresholds are easier to formu-  late and apply in the HSI representation than in the RGB representation  provided by the imaging system.    
+-->
+</p>
+
+<h2>10.5 色の恒常性</h2>
+
+<p>  
+屋外光の色彩は大きく変化するが、人間は周囲の照明の色にほとんど左右されずに、周囲の物体の色を正しく認識することができる。この現象は色恒常性と呼ばれる。
+<!--
+The color content of outdoor light varies considerably, yet people are able  to correctly perceive the colors of objects in the scene independent, for the  most part, from the color of the ambient illumination. This phenomenon is  called color constancy.  </p>
+-->
+<p>  
+周囲光は、各波長における光強度を表すスペクトル分布 \E(\lambda)\) を持つ。シーンの表面は不透明であると仮定すると、シーン座標は画像平面上の対応する点 \((x, y)\) の座標を使用して指定できる。位置 \((x, y)\) にある表面点から反射される波長 \(\lambda\) の光の割合は \(S(x,y,\lambda)\) である。画像内の各位置に到達する光は、シーンの表面に当たる周囲光のスペクトル分布と、各波長で反射される光の割合によって決まる。
+<!--
+Ambient light has the spectral distribution \E(\lambda)\), which describes the  power at each wavelength. Assume that scene surfaces are opaque, so that  scene coordinates can be specified using the coordinates of the corresponding  point \((x, y)\) on the image plane. The fraction of light at wavelength \(\lambda\) reflected  from the surface point at location \((x, y)\) is \(S(x,y,\lambda)\). The light arriving at  each location in the image is determined by the spectral distribution of the  ambient light that falls on the scene surfaces and the fraction of light reflected  at various wavelengths:    
+-->
+\[
+S(x,y,\lambda)E(\lambda) \tag{10.18}
+\]
+
+</p>
+
+<p>  
+各画像位置 \((x,y)\) に \(p\) 個のセンサーがあり、各センサーが異なる分光応答関数を持つと仮定する。センサー \(k\) の分光応答は \(R_k(\lambda)\) である。位置 \((x, y)\) にある各センサーは、異なる光分布をサンプリングする。
+<!--
+Assume that there are p sensors at each image location \((x,y)\) and each  sensor has a different spectral response function. The spectral response of  sensor \(k\) is \(R_k(\lambda)\). Each sensor at location \((x, y)\) samples a different distribu-  tion of light:
+-->
+\[
+\rho_k(x,y)=\int_0^\infty R_k(\lambda)S(x,y,\lambda)E(\lambda)d\lambda \tag{10.19}
+\]
+画像平面上の位置 \((x,y)\) に対応するシーン表面上の点の色（分光反射率）に関する情報は、その位置にある \(p\) 個のセンサーから得られる値 \(\rho_1(x,y), \rho_2(x,y),...,\rho_p(x, y)\) にエンコードされる。色恒常性は、周囲光 \(E(\lambda)\) の分光分布に依存しないセンサー応答 \(\{\rho_k(x, y), k =1,...,p\}\) からシーン表面の分光反射率 \(S(x,y,\lambda)\) を復元する問題である。
+<!--
+The information about the color (spectral reflectance) of a point on the scene  surface corresponding to location \((x,y)\) in the image plane is encoded in  the values \(\rho_1(x,y), \rho_2(x,y),...,\rho_p(x, y)\) obtained from the \(p\) sensors at that  location. Color constancy is the problem of recovering the spectral reflectance  \(S(x,y,\lambda)\) of scene surfaces from the sensor responses \(\{\rho_k(x, y), k =1,...,p\}\)  independent of the spectral distribution of the ambient light \(E(\lambda)\).  
+-->
+</p>
+<p>  
+原理的には、色恒常性問題は有限次元線形空間における逆問題として定式化され、行列法を用いて解くことができる。表面反射率は基底関数の線形結合であると仮定する。
+<!--
+In principle, the color constancy problem can be formulated as an inverse  problem in a finite-dimensional linear space and solved using matrix methods.  Assume that the surface reflectance is a linear combination of basis functions,
+-->
+\[
+S(x,y,\lambda) = \sum_{i=1}^n \sigma_i(x,y)S_i(\lambda) \tag{10.20}
+\]
+基底関数の数 \(n\) は、表面反射率の自由度の数である。
+基底関数 \(S_i(\lambda)\) が既知であると仮定する。3つの基底関数を持つ線形モデルでも、典型的な表面反射率を説明できる場合がある。
+<!--
+The number \(n\) of basis functions is the number of degrees of freedom in the  surface reflectance. Assume that the basis functions \(S_i(\lambda)\) are known. Linear  models with as few as three basis functions may be sufficient to account for  typical surface reflectances.  
+-->
+</p>
+<p>  
+周囲光を m 自由度の線形モデルで表す。
+<!--
+Represent the ambient light by a linear model with m degrees of freedom:
+-->
+\[
+E(\lambda)=\sum_{j=1}^m \epsilon_j E_j(\lambda) \tag{10.21}
+\]
+基底光のスペクトル分布 \(E_j(\lambda)\) が既知であると仮定する。様々な気象条件や時間帯における自然光をモデル化するには、3つまたは4つの基底光のみが必要である。
+<!--
+Assume that the spectral distributions \(E_j(\lambda)\) of the basis lights are known.  Only three or four basis lights are needed to model natural daylight under a  wide variety of weather conditions and times of day.  
+-->
+</p>
+<p>  
+色決定問題は行列表記で表すことができる。\(\epsilon_j\) の \(m\) 値を列ベクトル \(\epsilon\) に結合し、\(\sigma_i\) の \(n\) 値を列ベクトル \(\sigma\) に結合する。これらの列ベクトルを式 10.19 に代入すると、画像内の各ピクセルの行列モデルが得られる。
+<!--
+The color determination problem can be represented in matrix notation.  Combine the \(m\) values of \(\epsilon_j\) into a column vector \(\epsilon\), and combine the \(n\) values  of \(\sigma_i\) into a column vector \(\sigma\). Substitute the column vectors into Equation  10.19 to yield a matrix model for each pixel in the image: 
+-->
+\[
+\rho=\Lambda_\epsilon \sigma \tag{10.22}
+\]
+照明行列\(\Lambda_\epsilon\)は\(p\)行\(n\)列の行列であり、\(ij\)要素は
+<!--
+The lighting matrix \(\Lambda_\epsilon\) is a \(p\) by \(n\) matrix, and the \(ij\) entry is
+-->
+\[
+\int_0^\infty R_i(\lambda)S_j(\lambda)E(\lambda)d\lambda \tag{10.23}
+\]
+</p>
+<p>  
+周囲光が既知であれば、照明行列 \(\Lambda_\epsilon\) も既知である。センサー数が表面反射率の自由度数 \(p =n\) と等しい場合、照明行列を逆行列化すると、画像内の各点における表面分光反射率 \(\sigma\) の係数が得られ、これがシーン表面上の対応する点の色を特徴づける。
+<!--
+If the ambient illumination is known, then the lighting matrix \(|Lambda_\epsilon\) is known.  If the number of sensors equals the number of degrees of freedom in the  surface reflectivity, \(p =n\), then the lighting matrix can be inverted to obtain  the coefficients of the surface spectral reflectivity \(\sigma\) at each point in the  image which characterizes the color of the corresponding points on the scene  surfaces.  
+-->
+</p>
+
+<p>  周囲光が不明な場合、問題を解決するには、表面反射率の自由度の数よりも多くのセンサーが必要になる。周囲光はシーン内のすべてのポイントで同じであると仮定されているため、複数のシーンポイントの情報を使用して周囲光が推定される。\(p = n+1\) と仮定する。\(s\)個の異なる空間位置から、\(sp = s(n +1)\) の異なる測定値を取得できる。表面反射率には \(sn\) 個の未知数があり、周囲光スペクトルには \(m\) 個の未知数がある。未知数よりも多くのデータを取得するには、\(s > m\) の場所でサンプリングする必要がある。この分析は、\(n + 1\) 個のセンサーがあれば、周囲光がわからなくても色恒常性の問題を解決できることを示唆している。  
+<!--
+If the ambient illumination is not known, then solving the problem will require more sensors than the number of degrees of freedom in surface reflectance. Since it was assumed that the ambient illumination is the same for all points in the scene, the information at multiple scene points can be used to estimate the ambient illumination. Suppose p = n+1. From s different spatial locations, sp = s(n +1) different measurements can be obtained. There are sn unknowns for the surface reflectance and m unknowns for the ambient. light spectrum. It is necessary to sample at s > m locations to have more data than unknowns. This analysis suggests that the problem of color constancy can be solved without knowing the ambient illumination if there are n + 1 sensors.
+-->
+</p>
+<p>  行列 \(\Lambda_\epsilon\) は、n 次元表面空間を (n + 1) 次元センサー空間に写像する。例えば、p = 3 かつ n = 2 の場合、部分空間は 3 次元空間内の平面である。これは、シーン照明に依存しない表面反射率を決定するための次の 2 段階アルゴリズムを示唆している。  <div class="styleBullet">  <ul>  <li>1. センサー空間内のデータ点を張る平面（部分空間）を決定し、周囲光ベクトル \(\epsilon\) を復元する。    <li><br><li>2. 周囲光ベクトル \(\epsilon\) から照明行列 \(\Lambda_\epsilon\) を決定し、これを逆行列化して表面反射率ベクトル \(\sigma\) を取得する。</li>
+  </ul>
+  </div>
+  <!--  The matrix \(\Lambda_\epsilon\) maps an n-dimensional surface space into an (n + 1)-  dimensional sensor space. For example, if p = 3 and n = 2, then the sub-  space is a plane in a three-dimensional space. This suggests the following  two-step algorithm for determining surface reflectivity independent of scene  illumination:    1. Determine the plane (subspace) spanning the data points in the sensor  space to recover the ambient light vector \(\epsilon\).    2. Determine the lighting matrix \(Gamma_\epsilon\) from the ambient light vector \(\epsilon\) and  invert it to obtain the surface reflectivity vector \(\sigma\).  -->  </p>
+  <h2>10.6 考察</h2>
+  <p>  本章では、色覚というテーマのほんの表面をなぞったに過ぎない。  第9章で説明した陰影に関する内容を一般化し、色光、反射率、結像を網羅するために必要な最小限の数式と概念を紹介することを意図した。色彩用語とCIE色モデルの簡単な説明は、読者が他の文献でこのテーマを追求するのに十分な色彩理論の入門書となっている。HSI色モデルの説明は、本書の他の箇所で説明されているセグメンテーションおよびエッジ検出アルゴリズムを使用できるようにするために、マルチスペクトル画像に適用できる変換について読者に概要を示。マルチスペクトル画像をセグメンテーションする際の重要な概念は、次元数（チャンネル数）を削減し、閾値を用いてコア領域を容易に特定できるような変換を見つけることである。  <!--  This chapter has barely scratched the surface of the topic of color vision.  The intention has been to introduce the minimum number of formulas and  concepts required to generalize the material on shading (Chapter 9) to cover  colored light, reflectance, and imaging. The brief presentation on color ter-  minology and the CIE color model provides an introduction to color the-  ory sufficient to allow the reader to pursue the topic in other sources. The  presentation of the HSI color model gives the reader some glimpse of the  transformations that can be applied to multispectral imagery to allow the  segmentation and edge detection algorithms covered elsewhere in this text  to be used. The key concept in segmenting multispectral imagery is to find  a transformation that reduces the dimensionality (number of channels) and  makes it easy to use thresholds to determine core regions.  -->  </p>
+<p>  画像処理アルゴリズムは、様々なディスプレイやプリンタの色再現性の違いを補正するために開発されており、写実的なグラフィックスレンダリングには、周囲光と分光反射率の分光分布への近似値が必要である。画像中の興味深い特徴を色彩を用いて強調する画像強調技術は数多く存在する。本書は画像の生成、再現、強調については扱っていないため、カラー画像に関する多くの興味深いトピックは省略されている。読者には、広く入手可能な画像処理やコンピュータグラフィックスに関する優れたテキストでこれらのトピックについてさらに詳しく調べることを勧める。  <!--  Image processing algorithms have been developed for correcting differ-  ences in the color capabilities of various displays and printers, and realistic  graphics renderings require approximations to the spectral distributions for  ambient illumination and spectral reflectivity. There are many image en-  hancement techniques that use color to highlight interesting features in im-  ages. Since this text is not concerned with the generation, reproduction, or  enhancement of images, many interesting topics in color imagery have been  omitted; the reader is encouraged to pursue the topic in the many excellent  texts on image processing and computer graphics that are widely available.  -->  </p>
     </body>
 </html>
