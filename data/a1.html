@@ -53,11 +53,11 @@
     </style>
     <style>
         .styleBullet { 
-            text-indent: -30px; /* 最初の行の字下げを逆方向に */
+            text-indent: -20px; /* 最初の行の字下げを逆方向に */
             margin-left: 30px; /* 2行目以降の字下げを調整 */
             ul {
                   list-style-type: none; /* 箇条書き記号を非表示 */
-                  padding-left: 50px; /* 全体の左余白 */
+                  padding-left: 0px; /* 全体の左余白 */
             }
             li {
             }
@@ -75,7 +75,7 @@
     </style>
     </head>
     <body>
-        <h1>付録A<br>数学の概念(準備中)</h1>
+        <h1>付録A<br>数学の概念</h1>
 <p>
 本書で使用されている数学的概念の一部を、この付録にまとめている。セクションA.1では、マシンビジョンで一般的に役立つ幾何学の公式をいくつか紹介し、セクションA.2では線形空間を扱い、セクションA.3では、正則化を用いて不良設定問題を解く際に用いられる変分計算について説明する。
 <!-- Some of the mathematical concepts used in this book are summarized in this appendix. Section A.1 includes some formulas for geometry that are generally useful in machine vision, Section A.2 covers linear spaces, and Section A.3 describes the variational calculus which is used in solving ill-posed problems through regularization. -->
@@ -121,289 +121,495 @@ hand sweep from \(\mathbf v_1\) to \(\matgbf v_2\). The implicit equation for th
 \[
 \mathbf n\cdot (\mathbf p - \mathbf p_0) = 0  \tag{A.5}
 \]
-
+ここで、\(\mathbf p_0\) は平面上の点であり、平面を原点からオフセットさせることができます。法線ベクトル \(\mathbf n = (a,b,c)\) の場合、平面方程式は次のように書き表されます。
+<!--
 where \(\mathbf p_0\) is a point in the plane and allows the plane to be offset from the
 origin. If the normal vector \(\mathbf n = (a,b,c)\), then the plane equation can be
 written as
+-->
 \[
 ax + by + cz+d=0 \tag{A.6}
 \]
-where \(d = \\mathbf n\cdot\mathbf p_0\) accounts for the displacement of the plane from the origin.
+ここで、\(d = \mathbf n\cdot\mathbf p_0\) は平面の原点からの変位を表します。
+<!--
+where \(d = \mathbf n\cdot\mathbf p_0\) accounts for the displacement of the plane from the origin.
+-->
 </p><p>
-The parametric form of a surface, such as a plane, is an equation of the
-form p(u,v) = (a(u, v), y(u, v), 2(u, v)). The parametric equation for a plane
-is derived by noting that the origin in the (u,v) domain maps to a point
-Po = (2, Yo, Zo) on the plane, the u-axis in the domain maps to a vector vy
-in the plane, and the v-axis in the domain maps to a vector v2 in the plane.
+平面などの面の媒介変数形式は、\(\mathbf p(u,v) = (x(u, v), y(u, v), z(u, v))\) という形式の方程式です。平面の媒介変数方程式は、\((u,v)\) 領域の原点が平面上の点
+\(\mathbf p_0 = (x_0, y_0, z_0)\) に写像され、領域内の \(\mathbf u\) 軸が平面上のベクトル \(\mathbf v_1\) に写像され、領域内の \(\mathbf v\) 軸が平面上のベクトル \(\mathbf v_2\) に写像されることに注目して導かれます。
+媒介変数方程式は、
+<!--
+　The parametric form of a surface, such as a plane, is an equation of the
+form \(\mathbf p(u,v) = (x(u, v), y(u, v), z(u, v))\). The parametric equation for a plane
+is derived by noting that the origin in the \((u,v)\) domain maps to a point
+ \(\mathbf p_0 = (x_0, y_0, z_0)\) on the plane, the \(\mathbf u\)-axis in the domain maps to a vector \(\mathbf v_1\) 
+in the plane, and the \(\mathbf v\)-axis in the domain maps to a vector  \(\mathbf v_2\) in the plane.
 The parametric equation is
-
-p(u,v) =A ( e ) + Po (A.7)
-
+-->
+\[
+\mathbf p(u,v) =A
+\begin{pmatrix}
+u \\
 v
-
-where the columus of the 3 x 2 matrix A are the vectors v; and vo.
-494 APPENDIX A. MATHEMATICAL CONCEPTS
-
-A.2 Linear Algebra
-
+\end{pmatrix}
++\mathbf p_0 \tag{A.7}
+\]
+ここで、3 x 2 行列 A の列はベクトル \(\mathbf v_1\) と \(\mathbf v_2\) です。
+<!--
+where the columus of the 3 x 2 matrix A are the vectors \(\mathbf v_1\)  and \(\mathbf v_2\).
+-->
+</p>
+<h2>A.2 線形代数</h2>
+<!--
+<h2>A.2 Linear Algebra</h2>
+-->
+<p>
+線形空間の概念は、物理システムがどのように振る舞うべきかについてのいくつかの共通の仮定に基づいています。科学と工学における線形空間の力は、単純な数学モデルと現実の物理システムとの間のこの対応関係に由来します。
+<!--
 The notion of a lincar space is based on some common assumptions about how
 physical systems should behave. The power of linear spaces in science and
-engineering comes from this correspondence between simple mathematical
+engineering comes from this correspondence between simple mathematical models and real physical systems.
+-->
+</p><p>
+スカラー集合 \(F\) は、スカラーが以下の条件を満たすとき、体である。
+<div class="styleBullet">
+<ul>
+<li>1. \(x\) と \(y\) が \(F\) の元であるとき、\(x + y\) と \(xy\) は \(F\) の元である。
 
-models and real physical systems.
-A set of scalars F is a field if the scalars obcy the following conditions:
+</li><br><li>2. \(x\) が \(F\) の元であるとき、加法逆元 \(-x\) は \(F\) の元である。
 
-1. If 2 and y are elements of F, then x + y and zy are elements of F.
+</li><br><li>3. \(x\) が \(F\) の元であり、かつ \(x\neq 0\) であるとき、乗法逆元 \(x^{-1}\) は \(F\) の元である。
 
-2. If x is an element of F, then the additive inverse —z is an element of
-F.
+</li><br><li>4.加法単位元 0 と乗法単位元 1 はどちらも \(F\) の元です。</li>
+</ul>
+</div>
+<!--
+　A set of scalars F is a field if the scalars obcy the following conditions:
+<div class="styleBullet">
+<ul>
+<li>1. If \(x\) and \(y\) are elements of \(F\), then \(x + y\) and \(xy\) are elements of \(F\).
 
-3. If z is an element of F and « 4 0, then the multiplicative inverse x7!
+</li><br><li>2. If \(x\) is an element of \(F\), then the additive inverse \(-x\) is an element of \(F\).
 
-is an element of F’.
+</li><br><li>3. If \(x\) is an element of \(F\) and \(x\neq 0\), then the multiplicative inverse \(x^{-1}\) is an element of \(F\).
 
-4. The additive identity 0 and the multiplicative identity 1 are both ele-
-ments of F.
-
-For example, the set of real numbers with the usual forms of addition and
+</li><br><li>4. The additive identity 0 and the multiplicative identity 1 are both elements of \(F\).</li>
+</ul>
+</div>
+-->
+</p><p>
+たとえば、通常の加算と乗算の形式を持つ実数の集合は体です。
+<!--
+　For example, the set of real numbers with the usual forms of addition and
 multiplication is a field.
-
-The mathematical model that comes from combining scalars into vectors
+-->
+</p><p>
+スカラーをベクトルに組み合わせて空間上の点やその他多くのものを表現する数学モデルは、非常に強力なモデルです。ベクトル \(\mathbf u = (u_1, u_2,...,u_n)\) とベクトル \(\mathbf v = (v_1,v_2,...,v_n)\) とします。ベクトルの加算は、対応するベクトル要素のスカラー加算によって定義されます。
+<!--
+　The mathematical model that comes from combining scalars into vectors
 to represent points in space and many other things is a very powerful model.
-Let vector u = (uj, U2,...,Un) and vector v = (2, %2,...,%)- Addition of
+Let vector \(\mathbf u = (u_1, u_2,...,u_n)\) and vector \(\mathbf v = (v_1,v_2,...,v_n)\). Addition of
 vectors is defined by the scalar addition of the corresponding vector elements,
+-->
+\[
+\mathbf u+\mathbf v = (u_1+v_1, u_2+v_2,...,u_n+v_n) \tag{A.8}
+\]
+ベクトル \(\mathbf v\) とスカラー \(a\) の乗算は、ベクトルの個々の要素にスカラー乗算を適用することによって定義されます。
+<!--
+and multiplication of a vector \(\mathbf v\) by a scalar \(a\) is defined by applying scalar multiplication to the individual elements of the vector:
+-->
+\[
+a\mathbf v = (av_1, av_2,..., av_n)  \tag{A.9}
+\]
+</p><p>
+ベクトル空間は線形空間とも呼ばれ、次の条件に従います。
+<div class="styleBullet">
+<ul>
+<li>1. ベクトル \(\mathbf u\) と \(\mathbf v\) の加算は可換です
+\[
+\mathbf u+\mathbf v=\mathbf v+\mathbf u \tag{A.10}
+\]
 
-utv = (uy +1, Ua t02,..., Un + Un), {A.8)
+</li><br><li>2. ベクトル \(\mathbf u, \mathbf v\) と \(\mathbf w\) の加算は結合的です。
+\[
+(\mathbf u+\mathbf v)+\mathbf w=\mathbf u+(\mathbf v+\mathbf w) \tag{A.11}
+\]
 
-and multiplication of a vector v by a scalar a is defined by applying scalar
-multiplication to the individual elements of the vector:
+</li><br><li>3. ベクトル加算の単位元である 0 で示されるベクトルがあります。
+\[
+0+\mathbf u=\mathbf u+0=\mathbf u \tag{A.12}
+\]
 
-av = (avi, av2,..., An). (A.9)
+</li><br><li>4. すべてのベクトル \(\mathbf v\) に対して加法逆元があります。
+\[
+\mathbf v+(-\mathbf v) =0 \tag{A.13}
+\]
+</li><br><li>5. ベクトルの合計とスカラー c の乗算は、個々のベクトルに分配されます。
+\[
+c(\mathbf u+\mathbf v) = c\mathbf u+c\mathbf v \tag{A.14}
+\]
+
+</li><br><li>6. ベクトルとスカラーの和の乗算は、個々のスカラー乗算の和として書き直すことができます。
+\[
+(a+ b)\mathbf v = a\mathbf v + b\mathbf v \tag{A.15}
+\]
+
+</li><br><li>7. ベクトルとスカラーの積の乗算は結合則に従います。
+\[
+(ab)\mathbf v = a(b\mathbf v) \tag{A.16}
+\]
+
+</li><br><li>8. ベクトルとスカラーの乗算には単位元があります。
+\[
+1\mathbf u =\mathbf u \tag{A.17}
+\]
+</li>
+</ul>
+</div>
+<!--
 A vector space, also called a linear space, obeys the following conditions:
-1. Addition of vectors u and v is commutative
+<div class="styleBullet">
+<ul>
+<li>1. Addition of vectors \(\mathbf u\) and \(\mathbf v\) is commutative
+\[
+\mathbf u+\mathbf v=\mathbf v+\mathbf u  \tag{A.10}
+\]
 
-utvevt+u. (A.10)
+</li><br><li>2. Addition of vectors \(\mathbf u, \mathbf v\), and \(\mathbf w\) is associative:
+\[
+(\mathbf u+\mathbf v)+\mathbf w=\mathbf u+(\mathbf v+\mathbf w) \tag{A.11}
+\]
 
-2. Addition of vectors u, v, and w is associative:
+</li><br><li>3. There is a vector denotcd by 0 that is the identity element for vector addition:
+\[
+0+\mathbf u=\mathbf u+0=\mathbf u \tag{A.12}
+\]
 
-(utv)+w=u+(v+w). (A.11)
-A.2. LINEAR ALGEBRA 495
+</li><br><li>4, For every vector \(\mathbf v\) there is an additive inverse:
+\[
+\mathbf v+(-\mathbf v) =0  \tag{A.13}
+\]
+</li><br><li>5. Multiplication of a vector sum by a scalar c is distributed to the individual vectors:
+\[
+c(\mathbf u+\mathbf v) = c\mathbf u+c\mathbf v \tag{A.14}
+\]
 
-3. There is a vector denotcd by 0 that is the identity element for vector
-addition:
-0+u=u+0=u. (A.12)
+</li><br><li>6. Multiplication of a vector by a sum of scalars can be rewritten as the sum of the individual scalar multiplications:
+\[
+(a+ b)\mathbf v = a\mathbf v + b\mathbf v  \tag{A.15}
+\]
 
-4, For every vector v there is an additive inverse:
+</li><br><li>7. Multiplication of a vector by a product of scalars is associative:
+\[
+(ab)\mathbf v = a(b\mathbf v) \tag{A.16}
+\]
 
-v+(-v) =0. (A.13)
-
-5. Multiplication of a vector sum by a scalar c is distributed to the indi-
-vidual vectors:
-c(u+v) = cu-+cv. (A.14)
-
-6. Multiplication of a vector by a sum of scalars can be rewritten as the
-sum of the individual scalar multiplications:
-
-{a+ b)v = av +t bv. (A.15)
-
-7. Multiplication of a vector by a product of scalars is associative:
-
-(ab)v = a(bv). (A.16)
-
-8. There is an idcutity element for multiplication of a vector by a scalar:
-
-lu =u. (A.17)
-
-The linear space is fundamental to science and engineering because it is the
+</li><br><li>8. There is an identity element for multiplication of a vector by a scalar:
+\[
+1\mathbf u =\mathbf u \tag{A.17}
+\]
+</li>
+</ul>
+</div>
+-->
+</p><p>
+線形空間は、線形に振る舞うシステムの数学モデルであるため、科学と工学の基礎となります。線形空間とは、システムが単純な動作をし、理解しやすく設計に利用しやすいことを意味します。線形システム \(S\) は、重ね合わせと同次性の条件に従います。
+<!--
+　The linear space is fundamental to science and engineering because it is the
 mathematical model for systems that behave linearly, which means that the
 systcms behave in a simple way and are easy to understand and use in design.
-A linear system S$ obeys the conditions of superposition and homogeneity:
-
-Slx+y] = S[z] + Sy] (A.18)
-Sfaz] = aS{[x] (4.19)
-
+A linear system \(S\) obeys the conditions of superposition and homogeneity:
+-->
+\[
+\begin{align}
+S[x+y] &= S[x] + S[y] \tag{A.18} \\
+\\
+S[\alpha x] &= \alpha S[x] \tag{A.19}
+\end{align}
+\]
+これは、入力の合計に対する応答は個々の入力に対する応答の合計であり、定数倍された入力に対する応答はスケーリングされた応答であることを示しています。線形性条件は、物事がどのように振る舞うべきかという私たちの直感的な概念に対応しています。例えば、明るさが2倍の照明は、シーンの明るさも2倍に見えると予想されますし、2つの照明を使用した結果は、それぞれの照明を単独で使用した場合の結果の合計になるはずです。
+<!--
 which say that the response to a sum of inputs is the sum of the responses
 to the individual inputs, and the response to an input scaled by a constant
 is the scaled response. The linearity conditions correspond to our intuitive
 notions about how things should behave. For example, we expect that a light
 that is twice as bright would make a scene appear to be twice as bright, and
-496 APPENDIX A. MATHEMATICAL CONCEPTS
+
 
 we expect that the result of using two lights should be the sum of the results
 of using each light alone.
-A lincar combination is a sum of terms multiplied by constant coefficients:
-
-An clement v in an n-dimensional vector space V can be represented as a
+-->
+</p><p>
+線形結合は、定数係数を掛けた項の合計です。
+<!--
+　A linear combination is a sum of terms multiplied by constant coefficients:
+-->
+\[
+a_1b_1+a_2b_2+\cdots+a_nb_n \tag{A.20}
+\]
+n次元ベクトル空間\(V\)の要素\(\mathbf v\)は、n個の基底ベクトルの線形結合として表すことができます。
+<!--
+An clement \(\mathbf v\) in an n-dimensional vector space \(V\) can be represented as a
 linear combination of n basis vectors:
-
-V = aye) + ayeg +--+ + anen, (A.21)
-
-where e; is a basis vector and a, is the corresponding coefficient. A linear
+-->
+\[
+\mathbf v = a_1\mathbf e_1+ a_2\mathbf e_2+\cdots+a_n\mathbf e_n \tag{A.21}
+\]
+ここで、\(\mathbf e_i\) は基底ベクトル、\(a_i\) は対応する係数です。線型変換はベクトル空間間の写像であり、ベクトル空間内の要素を何らかの基底を基準として表す係数ベクトルに行列乗算を適用することで実装できます。自然基底とは、位置 \(i\) で \(e_i= 1\)、その他の位置では 0 となるベクトルの集合 \(\mathbf e_1,\mathbf e_2,\cdots,\mathbf e_n\) です。自然基底の係数は、通常の直交座標系におけるベクトルの座標です。
+<!--
+where \(\mathbf e_i\) is a basis vector and \(a_i\) is the corresponding coefficient. A linear
 transformation is a mapping between vector spaces and can be implemented
 by matrix multiplication applied to the vector of coefficients that represent
 an element in a vector space relative to some basis. The natural basis is the
-set of vectors €;,€2,...,@, with e; = 1 at position 7 and zero elsewhere. The
-coefficients for the natural basis are the coordinates of the vector in the usual
+set of vectors \(\mathbf e_1,\mathbf e_2,\cdots,\mathbf e_n\) with \(e_i= 1\) at position \(i\) and zero elsewhere. The coefficients for the natural basis are the coordinates of the vector in the usual
 Cartesian coordinate system.
-
-Functional analysis extends the notion of vector space to spaces of func-
+-->
+</p><p>
+関数解析はベクトル空間の概念を、基底関数の線形結合で表現できる関数の空間に拡張します。
+<!--
+　Functional analysis extends the notion of vector space to spaces of func-
 tions that can be represented by linear combinations of basis functions:
-
-F(t) = aby (t) + aghe(t) +--+ + aubp(t). (A.22)
-
+-->
+\[
+f(t) = a_1b_1(t)+ a_2b_2(t)+\cdots+a_nb_n(t) \tag{A.22}
+\]
+これは有限次元ベクトル空間です。なぜなら、基底には有限個の基底関数が含まれるからです。しかし、フーリエ変換のように、無限個の基底関数を必要とする無限次元の線型空間も存在します。有限次元ベクトル空間は統計学において重要な役割を果たしており、本書でもその重要性を論じています。なぜなら、モデルは線型回帰によって推定できる有限個のパラメータで表現できるからです。
+<!--
 This is a finite-dimensional vector space, since the basis contains a finite
 number of basis functions; but there arc linear spaces with an infinite number
 of dimensions that require an infinite number of basis functions, such as
 Fourier scrics. Fimite-dimensional vector spaces play an important role in
 statistics, and hence in this book, since a model can be represented by a
 finite number of parameters that can be estimated by linear regression.
-
-The scalar product supports the notions of the length of a vector and
+-->
+</p><p>
+スカラー積は、ベクトルの長さとベクトル間の角度の概念をサポートします。ベクトルの長さの2乗は、ベクトル自身とのスカラー積です。
+<!--
+　The scalar product supports the notions of the length of a vector and
 the angle between vectors. The square of the length of a vector is the scalar
 product of the vector with itself,
-
-IVP = vey, (A.23)
-
+-->
+\[
+||\mathbf v||^2=\mathbf v\cdot\mathbf v \tag{A.23}
+\]
+これは、ベクトルをある基底に対して表す係数の二乗の和です。2つのベクトル間の角度は、2つのベクトルのスカラー積であり、各ベクトルの長さで正規化されています。この角度は、2つのベクトルの差の尺度となります。
+<!--
 which is the sum of the squares of the cocfficients that represent the vector
 relative to some basis. The angle between two vectors is the scalar product of
 the two vectors, normalized by the length of each vector. The angle provides
 a measure of the difference between two vectors.
-A.2. LINEAR ALGEBRA 497
-
-Consider two vectors v, and v2 in the usual Euclidean three-dimensional
-space that are not collinear. Vectors v; and v2 define a plane in space. Any
-linear combination of v; and v2 is a vector in the plane,
-
-V = a1V1 + G2Ve, (A.24)
-
+-->
+</p><p>
+通常のユークリッド三次元空間において、共線でない二つのベクトル \(\mathbf v_1\) と \(\mathbf v_2\) を考える。ベクトル \(\mathbf v_1\) と \(\mathbf v_2\) は空間内の平面を定義する。\(\mathbf v_1\) と \(\mathbf v_2\) の任意の線型結合は平面内のベクトルである。
+<!--
+　Consider two vectors \(\mathbf v_1\) and \(\mathbf v_2\) in the usual Euclidean three-dimensional
+space that are not collinear. Vectors \(\mathbf v_1\) and \(\mathbf v_2\) define a plane in space. Any
+linear combination of \(\mathbf v_1\) and \(\mathbf v_2\) is a vector in the plane,
+-->
+\[
+\mathbf v = a_1\mathbf v_1+a_2\mathbf v_2 \tag{A.24}
+\]
+そして、平面上の任意の点には、ベクトルの一意の線形結合で到達できます。この平面は3次元ユークリッド空間の部分空間であり、ベクトルvyとv2は部分空間を張る基底を形成します。
+<!--
 and any point in the plane can be reached with a unique linear combination
 of the vectors. This plane is a subspace of the three-dimensional Euclidean
 space, and the vectors vy and v2 form a basis that spans the subspace.
-
-Now consider a third vector v3 that does not lie in the plane spanned
-by the vectors v, and v2 as defined in the preceding paragraph. The three
-vectors V1, V2, and v3 form a basis that spans the entire three-dimensional
-space. Consider some vector v that is not coplanar with v, and vo. Vector
-v can be written as a linear combination of two vectors,
-
-v= aU + aw, (A.25)
-
-such that vector u lies in the plane spanned by v; and v2, and vector w is
+-->
+</p><p>
+ここで、前段落で定義したベクトル \(\mathbf v_1\) と \(\mathbf v_2\) が張る平面上にない3つ目のベクトル \(\mathbf v_3\) を考えます。3つのベクトル \(\mathbf v_1, \mathbf v_2\)、\(\mathbf v_3\) は、3次元空間全体を覆う基底を形成します。\(\mathbf v_1\) と \(\mathbf v_2\) と同一平面上にないベクトル \(\mathbf v\) を考えます。ベクトル \(\mathbf v\) は、2つのベクトルの線形結合として表すことができます。
+<!--
+　Now consider a third vector \(\mathbf v_3\) that does not lie in the plane spanned
+by the vectors \(\mathbf v_1\) and \(\mathbf v_2\) as defined in the preceding paragraph. The three
+vectors \(\mathbf v_1, \mathbf v_2\), and \(\mathbf v_3\) form a basis that spans the entire three-dimensional
+space. Consider some vector \(\mathbf v\) that is not coplanar with \(\mathbf v_1\) and \(\mathbf v_2\). Vector
+\(\mathbf v\) can be written as a linear combination of two vectors,
+-->
+\[
+\mathbf v= a_1\mathbf u + a_2\mathbf w \tag{A.25}
+\]
+ベクトル \(\mathbf u\) は \(\mathbf v_1\) と \(\mathbf v_2\) が張る平面上にあり、ベクトル \(\mathbf w\) はその平面に垂直です。この概念は、最適化と回帰分析の応用において基本的な概念です。
+<!--
+such that vector \(\mathbf u\) lies in the plane spanned by \(\mathbf v_1\) and \(\mathbf v_2\), and vector \(\mathbf w\) is
 perpendicular to that plane. This concept is fundamental to applications in
 optimization and regression.
-
-The usual scalar product between vectors u and v can be generalized
+-->
+</p><p>
+ベクトル \(\mathbf u\) と \(\mathbf v\) 間の通常のスカラー積は、対応するベクトル要素間の各スカラー積に重みを付加した二次形式に一般化できます。
+<!--
+　The usual scalar product between vectors \(\mathbf u\) and \(\mathbf v\) can be generalized
 to a quadratic form that includes a weight on each scalar product between
 corresponding vector elements,
-
-QU VY + a9U9V2 So An Unvn, (A.26)
-
+-->
+\[
+a_1u_1v_1+a_2u_2v_2+\cdots+a_nu_nv_n \tag{A.26}
+\]
+これはさらに一般化して、ベクトル \(\mathbf u\) と \(\mathbf v\) の要素のすべてのペアワイズ組み合わせ間の積の重み付き和を求めることができます。
+<!--
 which can be further generalized to a weighted sum of the products between
-all pairwise combinations of the elements of vectors u and v:
-
-y
-
-i=1j
-
-n
-=1
-
+all pairwise combinations of the elements of vectors \(\mathbf u\) and \(\mathbf v\):
+-->
+\[
+\sum_{i=1}^n\sum_{j=1}^n a_{ij}u_uv_j \tag{A.27}
+\]
+この加重和は行列表記で次のように表すことができます。
+<!--
 This weighted sum can be writtcn in matrix notation as
-uAv’, (A.28)
-
-where the superscript T denotes the transposc of a row vector into a column
-vector. There is no loss of generality in assuming that matrix A is symmetric.
-498 APPENDIX A. MATHEMATICAL CONCEPTS
-
-The concept of eigenvalues and cigenvectors starts simply with the idea
-that there may be a linear transformation represented by matrix A and some
-
-vector x such that.
-Ax = Ax (A.29)
-
-for some constant A. Vector x is an eigenvector of the linear transformation,
-and A is its eigenvalue.
-
-Let matrix A be a linear transformation that scales and rotates the nat-
+-->
+\[
+\mathbf uA\mathbf v^T  \tag{A.28}
+\]
+ここで、上付き文字 \(T\) は行ベクトルを列ベクトルに転置することを意味します。行列 \(A\) が対称行列であると仮定しても、一般性は損なわれません。
+<!--
+where the superscript \(T\) denotes the transposc of a row vector into a column
+vector. There is no loss of generality in assuming that matrix \(A\) is symmetric.
+-->
+</p><p>
+固有値と固有ベクトルの概念は、行列\(A\)とあるベクトル\(\mathbf x\)で表される線形変換が存在するという考えから始まります。
+<!--
+　The concept of eigenvalues and cigenvectors starts simply with the idea
+that there may be a linear transformation represented by matrix \(A\) and some vector \(\mathbf x\) such that
+-->
+\[
+A\mathbf x = \lambda \mathbf x \tag{A.29}
+\]
+ある定数 \(\lambda\) について。ベクトル \(\mathbf x\) は線形変換の固有ベクトルであり、\(\lambda\) はその固有値です。
+<!--
+for some constant \(\lambda\). Vector \(\mathbf x\) is an eigenvector of the linear transformation,
+and \(\lambda\) is its eigenvalue.
+-->
+</p><p>
+行列 \(A\) を、ベクトル空間の自然基底を、軸（基底ベクトル）の長さと向きが原点を中心とする楕円体の軸と一致するように、拡大・縮小および回転させる線型変換とします。楕円体の軸と座標系の軸の1つに既に一致している単位ベクトル \(\mathbf u\) を考えます。単位ベクトルは楕円体の軸と一致しているため、楕円体の向きへの変換後も向きは変わりませんが、長さは楕円体の軸の長さに拡大・縮小されるように変化します。つまり、
+<!--
+　Let matrix \(A\) be a linear transformation that scales and rotates the nat-
 ural basis of a vector space so that the axes (basis vectors) correspond in
 length and orientation with the axes of some ellipsoid that is centered on the
-origin. Consider a unit vector u that is already aligned with both an axis
+origin. Consider a unit vector \(\mathbf u\) that is already aligned with both an axis
 of the ellipse and one of the axes of the coordinate system. Since the unit
 vector is aligned with the axes of the ellipsoid, it will not change orientation
 uuder the transformation into the orientation of the ellipsoid, but will change
 length so that it is scaled to the length of the axis of the ellipsoid; thus,
-
-Au = Au, (A.30)
-
-where 4 is the length of the axis of the ellipsoid. This shows that the eigen-
+-->
+\[
+A\mathbf u = \lambda\mathbf u \tag{A.30}
+\]
+ここで、\(\lambda\) は楕円体の軸の長さです。これは、固有値と固有ベクトルが楕円体の軸の長さと向きであることを示しています。
+<!--
+where \(\lambda\) is the length of the axis of the ellipsoid. This shows that the eigen-
 values and eigenvectors are the length and orientation of the axes of the
 ellipsoid.
-
-A.3 Variational Calculus
-
-Let f(z, y) be the function that is the solution to a variational problem. The
+-->
+</p>
+<h2>A.3 変分計算</h2>
+<!--
+<h2>A.3 Variational Calculus</h2>
+-->
+<p>
+変分問題の解となる関数を\(f(x, y)\)とする。変分問題の一般形は
+<!--
+Let \(f(x, y)\) be the function that is the solution to a variational problem. The
 general form of a variational problem is
-
+-->
+\[
+\int\int F(x,y,f,f_x,f_y,f_{xx},f_{xy},f_{yy},\cdots) \;dx\;dy
+\]
+変分問題の解は、オイラー方程式と呼ばれる偏微分方程式として与えられ、これは\(F\)の様々な偏導関数を含む式から構成される。2変数関数の一般形は、
+<!--
 The solution to the variational problem is given as a partial differential equa-
 tion, called the Euler equation, which is constructed from a formula involving
-various partial derivatives of F. The general form for a function of two vari-
+various partial derivatives of \(F\). The general form for a function of two vari-
 ables is
-
-a ? an
-oy ant fe + Baal lee —++(-1) Ban’ faim
-a] & a”
-—_— — —.--+(-])” = wl
-By + Oy? Py, ( ) aye fu) 0 (A 3 )
-
-A.3. VARIATIONAL CALCULUS 499
-
-if F does not contain any cross derivatives. In computing the derivatives of
-the integrand F' with respect to a partial derivative of the solution function
-f, the partial derivative of the solution function is treated as a single variable
+-->
+\[
+\begin{align}
+F_f &-\frac{\partial}{\partial x}F_{f_x}+\frac{\partial^2}{\partial x^2}F_{f_{xx}}-\cdots+(-1)^n\frac{\partial^n}{\partial x^n}F_{f_x(n)} \\
+\\
+&-\frac{\partial}{\partial y}F_{f_y}+\frac{\partial^2}{\partial y^2}F_{f_{yy}}-\cdots+(-1)^n\frac{\partial^n}{\partial y^n}F_{f_y(n)}=0 \tag{A.31}
+\end{align}
+\]
+\(F\) に交差微分が含まれていない場合。積分関数 \(F\) の解関数 \(f\) の偏微分に関する微分を計算する際、解関数の偏微分は、添字付きの記号で表されていても、単一の変数として扱われます。微分の順序によって符号が変わること、および \(x\) と \(y\) の式の行が同じ形になっていることに注意してください。\(f\) が2変数以上の関数である場合、オイラー方程式は、追加変数ごとに項の列を追加して拡張されます。\(F\) に交差微分が含まれている場合、交差微分を扱うための項が追加されます。変分問題で複数の関数を求める必要がある場合、関数ごとに別のオイラー方程式が生成されます。
+<!--
+if \(F\) does not contain any cross derivatives. In computing the derivatives of
+the integrand \(F\) with respect to a partial derivative of the solution function
+\(f\), the partial derivative of the solution function is treated as a single variable
 even though the variable is denoted by a symbol with subscripts. Note how
 the sign alternates with the order of the derivatives and how the rows of
-the formula for z and y have the same form. If f is a function of more
+the formula for \(x\) and \(y\) have the same form. If \(f\) is a function of more
 than two variables, then the Euler equation is extended with an additional
-sequence of terms for each of the additional variables. If F contains cross
+sequence of terms for each of the additional variables. If \(F\) contains cross
 derivatives, then there will be additional terms to handle the cross derivatives.
 If the variational problem requires finding morc than one function, then each
 function will yield another Euler equation.
-
-As an cxample, consider the problem of determining the surface z =
-f(x,y) that interpolates a set of data points zz at locations (xj, y,) in a
-rectangular region FR of the image plane, for k = 1,...,n. This is an ill-posed
+-->
+</p><p>
+例として、画像平面の矩形領域 \(R\) 内の位置 \(x_k, y_k\) にあるデータ点集合 \(z_k\) を補間する曲面 \(z = f(x, y)\) を求める問題を考えます（\(k = 1,...,n\)）。点集合を補間できる関数は無数に存在するため、これは不適切問題です。問題を適切問題にするには、ノルムに従って滑らかな関数を選択します。
+<!--
+　As an cxample, consider the problem of determining the surface \(z =
+f(x,y)\) that interpolates a set of data points \(z_k\) at locations \((x_k,y_k)\) in a
+rectangular region \(R\) of the image plane, for \(k = 1,...,n\). This is an ill-posed
 problem, since there arc an infinite number of functions that can interpolate
 a set of points. To make the problem well posed, choose the function that is
 smooth according to the norm
-
-/ [Ife] aeay, (A.32)
-
+-->
+\[
+\int\int_R \left[\nabla^2f(x,y)\right]^2dx\;dy \tag{A.32}
+\]
+これは、式A.32を最小化し、位置 \((x_k,y_k)\) にあるデータ点 \(z_k\) を補間する関数を選択することを意味します。変分法を用いると、解は重調和方程式です。
+<!--
 which means choose the function that minimizes Equation A.32 and interpo-
-lates the data points z;, at locations (x,, y,). Using the calculus of variations,
+lates the data points \(z_k\) at locations \((x_k,y_k\). Using the calculus of variations,
 the solution is the biharmonic equation
+-->
+\[
+\nabla^4f(x,y)=9 \tag{A.33}
+\]
 
-Vif (e,y) =0 (A.33)
+境界条件付き
+<!--
 with boundary conditions
-Fy = 0 (A.34)
+-->
+\[
+\begin{align}
+f_{yy} &= 0 \tag{A.34} \\
+\\
+f_{xxy} &= 0 \tag{A.35}
+\end{align}
+\]
 
+矩形領域の上下の辺と境界条件に沿って
+<!--
 along the top and bottom edges of the rectangular domain and boundary
 conditions
-
-Fyya = 0 (A.37)
-
+-->
+\[
+\begin{align}
+f_{xx} &= 0 \tag{A.36} \\
+\\
+f_{yyx} &= 0 \tag{A.37} 
+\end{align}
+\]
+矩形領域の左右の辺に沿って、補間面は境界に沿って特定の値や方向をとる必要はなく、滑らかに境界に近づく必要があるという境界条件が課せられます。
+<!--
 along the left and right sides of the rectangular domain. The boundary
 conditions mean that the interpolated surface does not have to assume any
-500 APPENDIX A. MATHEMATICAL CONCEPTS
 
 particular value or orientation along the boundary, but should smoothly ap-
 proach the boundary.
-
-Finding the partial differential equation and boundary conditions for a
+-->
+</p><p>
+変分法における問題の偏微分方程式と境界条件を求めることは、解の一部に過ぎません。偏微分方程式は数値解析によって解かなければなりません。
+<!--
+　Finding the partial differential equation and boundary conditions for a
 problem in the variational calculus is only part of the solution. The partial
 differential equations must be solved by numerical methods.
-
-A.4 Numerical Methods
-
+-->
+</p>
+<h2>A.4 数値解析法</h2>
+<!--
+<h2>A.4 Numerical Methods</h2>
+-->
+<p>
+重調和方程式 A.33 とその境界条件のような偏微分方程式を解く数値解法は数多く存在します。これらの方法はすべて、偏微分を差分近似に置き換えることを伴います。基本的に 2 つのアプローチがあります。(1) 変分問題 (方程式 A.32 など) の偏微分を差分近似に置き換えて、数値的に解ける連立方程式を得る方法、または (2) 変分問題から導かれた偏微分方程式 (たとえば方程式 A.33) の偏微分を差分近似に置き換えて連立方程式を得て、数値的に方程式を解く方法です。変分問題を直接解く数値解法の方が効率的ですが、偏微分方程式を解く反復法の方が記述と実装が容易です。
+<!--
 There arc many numerical methods for solving partial differential equations
 such as the biharmonic Equation A.33 and its boundary conditions. All
 of the methods involve replacing the partial derivatives with finite differ-
@@ -417,55 +623,77 @@ equations and solve the equations numerically. The numerical methods that
 solve the variational problem directly can be more efficient, but the iterative
 methods that solve the partial differential equations are easier to describe
 and implement.
-
-The simplest finite difference methods solve a partial differential equation
+-->
+</p><p>
+最も単純な差分法は、一様グリッド上の点で偏微分方程式を解きます。解は、グリッド位置 [7,3] における関数 \(z = f(x,y)\) の値の配列であり、\(i = 1,...,n\) および \(j =1,...,m\) です。
+グリッド位置 \([i,j]\) で評価された重調和関数の差分近似は、隣接するグリッド位置における関数値の線形結合です。関数値 \(f[i, j]\) の \(n\) × m グリッドが、\(k = (i -1)m—j\) である長いベクトル \(f[k]\) に展開されていると想像してください。\(N_k\) を、グリッド内で \(f[k]\) に隣接する点のグリッド位置のオフセットのリストとします。重調和方程式は各グリッド位置で次のように近似される。
+<!--
+　The simplest finite difference methods solve a partial differential equation
 at points on a uniform grid. The solution is an array of values for the func-
-tion z = f(z,y) at grid locations [7,3], with i = 1,...,n and j =1,...,m.
+tion \(z = f(x,y)\) at grid locations [7,3], with \(i = 1,...,n\) and \(j =1,...,m\).
 The finite difference approximation for the biharmonic evaluated at grid lo-
-cation [?, 7] is a linear combination of the function values at neighboring grid
-locations. Imagine that the n by m grid of function values f[i, j] is unfolded
-into a long vector f[k], with k = (i -1)m— Jj. Let N, be the list of offsets
-for the grid locations of the neighbors of f[A] in the grid. The biharmonic
+cation \([i,j]\) is a linear combination of the function values at neighboring grid
+locations. Imagine that the \(n\) by m grid of function values \(f[i, j]\) is unfolded
+into a long vector \(f[k]\), with \(k = (i -1)m— j\). Let \(N_k\) be the list of offsets
+for the grid locations of the neighbors of \(f[k]\) in the grid. The biharmonic
 equation is approximated at each grid location by
-
-Vif(z,y) © afk] + D0 aflk+ 0 =0 (A.38)
-
-1EN;,
-
+-->
+\[
+\nabla^4f(x,y)\approx a_0f[k]+\sum_{l\in N_k} a_l f[k+l]=0 \tag{A.38}
+\]
+領域の境界付近の係数が変化する。各グリッド位置において、この線形方程式は線形連立方程式の1行を構成する。
+<!--
 with changes to the coefficients near the boundaries of the domain. For cach
 grid location, this linear equation provides one row in a system of linear
 
 equations
-Af =0 (A.39)
-FURTHER READING 501
-
+-->
+\[
+Af =0  \tag{A.39}
+\]
+ただし、既知の値が補間されているグリッド位置では、\(f[k] = 1\) を除いて行はゼロで埋められ、右側のサイズは既知の値 \(z_k\) になります。この連立一次方程式は、スパース行列法を用いて解くことができます。あるいは、式 A.38 を \(f[k]\) について解き、この式を既知の値を持たないすべてのグリッド位置で繰り返し、解ベクトルが大きく変化しなくなるまで繰り返すこともできます。これは逐次近似法であり、偏微分方程式や変分問題を解くためのより洗練された方法とともに、Numerical Recipes [197] で説明されています。
+<!--
 except at the grid locations where a known value is being interpolated, in
-which case that row is filled with zeros except at f[k] = 1 and the right-hand
-size is the known valuc z,. The system of linear equations can be solved
-with sparse matrix techniques, or Equation A.38 can be solved for f[k] and
+which case that row is filled with zeros except at \(f[k] = 1\) and the right-hand
+size is the known valuc \(z_k\). The system of linear equations can be solved
+with sparse matrix techniques, or Equation A.38 can be solved for \(f[k]\) and
 this formula repeated over all grid locations that do not have a known value
 until the solution vector does not change significantly. This is the method of
 successive approximation and is described in Numerical Recipes [197], along
 with more sophisticated methods for solving partial differential equations
 and variational problems.
-
-Further Reading
-
+-->
+</p>
+<h2>さらに学ぶために</h2>
+<!--
+<h2>Further Reading</h2>
+-->
+<p>
+Graphics Gemsシリーズ[89]には、幾何学に役立つ多くの公式とアルゴリズムが掲載されています。
+<!--
 The series of books Graphics Gems [89] provide many useful formulas and
 algorithms for geometry.
-
-Linear spaces are widely used in scicnce and engineering. Lang [153
-provides a rigorous introduction to linear spaces. Noble and Daniel [187
-cover lincar spaces with many practical applications. Naylor and Sell [182
-cover functional analysis, which is the extension of vector spaces to spaces 0
+-->
+</p><p>
+線型空間は科学と工学の分野で広く用いられている。Lang [153]
+は線型空間への厳密な入門書を提供している。NobleとDaniel [187]
+は線型空間を多くの実用的な応用とともに扱っている。NaylorとSell [182]
+はベクトル空間を関数空間に拡張した関数解析を扱い、科学と工学における多くの例を挙げている。
+<!--
+　Linear spaces are widely used in scicnce and engineering. Lang [153]
+provides a rigorous introduction to linear spaces. Noble and Daniel [187]
+cover lincar spaces with many practical applications. Naylor and Sell [182] cover functional analysis, which is the extension of vector spaces to spaces 0
 functions, and include many examples from science and engineering.
-
-Many problems can be formulated as optimization problems and solved
+-->
+</p><p>
+多くの問題は最適化問題として定式化でき、変分計算を用いて解くことができます。変分計算の優れた入門書として、CourantとHilbert [62, 第4章]が挙げられます。変分計算は偏微分方程式を生成しますが、これは通常、数値解法によって解く必要があります。Numerical Recipes [197]は数値解法の優れた入門書です。
+<!--
+　Many problems can be formulated as optimization problems and solved
 using the variational calculus. An excellent introduction to the variationa
 calculus is provided by Courant and Hilbert [62, Chap. 4]. The variationa
 calculus produces a partial differential equation that usually must be solved
 by numerical methods. The book Numerical Recipes is an excellent intro-
 duction to numerical methods [197].
-
+-->
     </body>
 </html>
