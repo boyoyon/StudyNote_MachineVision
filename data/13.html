@@ -75,7 +75,7 @@
     </style>
     </head>
     <body>
-        <h1><center>13章 曲線と曲面(準備中)</center></h1>
+        <h1><center>13章 曲線と曲面</center></h1>
 <p>
 マシンビジョンにおける表面処理には、再構成とセグメンテーションという2つの根本的な問題がある。表面処理は、外れ値を含む可能性のある疎な深度測定値から再構成する必要がある。表面処理が均一なグリッド上に再構成された後、物体認識と表面推定値の精度向上のため、表面を異なる表面タイプに分割する必要がある。
 <!-- There are two fundamental problems with surfaces in machine vision: re-
@@ -89,10 +89,10 @@ surface types for object recognition and refinement of the surface estimates.-->
 <ul>
 <li><strong>曲面表現</strong>　多項式曲面パッチやテンソル積3次スプラインなどの曲面表現</li><br>
 
-<li><strong>補間法</strong>　双線形補間などの補間法</li><br>
+<li><strong>補間法</strong>　双一次補間などの補間法</li><br>
 
 <li><strong>近似</strong>　変分法と回帰スプラインを用いた曲面の近似</li><br>
-<li><strong>セグメンテーション</strong>　点計測値から曲面パッチへのセグメンテーション</li><br>
+<li><strong>セグメンテーション</strong>　点計測値から曲面パッチへのセグメンテーション(領域分割)</li><br>
 
 <li><strong>位置合わせ</strong>　点計測値による曲面の位置合わせ</li>
 </ul>
@@ -155,7 +155,7 @@ In Chapter 14 on motion, we will discuss the image flow velocity field, which
 is a two-dimensional space of measurements (velocity vectors) defined in the
 two-dimensonal space of image plane coordinates.-->
 </p><p>
-場には、均一、直線、不規則（散在）の3種類がある。均一場野では、測定点は行と列の間隔が等間隔の矩形格子上に配置される。画像は均一場の例である。第12章の較正で説明したように、格子点の位置は、格子原点の位置、格子の方向、および行と列の間隔によって決まる。
+場には、均一、直線、不規則（散在）の3種類がある。均一場では、測定点は行と列の間隔が等間隔の矩形格子上に配置される。画像は均一場の例である。第12章の較正で説明したように、格子点の位置は、格子原点の位置、格子の方向、および行と列の間隔によって決まる。
 <!-- There are three types of fields: uniform, rectilinear, and irregular (scat-
 tered). In uniform fields, measurements are located on a rectangular grid
 with equal spacing betwecn the rows and columns. Images are examples of
@@ -181,530 +181,741 @@ grid with coordinate axes labeled \(x\) and \(y\) will have a list of \(x\) coor
 \(\{x_j\},j= 1,2,...,m\) for the m grid columns and a list of \(y\) coordinates
 \(\{y_i\},i = 1,2,...,n\) for the n grid rows. The location of grid point \([i,j]\) is
 \((x_j, y_i)\).
-
+-->
+</p><p>
+不規則フィールドは、散在する（ランダムに配置された）測定、または直線構造に対応しない測定パターンに使用される。各測定の座標 \((x_k, y_k)\) は、\(k =1,...,n\) のリストで明示的に指定する必要がある。
+<!--
 Irregular fields are used for scattered (randomly located) measurements
-or any pattern of measurements that do not correspond to a rectilinear struc-
-ture. The coordinates (x, y,) of each measurement must. be provided explic-
-itly in a list fork =1,...,7.
-
+or any pattern of measurements that do not correspond to a rectilinear structure. The coordinates \((x_k, y_k)\) of each measurement must be provided explicitly in a list for \(k =1,...,n\).
+-->
+</p><p>
+これらの概念は、両眼ステレオおよびアクティブセンシングによる奥行き測定の表現方法を理解する上で重要である。両眼ステレオによる奥行き測定は、画像平面上の散在位置 \((x_k,y_k)\) に位置する不規則なスカラー分布 \(z_k\) として、またはステレオカメラの座標系内の散在位置 \((x_k,y_k,z_k)\) に位置するヌルデータ部分を持つ不規則な点測定フィールドとして表現できる。同様に、レンジカメラによる奥行き測定は、画像平面位置 \((x_j,y_i)\) の均一グリッド上の距離測定 \(z_{i,j}\) として、またはヌルデータ部分を持つ不規則な点測定フィールドとして表現できる。言い換えれば、グラフ面 \(z = f(x,y)\) の点サンプルは、領域内の位置からの変位測定として、または3次元空間内の点として扱うことができる。
+<!--
 These concepts are important for understanding how to represent depth
 measurements from binocular stereo and active sensing. Depth measure-
 ments from binocular stereo can be represented as an irregular, scalar ficld
-of depth measurements z; located at scattered locations (xz, y,) in the im-
-age plane or as an irregular field of point measurements located at scattered
-positions (xz, yx, 2%) im the coordinate system of the sterco camera with a
-null data part. Likewise, depth measurements from a range camera can be
-represented as distance measurements 2; on a uniform grid of image plane
-locations (#;,y;) or as an irregular field of point measurements with a null
-data part. In othcr words, point samples of a graph surface z = f(x,y) can
-be treated as displacement measurements from positions in the domain or as
-points in three-dimensional space.
-
-13.2 Geometry of Curves
-
+of depth measurements \(z_k\) located at scattered locations \((x_k,y_k)\) in the image plane or as an irregular field of point measurements located at scattered positions \((x_k,y_k,z_k)\) in the coordinate system of the stereo camera with a null data part. Likewise, depth measurements from a range camera can be represented as distance measurements \(z_{i,j}\) on a uniform grid of image plane locations \((x_j,y_i)\) or as an irregular field of point measurements with a null
+data part. In othcr words, point samples of a graph surface \(z = f(x,y)\) can be treated as displacement measurements from positions in the domain or as points in three-dimensional space.
+-->
+</p>
+<h2>13.2 曲線の幾何学</h2>
+<!--
+<h2>13.2 Geometry of Curves</h2>
+-->
+<p>
+曲面について議論する前に、3次元曲線について触れておく。
+理由は2つある。1つは曲面が特定の特殊な曲線を用いて記述されること、もう1つは曲線の表現が曲面の表現に一般化されることである。曲線は、暗黙的、明示的、パラメトリックの3つの形式で表現できる。
+<!--
 Before a discussion of surfaces, curves in three dimensions will be covered
 for two reasons: surfaces are described by using certain special curves, and
 representations for curves generalize to represcntations for surfaces. Curves
 can be represented in three forms: implicit, explicit, and paramctric.
-368 CHAPTER 13. CURVES AND SURFACES
-
+-->
+</p><p>
+空間における曲線のパラメトリック形式は
+<!--
 The parametric form for curves in space is
-
-p= (z,y, 2) = (e(¢), y(4), 2(4)), (13.1)
-
-for t) <t<t,, where a point along the curve is specified by three functions
-that describe the curve in terms of the parameter ¢. The curve starts at
-the point (x(to), y(to), z(to)) for the initial paramcter value fp and ends at
-(a(t), y(ts), 2(t1)) for the final parameter value t,. The points corresponding
-to the initial and final parameter values are the start and end points of
-the curve, respectively. For example, Chapter 12 makes frequent use of the
+-->
+\[
+\mathbf p= (x,y,z) = (x(t),y(t),z(t)) \tag{13.1}
+\]
+\(t_0\leq t\leq t_1\) の場合、曲線上の点は、曲線をパラメータ \(t\) で記述する 3 つの関数によって指定される。曲線は、初期パラメータ値 \(t_0\) のときに点 \((x(t_0), y(t_0), z(t_0))\) で始まり、最終パラメータ値 \(t_1\) のときに点 \((x(t_1), y(t_1,z(t_1))\) で終わる。初期パラメータ値と最終パラメータ値に対応する点は、それぞれ曲線の始点と終点である。例えば、第 12 章では、空間内の光線のパラメータ形式を頻繁に使用する。
+<!--
+for \(t_0\leq t\leq t_1\), where a point along the curve is specified by three functions that describe the curve in terms of the parameter \t\). The curve starts at the point \((x(t_0), y(t_0), z(t_0))\) for the initial paramcter value \(t_0\) and ends at \((x(t_1),y(t_1,z(t_1))\) for the final parameter value \(t_1\). The points corresponding to the initial and final parameter values are the start and end points of the curve, respectively. For example, Chapter 12 makes frequent use of the
 parametric form for a ray in space:
-
-L Un LO
-y f=tl vy |r wo q, (13.2)
-z Uz 20
-
-for 0 < t < co, where the (unit) vector (uz, uy, uz) represents the direction
-of the ray and (zp, yo, 20) is the starting point of the ray.
-
-The parametric equation for the line segment from point py = (x1, ¥1, 21)
-to point py = (x2, yo, 22) is
-
-x Bq — X41 vy
-y }=tl wm J+t mw |. (13.3)
-z 2g — 21 ran
-
-Curves can also be represented implicitly as the set of points («, y, z) that
-satisfy some equation
-f(e,y,2) =0 (13.4)
-
-or set of equations.
-
-13.3. Geometry of Surfaces
-
-Like curves, surfaces can be represented in implicit, explicit, or parametric
-form. The parametric form for a surface in space is
-
-(x, y,2) = (e(u,v), y(u,v), z(u,2)), (13.5)
-
-for uy <u <u and w <v < v,. The domain can be defined more gencrally
-as (u,v) € D.
-13.3. GEOMETRY OF SURFACES 369
-
-The implicit form for a surface is the set of points (x,y,z) that satisfy
-some equation
-
-f(z,y,2) =0. (13.6)
-
-For example, a sphere with radius r centered at (x0, yo, 20) is
-f(e.y.2) = (ea) +(y-wPt(e-a)P—-P=0. (13.7)
-The explicit. (functional) form
-
-2= fle,y) (13.8)
-
-is used in machine vision for range images. It is not as general and widely
-used as the parametric and implicit forms, because the explicit. form is only
-useful for graph surfaces, which arc surfaces that can be represented as dis-
-placements from some coordinate plane.
-
-If a surface is a graph surface, then it can be represented as displacements
-normal to a planc in space. For example, a range image is a rectangular grid
-of samples of a surface
-
-z= F(e,y); (13.9)
-
-where (x, y) are image plane coordinates and z is the distance parallel to the
-z axis in camera coordinates.
-
-13.3.1 Planes
-
-Three points define a plane in space and also define a triangular patch in
-space with corners corresponding to the points. Let py, p,, and p, be three
-points in space. Define the vectors e; = p; — Pg and €2 = py — Py. The
-normal to the plane is n = e; X eg. A point p lies in the plane if
-
-(P — Py) n= 0. (13.10)
-
-Equation 13.10 is one of the implicit forms for a plane and can be written in
-
-the form
-ax + by+ez+d=0, (13.11)
-
-where the coefficients a, 6, and ¢ are the elements of the normal to the plane
-and d is obtained by plugging the coordinates of any point on the plane into
-Equation 13.11 and solving for d.
-370 CHAPTER 13. CURVES AND SURFACES
-
-The parametric form of a plane is created by mapping (u,v) coordinates
-into the plane using two vectors in the plane as the basis vectors for the
-coordinate system in the plane, such as vectors e; and eg above. Suppose
-that point py in the plane corresponds to the origin in u and v coordinates.
-Then the parametric equation for a point in the plane is
-
-xe
-y | = ue, + veg + po. (13.12)
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
 z
+\end{pmatrix}
+=t
+\begin{pmatrix}
+u_x \\
+u_y \\
+u_z
+\end{pmatrix}
++
+\begin{pmatrix}
+x_0 \\
+y_0 \\
+z_0
+\end{pmatrix}
+\tag{13.2}
+\]
+\(0 \leq t \lt \infty\) の場合、（単位）ベクトル \((u_x, u_y, u_z)\) は光線の方向を表し、\((x_0, y_0, z_0)\) は光線の始点である。
+<!--
+for \(0 \leq t lt \infty\), where the (unit) vector \((u_x, u_y, u_z)\)  represents the direction of the ray and \((x_0, y_0, z_0)\) is the starting point of the ray.
+-->
+</p><p>
+点 \(\mathbf p_1= (x_1, y_1, z_1)\) から点 \(\mathbf p_2 = (x_2, y_2,z_2)\) までの線分のパラメトリック方程式は
+<!--
+The parametric equation for the line segment from point \(\mathbf p_1= (x_1, y_1, z_1)\) to point \(\mathbf p_2 = (x_2, y_2,z_2)\) is
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+=t
+\begin{pmatrix}
+x_2 - x_1 \\
+y_2 - y_1 \\
+z_2 - z_1
+\end{pmatrix}
++
+\begin{pmatrix}
+x_1 \\
+y_1 \\
+z_1
+\end{pmatrix}
+\tag{13.3}
+\]
+曲線は、ある方程式または方程式の集合を満たす点の集合\((x, y, z)\)として暗黙的に表現することもできる。
+<!--
+Curves can also be represented implicitly as the set of points \((x, y, z)\) that satisfy some equation
+-->
+\[
+f(x,y,z) =0 \tag{13.4}
+\]
+<!--
+or set of equations.
+-->
+</p>
+<h2>13.3. 曲面の幾何学</h2>
+<!--
+<h2>13.3. Geometry of Surfaces</h2>
+-->
+<p>
+曲線と同様に、曲面は暗黙的、明示的、あるいはパラメトリックな形式で表現できる。空間における曲面のパラメトリックな形式は、
+<!--
+Like curves, surfaces can be represented in implicit, explicit, or parametric form. The parametric form for a surface in space is
+-->
+\[
+(x, y, z) = (x(u,v), y(u,v), z(u,v)) \tag{13.5}
+\]
+\(u_0\leq u\leq u_1\) かつ \(v_0\leq v\leq v_1\) である。より一般的には、定義域は \((u,v)\in D\) と定義できる。
+<!--
+for \(u_0\leq u\leq u_1\) and \(v_0\leq v\leq v_1\). The domain can be defined more gencrally as \((u,v)\in D\).
+-->
+</p><p>
+曲面の暗黙形は、ある方程式を満たす点 \((x,y,z)\) の集合である。
+<!--
+The implicit form for a surface is the set of points \((x,y,z)\) that satisfy
+some equation
+-->
+\[
+f(x,y,z) =0  \tag{13.6}
+\]
+例えば、半径 \(r\)、中心 \((x_0, y_0,z_0)\) の球は
+<!--
+For example, a sphere with radius \(r\) centered at \((x_0, y_0,z_0)\) is
+-->
+\[
+f(x,y,z) = (x-x_0)^2 +(y-y_0)^2+(z-z_0)2-r^2=0  \tag{13.7}
+\]
 
-If the coordinate system in the plane must be orthogonal, then force e; and
-e, to be orthogonal by computing eg from the cross product between e; and
-
-the normal vector n,
-@, =n xX e&. (13.13)
-
+</p><p>
+明示的 (関数的) 形式
+<!--
+The explicit (functional) form
+-->
+\[
+z= f(x,y) \tag{13.8}
+\]
+マシンビジョンでは距離画像に使用される。パラメトリック形式や暗黙形式ほど汎用的かつ広く使用されているわけではない。これは、明示形式がグラフ曲面、つまりある座標平面からの変位として表現できる円弧曲面にのみ有効であるためである。
+<!--
+is used in machine vision for range images. It is not as general and widely
+used as the parametric and implicit forms, because the explicit. form is only useful for graph surfaces, which arc surfaces that can be represented as displacements from some coordinate plane.
+-->
+</p><p>
+表面がグラフ面である場合、空間における平面に垂直な変位として表現できる。例えば、距離画像は表面のサンプルの長方形グリッドである。
+<!--
+If a surface is a graph surface, then it can be represented as displacements normal to a planc in space. For example, a range image is a rectangular grid of samples of a surface
+-->
+\[
+z= f(x,y) \tag{13.9}
+\]
+ここで、\((x, y)\) は画像平面座標であり、\(z\) はカメラ座標における \(z\) 軸に平行な距離である。
+<!--
+where \((x, y)\) are image plane coordinates and \(z\) is the distance parallel to the \(z\) axis in camera coordinates.
+-->
+</p>
+<h3>13.3.1 平面</h3>
+<!--
+<h3>13.3.1 Planes</h3>
+-->
+<p>
+3点は空間上の平面を定義し、また、それらの点に対応する頂点を持つ空間上の三角形パッチも定義する。空間上の3点を \(\mathbf p_0, \mathbf p_1\)、\(\mathbf p_2\) とする。ベクトル \(\mathbf e_1 =\mathbf p_1-\mathbf p_0\) と \(\mathbf e_2 = \mathbf p_2 -\mathbf p_0\) を定義する。平面の法線は \(\mathbf n = \mathbf e1\times \mathbf e_2\) である。点\(\mathbf p\) が平面上にある場合、
+<!--
+Three points define a plane in space and also define a triangular patch in
+space with corners corresponding to the points. Let \(\mathbf p_0, \mathbf p_1\), and \(\mathbf p_2\) be three points in space. Define the vectors \(\mathbf e_1 =\mathbf  p_1-\mathbf p_0\) and \(\mathbf e_2 = \mathbf p_2 -\mathbf p_0\). The normal to the plane is \(\mathbf n = \mathbf e1\times \mathbf e_2\). A point \(\mathbf p\) lies in the plane if
+-->
+\[
+(\mathbf p-\mathbf p_0)\cdot \mathbf n=0 \tag{13.10}
+\]
+式13.10は平面の暗黙形式の一つであり、次のように書ける。
+<!--
+Equation 13.10 is one of the implicit forms for a plane and can be written in the form
+-->
+\[
+ax + by+cz+d=0  \tag{13.11}
+\]
+ここで、係数 \(a, b\)、\(c\) は平面の法線要素であり、dは平面上の任意の点の座標を式13.11に代入して \(d\) について解くことで得られる。
+<!--
+where the coefficients \(a, b\), and \(c\) are the elements of the normal to the plane and d is obtained by plugging the coordinates of any point on the plane into Equation 13.11 and solving for d.
+-->
+</p><p>
+平面のパラメトリック形式は、平面上の2つのベクトル（例えば、上に示したベクトル \(\mathbf e_1\) と \(\mathbf e_2\) ）を平面上の座標系の基底ベクトルとして用い、\((u,v)\) 座標を平面に写像することによって作成される。平面上の点 \(\mathbf p_0\) が \(u\) 座標と \(v\) 座標の原点に対応すると仮定する。そうすると、平面上の点のパラメトリック方程式は次のようになる。
+<!--
+The parametric form of a plane is created by mapping \((u,v)\) coordinates into the plane using two vectors in the plane as the basis vectors for the coordinate system in the plane, such as vectors \(\mathbf e_1\) and \(\mathbf e_2\) above. Suppose that point \(\mathbf p_0\) in the plane corresponds to the origin in u and v coordinates. Then the parametric equation for a point in the plane is
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+= u\mathbf e_1 + v\mathbf e_2 + \mathbf p_0 \tag{13.12}
+\]
+平面上の座標系が直交する必要がある場合、\(\mathbf e_1\) と \(\mathbf e_2\) を直交させるには、\(\mathbf e_1\) と法線ベクトル \(\mathbf n\) の外積から \(\mathbf e_2\) を計算する。
+<!--
+If the coordinate system in the plane must be orthogonal, then force \(\mathbf e_1\) and \(\mathbf e_2\) to be orthogonal by computing \(\mathbf e_2\) from the cross product between \(\mathbf e_1\) and
+the normal vector \(\mathbf n\),
+-->
+\[
+\mathbf e_2 = \mathbf n\times \mathbf  e_1 \tag{13.13}
+\]
+</p><p>
+平面の明示的な形は、式13.11を \(z\) について解くことで得られる。係数 \(c\) が 0 に近い場合、平面は \(z\) 軸にほぼ平行になるため、明示的な形は使用すべきではない。
+<!--
 The explicit form for the plane is obtained from Equation 13.11 by solving
-for z. Note that if coefficient c is close to zcro, then the plane is close to being
-parallel to the z axis and the explicit form should not be used.
+for \(z\). Note that if coefficient c is close to zcro, then the plane is close to being
+parallel to the \(z\) axis and the explicit form should not be used.
+-->
+</p>
+<h3>13.3.2 微分幾何学</h3>
+<!--
+<h3>13.3.2 Differential Geometry</h3>
+-->
+<p>
+微分幾何学は、領域内の位置 \((u,v)\) の小さな変化が、面上の位置 \(\mathbf p(u, v)\)、一次導関数 \(\mathbf p_u(u,v)\) と \(\mathbf p_v(u,v)\)、そして面法線 \(\mathbf n(u,v)\) にどのような影響を与えるかを解析する局所的な学問である。この幾何学は図13.1に示されている。
+<!--
+Differential geometry is the local analysis of how small changes in position \((u,v)\) in the domain affect the position on the surface, \(\mathbf p(u, v)\), the first derivatives, \(\mathbf p_u(u,v)\) and \(\mathbf p_v(u,v)\), and the surface normal, \(\mathbf n(u,v)\). The geometry is illustrated in Figure 13.1.
+-->
+</p>
+<center><img src="images/fig13_1.png"></center>
+<p class="margin-large">
+図13.1: 接平面とサーフェス法線を示す、パラメトリックに定義されたサーフェス。
+<!--
+Figure 13.1: A parametrically defined surface showing the tangent plane and surface normal.
+-->
+</p><p>
+曲面のパラメータ化は、領域内の点 \((u,v)\) を空間内の点 \(\mathbf p\) にマッピングする。
+<!--
+The parameterization of a surface maps points \((u,v)\) in the domain to
+points \(\mathbf p\) in space:
+-->
+\[
+\mathbf p(u, v) = \left(x(u, v), y(u, v), z(u, v)\right)  \tag{13.14}
+\]
+一次導関数 \(\mathbf p_u(u,v)\) と \(\mathbf p_v(u,v)\) は、点 \((x,y,z) = \mathbf p(u,v)\) における曲面の接平面を張るベクトルである。点 \(\mathbf p\) における面法線 \(\mathbf n\) は、点 \(\mathbf p\) における接平面の単位ベクトル法線として定義され、曲面パラメータ化の偏導関数の外積を用いて計算される。
+<!--
+The first derivatives, \(\mathbf p_u(u,v)\) and \(\mathbf p_v(u,v)\), are vectors that span the tangent plane to the surface at point \((x,y,z) = \mathbf p(u,v)\). The surface normal \(\mathbf n\) at point \(\mathbf p\) is defined as the unit vector normal to the tangent plane at point \(\mathbf p\) and is computed using the cross product of the partial derivatives of the surface parameterization,
+-->
+\[
+\mathbf n(\mathbf p)=\frac{\mathbf p_u\times \mathbf p_v}{||\mathbf p_u\times \mathbf p_v||} \tag{13.15}
+\]
 
-13.3.2 Differential Geometry
-
-Differential geometry is the local analysis of how small changes in position
-(u,v) in the domain affect the position on the surface, p(w, v), the first deriva-
-tives, p,,(w,v) and p,(w,v), and the surface normal, n{u,v). The geometry
-is illustrated in Figure 13.1.
-
-The parameterization of a surface maps points (u,v) in the domain to
-points p in space:
-
-plu, v) = (a(u, v), y(u, v), 2(u, v)). (13.14)
-
-The first derivatives, p,,(u,v) and p, (u,v), are vectors that span the tangent
-plane to the surface at point (z,y,z) = p(u,v). The surface normal n at
-point p is defined as the unit vector normal to the tangent plane at point
-p and is computed using the cross product of the partial derivatives of the
-surface parameterization,
-
-,_ Pu X Ps .
-n(p) = PuXPe (13.15)
-{Pu X Ppl
-13.3. GEOMETRY OF SURFACES 371
-
-(u+du, v+dv)
-
-uv parameter plane
-
-Figure 13.1: A paramotrically defined surface showing the tangent plane and
-surface normal.
-
-The tangent vectors and the surface normal n(w,v) define an orthogonal
-coordinate system at point p(w, v) on the surface, which is the framework for
-describing the local shape of the surface.
-
+</p><p>
+接ベクトルと面法線 \(\mathbf n(u,v)\) は、曲面上の点 \(\mathbf p(u, v)\) における直交座標系を定義し、これが曲面の局所形状を記述するための枠組みとなる。
+<!--
+The tangent vectors and the surface normal \(\mathbf n(u,v)\) define an orthogonal coordinate system at point \(\mathbf p(u, v)\) on the surface, which is the framework for describing the local shape of the surface.
+-->
+</p><p>
+曲面の曲率は、平面曲線の曲率の概念を用いて定義される。曲面上のある点 \(\mathbf p\) における曲率を知りたいとする。点 \(\mathbf p\) で曲面を切断し、点 \(\mathbf p\) で曲面に垂直な平面を考える。言い換えると、点 \(\mathbf p\) における面法線は、切断面にある。この平面と曲面の交点は、点 \(\mathbf p\) を含む平面曲線である。点 \(\mathbf p\) における法線曲率は、この交差する平面曲線の曲率である。図 13.2 を参照のこと。平面は、面法線と、\(\mathbf p\) で曲面に接する平面上のベクトルによって張られる。法曲率は、面法線を中心とした平面の向きに依存するため、一意ではない。最小曲率 \(\kappa_1\) と最大曲率 \(\kappa_2\) は主曲率と呼ばれ、最小曲率と最大曲率に対応する接平面内の方向は主方向と呼ばれる。
+<!--
 The curvature of a surface is defined using the concept of the curvature
 of a planar curve. Suppose thal we wish to know the curvature of the sur-
-face at some point p on the surface. Consider a planc that slices the surface
-at point p and is normal to the surface at point p. In other words, the
-surface normal at point p lies in the slicing plane. The intersection of the
-plane with the surface is a planar curve that includes point p. The normal
-curvature at point p is the curvature of this planar curve of intersection.
+face at some point \(\mathbf p\) on the surface. Consider a planc that slices the surface at point \(\mathbf p\) and is normal to the surface at point \(\mathbf p\). In other words, the surface normal at point \(\mathbf p\) lies in the slicing plane. The intersection of the plane with the surface is a planar curve that includes point \(\mathbf p\). The normal
+curvature at point \(\mathbf p\) is the curvature of this planar curve of intersection.
 Refer to Figure 13.2. The plane is spanned by the surface normal and a
-vector in the plane tangent to the surface at p. The normal curvature is not
-unique, since it depends on the orientation of the plane about the surface
-normal. The minimum and maximum curvetures, 4; and «zg, are called the
-372 CHAPTER 13. CURVES AND SURFACES
-
-* wy
-
-Figure 13.2: Diagram illustrating the geometry of the normal curvature at a
-point on a surface. The intersecting plane contains the surface normal.
-
-principal curvatures, and the directions in the tangent plane corresponding
-to the minimum and maximum curvatures are the principal directions.
+vector in the plane tangent to the surface at \(\mathbf p\). The normal curvature is not unique, since it depends on the orientation of the plane about the surface normal. The minimum and maximum curvetures, \(\kappa_1\) and \(\kappa_2\) are called the principal curvatures, and the directions in the tangent plane corresponding to the minimum and maximum curvatures are the principal directions.
+-->
+</p>
+<center><img src="images/fig13_2.png"></center>
+<p class="margin-large">
+図13.2: 面上の点における法線曲率の幾何学的形状を示す図。交差面には面法線が含まれる。
+<!--
+Figure 13.2: Diagram illustrating the geometry of the normal curvature at a point on a surface. The intersecting plane contains the surface normal.
+-->
+</p><p>
+ガウス曲率は主曲率の積である。
+<!--
 The Gaussian curvature is the product of the principal curvatures,
-
-K = 1k, (13.16)
-
+-->
+\[
+K = \kappa_1\kappa_2 \tag{13.16}
+\]
+平均曲率は主曲率の平均であり、
+<!--
 and the mean curvature is the average of the principal curvatures,
-
-Ky + Ke
-
-H=
-2
-
-(13.17)
-
+-->
+\[
+H=\frac{\kappa_1+\kappa_2}{2} \tag{13.17}
+\]
+曲率線とは、主方向に沿って得られる曲面上の曲線である。臍点(さいてん)とは、卵の端や球面上の任意の点など、すべての法曲率（つまり2つの主曲率）が等しい曲面上の点である。平均曲率は主曲率の平均である。
+<!--
 The lines of curvature are curves in the surface obtained by following the
-principal directions. Umbilic points are locations on the surface, such as the
-end of an egg or any point on a sphere, where all normal curvatures (and
-hence the two principal curvatures) are equal.
-13.4. CURVE REPRESENTATIONS 373
-
-13.4 Curve Representations
-
-Curves can be represented in parametric form x(t), y(t), 2(¢) with the position
+principal directions. Umbilic points are locations on the surface, such as the end of an egg or any point on a sphere, where all normal curvatures (and hence the two principal curvatures) are equal.
+-->
+</p>
+<h2>13.4 曲線表現</h2>
+<!--
+<h2>13.4 Curve Representations</h2>
+-->
+<p>
+曲線は、パラメータ \(t\) の関数によって曲線上の各点の位置が指定されたパラメータ形式 \(x(t), y(t), z(t)\) で表すことができる。多くの関数を使用して、曲線をパラメータ形式で指定できる。例えば、\((x_1, y_1, z_1)\) から始まり、\((x_2, y_2, z_2)\) で終わる線分は次のように指定できる。
+<!--
+Curves can be represented in parametric form \(x(t), y(t), z(t)\) with the position
 of cach point on the curve specified by a function of the parameter t. Many
 functions can be uscd to specify curves in paramctric form. For example, we
-can specify a line segment starting at (v1, y1, 21) and ending at (xo, y2, 22) as
-
-a(t) = teg+(l—t)zi (13.18)
-y(t) = tw +L tu (13.19)
-
-for 0 < ¢ < 1. Cubic polynomials are used in a general representation of
-space curves described in the next section.
-
-13.4.1 Cubic Spline Curves
-
-A cubic spline is a sequence of cubic polynomial curves joined end to end to
-represent a complex curve. Each segment of the cubic spline is a parametric
-
-curve:
-a(t) = agt? + bat? + at + de (13.21)
-y(t) = ayt? + byt? + cyt + dy (13.22)
-2(t) = at? +b,t +e.t + dz, (13.23)
-
-for 0 <¢< 1. Cubic polynomials allow curves to pass through points with a
+can specify a line segment starting at \((x_1, y_1, z_1)\) and ending at \((x_2, y_2, z_2)\) as
+-->
+\[
+\begin{align}
+x(t) &= tx_2+(1-t)x_1  \tag{13.18} \\
+\\
+y(t) &= ty_2+(1-t)y_1  \tag{13.19} \\
+\\
+z(t) &= tz_2+(1-t)z_1  \tag{13.20}
+\end{align}
+\]
+\(0\leq t\leq 1\) である。3次多項式は、次のセクションで説明する空間曲線の一般的な表現に使用される。
+<!--
+for \(0\leq t\leq 1\). Cubic polynomials are used in a general representation of space curves described in the next section.
+-->
+</p>
+<h3>13.4.1 3次スプライン曲線</h3>
+<!--
+<h3>13.4.1 Cubic Spline Curves</h3>
+-->
+<p>
+3次スプラインは、3次多項式曲線を端から端まで繋ぎ合わせて複雑な曲線を表すものである。3次スプラインの各線分はパラメトリック曲線である。
+<!--
+A cubic spline is a sequence of cubic polynomial curves joined end to end to represent a complex curve. Each segment of the cubic spline is a parametric curve:
+-->
+\[
+\begin{align}
+x(t) &= a_xt^3 + b_xt^2 + c_xt + d_x \tag{13.21} \\
+\\
+y(t) &= a_yt^3 + b_yt^2 + c_yt + d_y \tag{13.22} \\
+\\
+z(t) &= a_zt^3 + b_zt^2 + c_zt + d_z \tag{13.23}
+\end{align}
+\]
+\(0\leq t\leq 1\) の場合。3次多項式は、指定された接線を持つ点を通る曲線を許し、非平面曲線を許す最も低次の多項式である。
+<!--
+for \(0\leq t\leq 1\). Cubic polynomials allow curves to pass through points with a
 specified tangent and are the lowest-order polynomials that allow nonplanar
 curves.
-
+-->
+</p><p>
+これらの式は、係数をベクトルにまとめることでより簡潔に表現できる。係数ベクトルを次のように書くと、
+<!--
 These equations can be represented more compactly by organizing the
 coefficients into vectors. If the coefficient vectors are written as
-
-a = (Gz, Gy, Gz) (13.24)
-b = (Be, By, be) (13.25)
-C = (Cy, Cy, Cz) (13.26)
-d = (dz, dy,d.) (13.27)
-
-and p(t) = (a(é), y(¢), z(¢)), then a cubic polynomial curve can be written as
-
-p(t) = at? +b? +ct+d. (13.28)
-374 CHAPTER 13. CURVES AND SURFACES
-
-More complex curves are represented as sequences of cubic polynomials joined
-at their end points:
-
-pi) = at+btPrat+d
-
-)
-t) = apt? + bot? +eot+d
-Po(t) 2 2 2 2 (13.29)
-
-p(t) = a,f+b,t+¢,¢+d,
-
-for 0 <t <1. Note that a;, b;, ¢;, and d,; are the vectors of coefficients for
-curve segment 7. If we define cubic polynomial segment 7 on the unit interval
-t—-1<t <i, then the entire sequence is defined on the interval O<t<n
-and the sequence of cubic polynomial segments can be treated as a single
-parametric curve starting at point p,(0) and ending at point p,(n). This
-sequence of cubic polynomials is called a cubic spline and is a common way
-of representing arbitrary curves in machine vision and computer graphics.
-
-13.5 Surface Representations
-
+-->
+\[
+\begin{align}
+\mathbf a &= (a_x, a_y, a_z) \tag{13.24} \\
+\\
+\mathbf b &= (b_x, b_y, b_z) \tag{13.25} \\
+\\
+\mathbf c &= (c_x, c_y, c_z) \tag{13.26} \\
+\\
+\mathbf d &= (d_x, d_y, d_z) \tag{13.27}
+\end{align}
+\]
+そして \(\mathbf p(t) = (x(t), y(t), z(t))\) のとき、3次多項式曲線は次のように書ける。
+<!--
+and \(\mathbf p(t) = (x(t), y(t), z(t))\), then a cubic polynomial curve can be written as
+-->
+\[
+\mathbf p(t) = \mathbf a t^3 +\mathbf b t^2 +\mathbf c t+\mathbf d  \tag{13.28}
+\]
+より複雑な曲線は、端点で結合された 3 次多項式のシーケンスとして表される。
+<!--
+More complex curves are represented as sequences of cubic polynomials joined at their end points:
+-->
+\[
+\begin{align}
+\mathbf p_1(t) &= \mathbf a_1 t^3 + \mathbf b_1 t^2 + \mathbf c_1 t + \mathbf d_1 \\
+\\
+\mathbf p_2(t) &= \mathbf a_2 t^3 + \mathbf b_2 t^2 + \mathbf c_2 t + \mathbf d_2 \\
+&\vdots \\
+\mathbf p_n(t) &= \mathbf a_n t^3 + \mathbf b_n t^2 + \mathbf c_n t + \mathbf d_n \\
+\end{align}
+\tag{13.29}
+\]
+\(0\lt t \lt 1\) の場合。\(\mathbf a_i, \mathbf b_i, \mathbf c_i, \mathbf d_i\) は曲線セグメント \(i\) の係数のベクトルであることに注意。3次多項式セグメント \(i\) を単位区間 \(0\leq t\leq n\) で定義すると、シーケンス全体は区間 \(0\leq t \leq n\) で定義され、3次多項式セグメントのシーケンスは、点 \(\mathbf p_1(0)\) から点 \(\mathbf p_n(n)\) までを結ぶ単一のパラメトリック曲線として扱うことができる。この3次多項式シーケンスは3次スプラインと呼ばれ、マシンビジョンやコンピュータグラフィックスで任意の曲線を表現する一般的な方法である。
+<!--
+for \(0\lt t \lt 1\). Note that \(\mathbf a_i, \mathbf b_i, \mathbf c_i\) and \(\mathbf d_i\) are the vectors of coefficients for curve segment \i\). If we define cubic polynomial segment \(i\) on the unit interval
+\(0\leq t\leq n\), then the entire sequence is defined on the interval \(0\leq t \leq n\) and the sequence of cubic polynomial segments can be treated as a single
+parametric curve starting at point \(\mathbf p_1(0)\) and ending at point \(\mathbf p_n(n)\). This sequence of cubic polynomials is called a cubic spline and is a common way of representing arbitrary curves in machine vision and computer graphics.
+-->
+</p>
+<h2>13.5 表面表現</h2>
+<!--
+<h2>13.5 Surface Representations</h2>
+-->
+<p>
+このセクションでは、マシンビジョンで使用されるいくつかの単純な表面表現について説明する。
+<!--
 This section will cover some simple surface representations that are used in
 machine vision.
-
-13.5.1 Polygonal Meshes
-
+-->
+</p>
+<h3>13.5.1 ポリゴンメッシュ</h3>
+<!--
+<h3>13.5.1 Polygonal Meshes</h3>
+-->
+<p>
+平面ポリゴン（平面ファセットまたは面とも呼ばれる）は、複雑なオブジェクトをモデリングするために使用できる。平面についてはセクション13.3.1で説明した。このセクションでは、ポリゴンメッシュを使用してオブジェクトの表面をモデリングするために、いくつの平面ファセットを組み合わせることができるかを示す。
+<!--
 Planar polygons, also called planar facets or faces, can used to model complex
 objects. Planes were covered in Section 13.3.1. In this section, we will show
 how many planar facets can be combined to model the surface of an object
 using a polygonal mesh.
-
-in Chapter 6, we showed how a polyline can be represented by the list
+-->
+</p><p>
+第6章では、折れ線を、線分を結ぶ頂点の座標のリストで表現する方法を示した。同様に、ポリゴンメッシュは、メッシュ内の平面ポリゴンを定義する頂点の座標のリストで表現される。多くのポリゴンが各頂点を共有する可能性があるため、各頂点を一度だけリストできる間接表現を使用する。頂点に \(1\) から \(n\) までの番号を付け、各頂点の座標を一度だけ格納する。
+<!--
+In Chapter 6, we showed how a polyline can be represented by the list
 of coordinates for the vertices that connect the line sesments. Likewise, a
 polygonal mesh is represented by the list of vertex coordinates for the vertices
 that define the planar polygons in the mesh. Since many polygons may share
 each vertex, we will use an indirect representation that allows each vertex to
-be listed once. Number the vertices from 1 to n and store the coordinates
-13.5, SURFACE REPRESENTATIONS 375
-
-for each vertex once:
-
-vi = 141,41)
-V2 = (x2, ¥p, 22) (13.30)
-Van = (2s Yns Zn)
-
-Represent each face by a list of the vertices in the polygon for the face. To
-ensure the consistency needed for using the vertex information, follow the
-convention of listing the vertices in the order in which they are encountered,
-moving clockwise around the face as seen from the outside of the abject
-or from the same side of the surface (for example, above the surface). For
-outward-facing normals, this means that the vertex order follows the left-
-hand rule: the order of the vertex around the polygon is the same as the
-direction of the fingers of the left hand with the thumb pointing in the di-
-rection of the surface normal. This representation makes it very casy to find
-all of the vertices for a given face, and any change in the coordinates of a
-vertex automatically (indirectly) changes all faces that use the vertex. The
-list of vertices representation docs not explicitly represent the edges between
+be listed once. Number the vertices from \(1\) to \(n\) and store the coordinates for each vertex once:
+-->
+\[
+\begin{align}
+\mathbf v_1 &=(x_1, y_1,z_1) \\
+\\
+\mathbf v_2 &=(x_2, y_2,z_2) \\
+&\vdots \\
+\mathbf v_n &=(x_n, y_n,z_n) 
+\end{align}
+\tag{13.30}
+\]
+各面を、その面のポリゴン内の頂点のリストで表す。頂点情報の使用に必要な一貫性を確保するため、頂点は、オブジェクトの外側またはサーフェスの同じ側（たとえば、サーフェスの上）から見たときに、面の周りを時計回りに移動して、遭遇した順にリストするという規則に従う。外向きの法線の場合、これは頂点の順序が左手の法則に従うことを意味する。つまり、ポリゴン周辺の頂点の順序は、親指をサーフェス法線の方向に向けた左手の指の方向と同じである。この表現により、特定の面のすべての頂点を簡単に見つけることができ、頂点の座標が変更されると、その頂点を使用するすべての面が自動的に（間接的に）変更される。頂点リスト表現は、隣接する面間のエッジを明示的に表すものではなく、特定の頂点を含むすべての面を効率的に見つける方法も提供しない。これらの問題は、ウィングドエッジ(翼付きエッジ)データ構造を使用することで解決される。
+<!--
+Represent each face by a list of the vertices in the polygon for the face. To ensure the consistency needed for using the vertex information, follow the convention of listing the vertices in the order in which they are encountered, moving clockwise around the face as seen from the outside of the abject or from the same side of the surface (for example, above the surface). For outward-facing normals, this means that the vertex order follows the left-hand rule: the order of the vertex around the polygon is the same as the direction of the fingers of the left hand with the thumb pointing in the direction of the surface normal. This representation makes it very casy to find all of the vertices for a given face, and any change in the coordinates of a vertex automatically (indirectly) changes all faces that use the vertex. The list of vertices representation docs not explicitly represent the edges between
 adjacent faces and docs not provide an efficient way to find all faces that
 include a given vertex. These problems are resolved by using the winged
 edge data structure.
-
+-->
+</p>
+<center><img src="images/fig13_0.png"></center>
+<p>
+</p><p>
+ウィングドエッジデータ構造は、頂点、エッジ、面の 3 種類のレコードを持つネットワークである。データ構造には、メッシュ全体を検索したり、各要素のレコードに隣接要素のリストを保存したりすることなく、すべての隣接要素を見つけるためにたどることができるポインタが含まれている。ポリゴン メッシュのすべての頂点に対して 1 つの頂点レコードがあり、ポリゴン メッシュのすべてのエッジに対して 1 つのエッジ レコードがあり、ポリゴン メッシュのすべての面に対して 1 つの面レコードがある。面、エッジ、または頂点レコードのサイズは、メッシュのサイズや隣接要素の数によって変化しない。エッジの両端の頂点とエッジの両側の面は直接見つけることができる。頂点を使用するすべての面 (エッジ) は、その頂点を含む面 (エッジ) の数に比例した時間で見つけることができる。面の周りのすべての頂点 (エッジ) は、面の周りの頂点 (エッジ) の数に比例した時間で見つけることができる。
+<!--
 The winged edge data structure is a network with three types of records:
-vertices, edges, and faces. The data structure includes pointers that can be
-followed to find all neighboring elements without searching the entire mesh or
-storing a list of ucighbors in the record for each element. There is one vertex
-record for every vertex in the polygonal mesh, one edge record for every edge
-in the polygonal mesh, and one face record for every face in the polygonal
-mesh. The size of the face, edge, or vertex record does not change with the
-size of the mesh or the number of neighboring elements. Both vertices at the
-ends of an edge and both faces on either side of an edge can be found directly;
-all of the faces (edges) that use a vertex can be found in time proportional to
-the number of faces (edges) that include the vertex; all of the vertices (edges)
-around a face can be found in time proportional to the number of vertices
-(edges) around the face.
-376 CHAPTER 13. CURVES AND SURFACES
+vertices, edges, and faces. The data structure includes pointers that can be followed to find all neighboring elements without searching the entire mesh or storing a list of ucighbors in the record for each element. There is one vertex record for every vertex in the polygonal mesh, one edge record for every edge in the polygonal mesh, and one face record for every face in the polygonal mesh. The size of the face, edge, or vertex record does not change with the size of the mesh or the number of neighboring elements. Both vertices at the ends of an edge and both faces on either side of an edge can be found directly; all of the faces (edges) that use a vertex can be found in time proportional to the number of faces (edges) that include the vertex; all of the vertices (edges) around a face can be found in time proportional to the number of vertices (edges) around the face.
+-->
 
-aed
-
+</p><p>
+ウィングドエッジデータ構造は、多辺を持つポリゴンを扱うことができる（表現は三角形の面を持つポリゴンメッシュに限定されない）。また、メッシュ内のすべてのポリゴンの辺の数が同じである必要はない。頂点の座標は頂点レコードにのみ保存され、面またはエッジの位置は頂点座標から計算される。
+<!--
+The winged edge data structure can handle polygons with many sides (the  representation is not limited to polygonal meshes with triangular facets), and it is not necessary for all polygons in the mesh to have the same number of sides. The coordinates of vertices are only stored in the vertex records; the position of a face or edge is computed from the vertex coordinates.
+-->
+</p><p>
+各面レコードはそのエッジのいずれかのレコードを指し、各頂点レコードはその頂点で終わるエッジのいずれかのレコードを指す。エッジ レコードには、面と頂点をポリゴン メッシュに接続し、ポリゴン メッシュを効率的に移動できるようにするポインタが含まれている。各エッジ レコードには、その端にある各頂点へのポインタ、エッジのいずれかの側にある各面へのポインタ、およびポリゴン メッシュで隣接する 4 つのウィングエッジへのポインタが含まれている。図 13.3 は、エッジ レコードに含まれる情報を示している。面、頂点、ウィングエッジは、コンパス方向で示される。この表記は便宜上のものであり、ポリゴン メッシュでは全体的な方向感覚はない。各ウィングにより、エッジの両側の面をどちらの方向にも移動できる。たとえば、北東のウィングをたどると、東の面の周りを時計回りに移動し続ける。
+<!--
+Each face record points to the record for one of its edges, and cach vertex record points to the record for one of the edges that end at that vertex. The edge records contain the pointers that connect the faces and vertices into a polygonal mesh and allow the polygonal mesh to be traversed efficiently. Each edge record contains a pointer to each of the vertices at its ends, a pointer to each of the faces on either side of the edge, and pointers to the four wing edges that are neighbors in the polygonal mesh. Figure 13.3 illustrates the information contained in an edge record. The faces, vertices, and wing edges are denoted by compass directions. This notation is just a convenience; in a polygonal mesh, there is no global sense of direction. Each wing allows the faces on either side of the edge to be traversed in either direction. For example, follow the northeast wing to continue traversing clockwise around the east face.
+-->
+</p>
+<center><img src="images/fig13_3.png"></center>
+<p class="margin-large">
+図13.3: 各エッジレコードには、エッジの端にある2つの頂点、エッジの両側にある2つの面、およびポリゴンメッシュを走査できる4つのウィングエッジへのポインタが含まれている。
+<!--
+</p>
+<p class="margin-large">
 Figure 13.3: Each edge record contains pointers to the two vertices at the
-ends of the edge, the two faces on either side of the edge, and the four wing
-edges that allow the polygonal mesh to be traversed.
-
-The winged edge data structure can handle polygons with many sides (the
-representation is not limited to polygonal meshes with triangular facets), and
-it is not necessary for all polygons in the mesh to have the same number of
-sides. The coordinates of vertices are only stored in the vertex records; the
-position of a face or edge is computed from the vertex coordinates.
-
-Each face record points to the record for one of its edges, and cach vertex
-record points to the record for one of the edges that end at that vertex. The
-edge records contain the pointers that connect the faces and vertices into a
-polygonal mesh and allow the polygonal mesh to be traversed efficiently. Each
-edge record contains a pointer to each of the vertices at its ends, a pointer
-to each of the faces on either side of the edge, and pointers to the four wing
-edges that are neighbors in the polygonal mesh. Figure 13.3 illustrates the
-13.5. SURFACE REPRESENTATIONS 377
-
-information contained in an edge record. The faces, vertices, and wing edges
-are denoted by compass directions. This notation is just a convenience; in
-a polygonal mesh, there is no global sense of direction. Each wing allows
-the faces on either side of the edge to be traversed in either direction. For
-example, follow the northeast wing to continue traversing clockwise around
-the east face.
-
+ends of the edge, the two faces on either side of the edge, and the four wing edges that allow the polygonal mesh to be traversed.
+-->
+</p><p>
+特定の面がエッジの東側にあるか西側にあるかは、ウィングドエッジデータ構造に面が入力された順序によって決まる。面を走査する際には、遭遇する各エッジの東側にあるか西側にあるかを確認する必要がある。面がエッジの東側にある場合は、北東の翼を時計回りに、南東の翼を反時計回りにたどる。それ以外の場合、面がエッジの西側にある場合は、南西の翼を時計回りに、北西の翼を反時計回りにたどる。
+<!--
 Whether a given face is cast or west of an edge depends on the order
 in which faces were entered in the winged edge data structure. As a face
-is traversed. it is necessary to check if the face is east or west of each edge
-that is encountered. If the face is east of the edge, follow the northeast wing
-clockwise around the face or the southeast wing counterclockwise around the
-face. Otherwise, if the face is west of the edge, follow the southwest wing
-clockwise around the face or the northwest wing counterclockwisc around the
-face.
+is traversed. it is necessary to check if the face is east or west of each edge that is encountered. If the face is east of the edge, follow the northeast wing clockwise around the face or the southeast wing counterclockwise around the face. Otherwise, if the face is west of the edge, follow the southwest wing clockwise around the face or the northwest wing counterclockwisc around the face.
+-->
+</p><p>
+時計回りや反時計回りなどの方向は、ビューワー中心である。言い換えると、ポリゴン メッシュが特定の位置から切断されていると想定される。ポリゴン メッシュを作成して使用する場合、ポリゴン メッシュに対するビューワー中心の方向の向きを指定する規則に従う必要がある。面の周りの方向は、面法線がビューワーに向いている面の側から示される。時計回りは、親指が面法線の方向を指しているときに左手の指が指す方向で示される面の周りの方向を意味する。反時計回りは、親指が面法線の方向を指しているときに右手の指が指す方向で示される面の周りの方向を意味する。ポリゴン メッシュがボリュームの境界を表す場合、すべての面法線は外側を指す。ポリゴン メッシュがサーフェスを表す場合、法線はすべてサーフェスの同じ側を指す。サーフェスがグラフ サーフェスの場合、法線はドメインからの正のオフセットの方向を指す。たとえば、ポリゴン メッシュがグラフ サーフェス \(z = f(x,y)\) を表す場合、面法線の \(z\) 軸への投影は正になる。
+<!--
+Directions like clockwise and counterclockwise are vicwer-centercd; in other words, they assume that the polygonal mesh is secn from a partic-ular position. When creating and using the polygonal mesh, it is necessary to adhere to some convention that provides an orientation for the viewer-centered directions relative to the polygonal mesh. Directions around the face are given from the side of the face with the surface normal pointing toward the viewer. Clockwise means the direction around the face indicated by how the fingers of the left hand point when the thumb points in the direction of the surface normal; counterclockwise means the direction around the face indicated by how the fingers of the right hand point when the thumb points in the direction of the surface normal. All face normals point to the outside if the polygonal mesh represents the boundary of a volume. If the polygonal mesh represents a surface, then the normals all point to the same side of the surface. If the surface is a graph surface, then the normals point in the direction of positive offsets from the domain. For example, if the polygonal mesh represents the graph surface z = f(x,y), then the projection of the face normals onto the z axis is positive.
+-->
+</p><p>
+ポリゴンメッシュに面を追加するアルゴリズムはアルゴリズム13.1に、面の周囲のエッジ（または頂点）を移動スするアルゴリズムはアルゴリズム13.2に示されている。アルゴリズム13.1では、上記の規則に従い、頂点が面の周囲を時計回りに並んでいることを前提としている。アルゴリズム13.2は、特定の頂点の周囲のすべてのエッジ（または面）を検出するように変更できる。
+<!--
+The algorithm for adding a face to a polygonal mesh is stated in Algorithm 13.1 and the algorithm for traversing the edges (or vertices) around a face is stated in Algorithm 13.2. Algorithm 13.1 assumes that the verticcs are listed in clockwise order around the face, assuming the conventions described above. Algorithm 13.2 can be modified to find all edges (or faces} around a given vertex.
+-->
+</p><p>
+<strong>アルゴリズム 13.1 ウィングドエッジデータ構造への面の追加</strong><br>
+入力は、面の連続する頂点のリストである。各頂点を一意に識別するために使用される頂点番号と、面を時計回りに並べた頂点座標が含まれる。
+<div class="styleBullet">
+<ul>
+<li>1. 頂点リスト内の各頂点について、その頂点がまだデータ構造に存在しない場合は、ウィングドエッジデータ構造にその頂点のレコードを追加する。
 
-Directions like clockwise and counterclockwise are vicwer-centercd; in
-other words, they assume that the polygonal mesh is secn from a partic-
-ular position. When creating and using the polygonal mesh, it is necessary
-to adhere to some convention that provides an orientation for the viewer-
-centered directions relative to the polygonal mesh. Directions around the
-face are given from the side of the face with the surface normal pointing to-
-ward the viewer. Clockwise means the direction around the face indicated by
-how the fingers of the left hand point when the thumb points in the direction
-of the surface normal; counterclockwise means the direction around the face
-indicated by how the fingers of the right hand point when the thumb points
-in the direction of the surface normal. All face normals point to the outside
-if the polygonal mesh represents the boundary of a volume. If the polygonal
-mesh represents a surface, then the normals all point to the same side of
-the surface. If the surface is a graph surface, then the normals point in the
-direction of positive offsets from the domain. For example, if the polygonal
-mesh represents the graph surface z = f(x,y), then the projection of the face
-normals onto the z axis is positive.
+</li><br><li>2. 連続する頂点のペア（最後の頂点と最初の頂点を含む）ごとに、それらの頂点を含むエッジが現在データ構造に存在しない場合は、エッジのレコードを追加する。
 
-The algorithm for adding a face to a polygonal mesh is stated in Algorithm
-13.1 and the algorithm for traversing the edges (or vertices) around a face is
-stated in Algorithm 13.2. Algorithm 13.1 assumes that the verticcs are listed
-in clockwise order around the face, assuming the conventions described above.
-Algorithm 13.2 can be modified to find all edges (or faces} around a given
-vertex.
-378 CHAPTER 13, CURVES AND SURFACES
+</li><br><li>3. 面を囲むエッジの各レコードについて、面を時計回りと反時計回りに移動するウィングを追加する。各レコードの影響を受けるウィングフィールドは、データ構造に挿入される新しい面が各エッジレコードの東面か西面かによって異なる。
 
-Algorithm 13.1 Adding a Face to a Winged Edge Data Structure
-The input is a list of successive vertices for the face, including verter numbers
-which are used to uniquely identify each verter and the verter coordinates,
-listed in clockwise order around the face.
+</li><br><li>4. 面のレコードを作成し、いずれかのエッジへのポインタを追加する。</li>
+</ul>
+</div>
+<!--
+<strong>Algorithm 13.1 Adding a Face to a Winged Edge Data Structure</strong><br>
+The input is a list of successive vertices for the face, including verter numbers which are used to uniquely identify each verter and the verter coordinates, listed in clockwise order around the face.
+<div class="styleBullet">
+<ul>
+<li>1. For each vertex in the list of vertices, add a record for the vertex to the winged edge data structure if the vertex is not already in the data structure.
 
-1. For each vertex in the list of vertices, add a record for the vertex to
-the winged edge data structure if the vertex is not already in the data
-structure.
+</li><br><li>2. For each pair of successive vertices (including the last and first vertices), add a record for the edge if an edge with those vertices is not currently in the data structure.
 
-2. For each pair of successive vertices (including the last and first vertices),
-add a record for the edge if an edge with those vertices is not currently
-in the data structure.
+</li><br><li>3. For each of the records for edges around the face, add the wings for clockwise and counterclockwise traversal around the face. The wing fields in each record that are affected depend on whether the new face being inserted in the data structure is the east or west face of each edge record,
 
-3. For each of the records for edges around the face, add the wings for
-clockwise and counterclockwise traversal around the face. The wing
-fields in each record that are affected depend on whether the new face
-being inserted in the data structure is the east or west face of each edge
-record,
+</li><br><li>4. Create a record for the face and add a pointer to one of the edges.</li>
+</ul>
+</div>
+-->
+</p>
+<h3>13.5.2 サーフェスパッチ</h3>
+<!--
+<h3>13.5.2 Surface Patches</h3>
+-->
+<p>
+曲面グラフの一部は、二変数多項式を用いてモデル化された曲面パッチとして表現できる。例えば、平面は次のように表される。
+<!--
+Portions of curved graph surfaces can be represented as surface patches modeled using bivariate (two-variable) polynomials. For example, a plane can be represented as
+-->
+\[
+z=a_0+a_1x+a_2y \tag{13.31}
+\]
+曲面パッチは高次多項式を使用してモデル化できる。
+<!--
+and curved surface patches can be modeled using higher-order polynomials. 
+-->
 
-4. Create a record for the face and add a pointer to one of the edges.
-
-13.5.2 Surface Patches
-
-Portions of curved graph surfaces can be represented as surface patches mod-
-eled using bivariate (two-variable) polynomials. For example, a plane can be
-
-represented as
-Z=ag+ayrt ay, (13.31)
-
-and curved surface patches can be modeled using higher-order polynomials.
-Bilinear patches, so named because anv cross section parallel to a coor-
-dinate axis is a line,
-
-Z=agtart+ agytagzy, (13.32)
+</p><p>
+双一次パッチは、座標軸に平行な断面が直線であることからこのように呼ばれる。
+<!--
+Bilinear patches, so named because anv cross section parallel to a coordinate axis is a line,
+-->
+\[
+z=a_0+a_1x+a_2y+a_3xy \tag{13.32}
+\]
+双二次パッチ、
+<!--
 biquadratice patches,
-
-z= a9 + aye + ay + agxy + asx” + asy’, (13.33)
-13.5. SURFACE REPRESENTATIONS 379
-
+-->
+\[
+z= a_0+ a_1x+a_2y+a_3xy+a_4x^2+a_5y^2 \tag{13.33}
+\]
+双三次パッチ、
+<!--
 bicubic patches,
-
-z= ag tare + ogy + agay + age? + ay?
-
-+ aga® + ara? y + agry” + age’, (13.34)
-
+-->
+\[
+\begin{align}
+z=& a_0+a_1x+a_2y+a_2xy+a_4x^2+a_5y^2 \\
+\\
+&+a_6x^3+a_7x^2y+a_8xy^2+a_9y^3
+\end{align}
+\tag{13.34}
+\]
+および双四次パッチ、
+<!--
 and biquartic patches,
-
-2 = aot aye t agy + agey + age? + asy?
-+ asx? + aze*y + agzy? + ayy? (13.35)
-+ ayox* + ae?y + aye’y? + agzy? + auy',
-
+-->
+\[
+\begin{align}
+z =& a_0 + a_1x + a_2y + a_3xy + a_4 x^2 + a_5 y^2 \\
+\\
+&+a_6 x^3 + a_7 x^2y + a_8xy^2 + a_9 y^3 \\
+\\
+&+a_{10}x^4 + a_{11}x^3y+a_{12}x^2y^2+a_{13}xy^4+a_{14}y^4
+\end{align}
+\tag{13.35}
+\]
+は、マシン ビジョンで表面パッチを表すために頻繁に使用される 2 変数多項式である。
+<!--
 are bivariate polynomials that are frequently used in machine vision to rep-
 resent surface patches.
-
+-->
+</p><p>
+多項式曲面パッチは、点の近傍など、曲面の一部をモデリングするのに適しているが、曲面全体をモデリングするには不便であり、グラフ曲面ではない曲面をモデリングすることはできない。より複雑な曲面は、次のセクションで説明する3次スプライン曲面を使用してモデリングできる。
+<!--
 Polynomial surface patches are good for modeling portions of a surface,
 such as the neighborhood around a point, but surface patches arc not conve-
 nient for modeling an entire surface and cannot model surfaces that. are not
 graph surfaces. More complex surfaces can be modeled using cubic spline
 surfaces, presented in the next section.
+-->
+</p><p>
+<strong>アルゴリズム 13.2 面の周りを時計回りにエッジをたどる</strong><br>
+入力は、移動する面のレコードへのポインタと、各エッジごとに実行する手続きである。
+<div class="styleBullet">
+<ul>
+<li>1. 面レコードから最初のエッジを取得し、それを現在のエッジにする。
 
-Algorithm 13.2 Follow the Edges Clockwise Around a Face
-The inputs are a pointer to the record for the face to traverse and a procedure
-to invoke for each edge that is visited.
+</li><br><li>2. 現在のエッジを処理する。各エッジを訪れる際に必要な操作を実行する。例えば、面の周りを時計回りに頂点のリストを作成するには、移動方向のエッジの端にある頂点を記録する。
 
-1. Get the first edge from the face record and make it the current edge.
+</li><br><li>3. 現在のエッジの西面を周回する場合、次のエッジは南西のウィングである。
 
-2. Process the current edge: perform whatever operations must be done as
+</li><br><li>4.現在のエッジの東面を迂回する場合、次のエッジは北東側のウィングである。
+
+</li><br><li>5. 現在のエッジが最初のエッジである場合、移動はこれで完了である。
+
+</li><br><li>6. そうでない場合は、手順2に進み、新しいエッジを処理する。</li>
+</ul>
+</div>
+<!--
+<strong>Algorithm 13.2 Follow the Edges Clockwise Around a Face</strong><br>
+The inputs are a pointer to the record for the face to traverse and a procedure to invoke for each edge that is visited.
+<div class="styleBullet">
+<ul>
+<li>1. Get the first edge from the face record and make it the current edge.
+
+</li><br><li>2. Process the current edge: perform whatever operations must be done as
 each edge is visited. For example, to compile a list of vertices clockwise
 around the face, record the vertex at the end of the edge in the direction
 of traversal.
 
-8. If the west face of the current edge is being circumnavigated, then the
+</li><br><li>3. If the west face of the current edge is being circumnavigated, then the
 next edge is the southwest wing.
 
-4. If the east face of the current edge is being circumnavigated, then the
-neat edge is the northeast wing.
+</li><br><li>4. If the east face of the current edge is being circumnavigated, then the
+next edge is the northeast wing.
 
-5. If the current edge is the first edge, then the traversal is finished.
+</li><br><li>5. If the current edge is the first edge, then the traversal is finished.
 
-6. Otherwise, go to step 2 to process the new edge.
-380 CHAPTER 13. CURVES AND SURFACES
-
-13.5.3 Tensor-Product Surfaces
-
+</li><br><li>6. Otherwise, go to step 2 to process the new edge.</li>
+</ul>
+</div>
+-->
+</p>
+<h3>13.5.3 テンソル積曲面</h3>
+<!--
+<h3>13.5.3 Tensor-Product Surfaces</h3>
+-->
+<p>
+13.4.1節では、複素曲線を3次多項式の列としてパラメトリック表現する方法を示した。この表現を拡張することで、複素曲面のパラメトリック表現を得ることができる。
+<!--
 In Section 13.4.1, we showed how a complex curve can be represented para-
 metrically as a sequence of cubic polynomials. This representation can be
 extended to get a parametric representation for complex surfaces.
-
-Write the equation for a parametric cubic polynomial curve in matrix
-
-notation: 3
-
-p(u) = | ay ay a3 a4 (13.36)
-
-u
-we
-u
+-->
+</p><p>
+パラメトリック 3 次多項式曲線の方程式を行列表記で書く。
+<!--
+Write the equation for a parametric cubic polynomial curve in matrix notation: 
+-->
+\[
+\mathbf p(u) = [\mathbf  a_1　\mathbf  a_2　\mathbf  a_3　\mathbf  a_4]
+\begin{bmatrix}
+u^3 \\
+u^2 \\
+u \\
 1
+\end{bmatrix}
+\tag{13.36}
+\]
+各係数は実際には 3 要素の列ベクトルであることに注意。
+<!--
 Note that each coefficient is actually a three-element column vector.
-
+-->
+</p><p>
+テンソル積曲面表現は、各パラメトリック座標に1つずつ、2つの曲線表現の組み合わせから形成される。
+<!--
 A tensor-product surface representation is formed from the combination
 of two curve representations, one in each parametric coordinate,
-
-ay vw
-2
-puv)=[u wou l]| | [br be bs bel} ° (13.37)
-ag
-ay 1
-
-where each a, is a three-element row vector, each b; is a three-element column
-vector, and each product a;b; is the pairwise product of the coefficients for
-each coordinate. The parametric surface can be written as
-
-p(u,v) = UTMY, (13.38)
+-->
+\[
+\mathbf p(u,v)=[u^3　u^2　u　1]
+\begin{bmatrix}
+\mathbf a_1 \\
+\mathbf a_2 \\
+\mathbf a_3 \\
+\mathbf a_4 
+\end{bmatrix}
+[\mathbf b_1　\mathbf b_2　\mathbf b_3　\mathbf b_4]
+\begin{bmatrix}
+v^3 \\
+v^2 \\
+v \\
+1
+\end{bmatrix}
+\tag{13.37}
+\]
+ここで、各\(\mathbf a_i\)は3要素の行ベクトル、各\(\mathbf b_i\)は3要素の列ベクトル、各積\(\mathbf a_o\mathbf b_j\)は各座標の係数の積である。パラメトリック曲面は次のように書ける。
+<!--
+where each \(\mathbf a_i\) is a three-element row vector, each \(\mathbf b_i\) is a three-element column vector, and each product \(\mathbf a_o\mathbf b_j\) is the pairwise product of the coefficients for each coordinate. The parametric surface can be written as
+-->
+\[
+\mathbf p(u,v)=U^TMV \tag{13.38}
+\]
+ここで以下を使った。
+<!--
 with
-ue
-pa | © 13.39
-v=|" (13.39)
+-->
+\[
+\mathbf U=
+\begin{bmatrix}
+u^3 \\
+u^2 \\
+u \\
 1
+\end{bmatrix}
+\tag{13.39}
+\]
+および
+<!--
 and
-we
-y?
-v=|" (13.40)
+-->
+\[
+\mathbf V=
+\begin{bmatrix}
+v^3 \\
+v^2 \\
+v \\
 1
-
-The elements of the 4 x 4 matrix M are the vectors of cocfficients for each
+\end{bmatrix}
+\tag{13.40}
+\]
+4 x 4 行列 \(M\) の要素は、パラメトリック曲面の各座標に対する係数のベクトルである。この表記法では、テンソル積曲面は文字通り2つの曲線の積、つまりu座標の曲線とv座標の曲線の積であることがわかる。パラメトリック領域内の座標軸に平行なテンソル積3次多項式曲面の任意の断面は、パラメトリック3次多項式曲線である。言い換えれば、一方の座標を固定すると、もう一方の座標を曲線パラメータとするパラメトリック3次多項式曲線が得られる。
+<!--
+The elements of the 4 x 4 matrix \(M\) are the vectors of cocfficients for each
 coordinate in the parametric surface. In this notation, we can sec that the
-13.6. SURFACE INTERPOLATION 381
-
 tensor-product surface is literally the product of two curves: one curve in
 the u coordinate and another curve in the v coordinate. Any cross section
 through the tensor-product cubic polynomial surface, parallel to a coordinate
 axis in the parametric domain, is a parametric cubic polynomial curve. In
 other words, if one coordinate is fixed, then the result is a parametric cubic
 polynomial curve with the other coordinate as the curve parameter.
-
-13.6 Surface Interpolation
-
+-->
+</p>
+<h2>13.6 サーフェス補間</h2>
+<!--
+<h2>13.6 Surface Interpolation</h2>
+-->
+<p>
+このセクションでは、上記で示した表面表現のいくつかを用いて、両眼ステレオやアクティブ三角測量で得られた深度測定値などのグラフ表面のサンプルを補間する方法を示す。深度測定値が画像処理に必要な均一グリッド形式に準拠していない場合、表面補間が必要になることがある。エッジ検出やセグメンテーションなどの画像処理アルゴリズムを使用する前に、深度測定値を均一グリッド上に補間する必要がある場合がある。
+<!--
 This section shows how some of the surface representations presented above
 can be used to interpolate samples of a graph surface, such as depth mea-
 surements obtained with binocular stereo or active triangulation. Surface
@@ -712,129 +923,191 @@ interpolation may be necessary when depth measurements do not conform to
 the uniform grid format required for image processing. It may be necessary
 to interpolate depth measurements onto a uniform grid before using image
 processing algorithms such as edge detection and segmentation.
-
-13.6.1 Triangular Mesh Interpolation
-
-Suppose that we have obtained samples z, of a graph surface, z = f(z, y),
-at scattered points (2%, y.) for k = 1,...,n using binocular stereo or active
+-->
+</p>
+<h3>13.6.1 三角形メッシュ補間</h3>
+<!--
+<h3>13.6.1 Triangular Mesh Interpolation</h3>
+-->
+<p>
+グラフ面 \(z = f(x, y)\) のサンプル \(z_k\) を、\(k = 1,...,n\) の散在点 \((x_k,y_k)\) で双眼ステレオ法または能動三角測量法を用いて取得し、画像平面上のグリッド位置 \([i,j]\) における深度座標を補間すると仮定する。\(n\times m\) グリッド（画像配列）内の各位置の座標 \((x_i,y_i)\) は次のように与えられる。
+<!--
+Suppose that we have obtained samples \(z_k\) of a graph surface, \(z = f(x, y)\),
+at scattered points \((x_k,y_k)\) for \(k = 1,...,n\) using binocular stereo or active
 triangulation and we nced to interpolate the depth mcasurcments at grid
-locations [¢,7] in the image plane. The coordinates (x;, y;) at cach location
-in the n x m grid (image array) are given by
-
-—1 .
-m (13.41)
-
-aj = j-
-
--1
-y= it. (13.42)
-
-We need to interpolate the z value at each point (a;, %).
-
-Use the scattered point coordinates and depth values (ax, ys, 2%) to create
+locations \([i,j]\) in the image plane. The coordinates \((x_i,y_i)\) at cach location
+in the \(n\times m\) grid (image array) are given by
+-->
+\[
+\begin{align}
+x_j &= j - \frac{m-1}{2} \tag{13.41} \\
+\\
+y_j &= -i+\frac{n-1}{2} \tag{13.42}
+\end{align}
+\]
+各点 \((x_j,y_i)\) の z 値を補間する必要がある。
+<!--
+We need to interpolate the z value at each point \((x_j,y_i)\).
+-->
+</p><p>
+散在点の座標と深度値 \((x_k,y_k,z_k)\) を使用して三角形の面を作成する。深度測定値はグラフ面から取得されるため、各三角形には明示的な平面方程式がある。
+<!--
+Use the scattered point coordinates and depth values \((x_k,y_k,z_k)\) to create
 a triangular iesh. Since the depth measurements are from a graph surface,
 cach triangle has an explicit planar equation
-
-z= ay tax + azy (13.43)
-
+-->
+\[
+z= a_0+a_1x+a_2y \tag{13.43}
+\]
+係数は13.3.1節で示した式から計算される。
+各グリッド位置について、点\((x_j,y_i)\)を囲む三角形を見つけ、この三角形に対応する式を使用して、グリッド位置における深度値を計算する。
+<!--
 with coefficients calculated from the formulas presented in Section 13.3.1.
-For cach grid location, find the triangle that encloses point. (a;, y;) and use
-382 CHAPTER 13. CURVES AND SURFACES
-
+For cach grid location, find the triangle that encloses point. \((x_j,y_i)\) and use
 the equation corresponding to this triangle to calculate the depth value at
 the grid location:
-24j = ag + aye; + aay. (13.44)
+-->
+\[
+z_{ij}=a_0 + a_1x_j + a_2 y_i \tag{13.44}
+\]
 
-13.6.2 Bilinear Interpolation
-
+</p>
+<h3>13.6.2 双一次補間</h3>
+<!--
+<h3>13.6.2 Bilinear Interpolation</h3>
+-->
+<p>
+場合によっては、直線グリッド上にすでに配置された値を補間する必要がある。例えば、12.3節で説明した平行化では、グリッド座標間の位置における画像の強度を、最も近い4つのグリッド位置のピクセル値から補間する必要がある。双一次補間は、直線グリッド上の値を補間する簡単な方法である。
+<!--
 Sometimes it is necessary to interpolate values that already lic on a rectilinear
 grid. For example, rectification, discussed in Section 12.3, requires that the
 image intensity at a location between grid coordinates be interpolated from
 the pixel values at the four nearest grid locations. Bilinear interpolation is
 an easy method for interpolating values on a rectilinear grid.
+-->
+</p><p>
+関数
+<!--
 The function
-fle,y) = a, + agar + agy + avy (13.45)
-
+-->
+\[
+f(x,y) = a_1 + a_2x+a_3y+a_4xy \tag{13.45}
+\]
+が双一次関数と呼ばれるのは、一方の変数を定数に設定すると、関数はもう一方の変数について線形となるためである。言い換えれば、双一次曲面の各パッチを座標軸に平行に切断すると、その断面は線分となる。平面上で座標軸に平行な辺を持つ任意の長方形には、頂点の値を補間する一意の双一次多項式が存在する。
+<!--
 is called bilinear because if one variable is set to a constant, then the function
 is linear in the other variable. In other words, each cross section of a bilinear
 surface patch taken parallel to a coordinate axis is a line segment. For any
 rectangle in the plane with sides parallel to the coordinate axes, there is a
 unique bilinear polynomial that interpolates the corner values.
-
+-->
+</p><p>
+直線グリッド上の4つの値の間で、点 (x, y) の値を補間する必要があるとする。点は、座標軸に平行な辺を持つ長方形で囲まれる。長方形の角は、値を補間する点に最も近いグリッド座標である。図13.4に示すように、角の座標は \((x_1,y_1),(x_1,y_2),(x_2,y_1)\)、\(x_2,y_2)\) で、値はそれぞれ \(z_{11},z_{12},z_{21}\)、\(z_{22}\) である。
+<!--
 Suppose that we need to interpolate the valuc at point (x, y) between four
 values on a rectilinear grid. The point is enclosed by a rectangle with sides
 parallel to the coordinate axes; the corners of the rectangle are the closest
 grid coordinates to the point at. which the value is to be interpolated. The
-corner coordinates are (v1, y1), (v1, y2), (wa, y:), and (a2, yo} with values 211,
-212, Za1, and zg2, respectively, as shown in Figure 13.4.
-
-The coefficients of the bilinear interpolant are determined by the values
-at the four corners of the grid rectangle and are computed by plugging each
-grid coordinate and value into Equation 13.45:
-
-24. = ay + age, + ay, + aariys (13.46)
-21g = A, + GgX1 + agYy + A4k1 Yo (13.47)
-221 = G1 + Gok + agy, + Gatoyi (13.48)
-29 = Gy + Agh2 + agyo + GgL2Y2 (13.49)
-
-and solving the four simultaneous equations for the coefficients of the inter-
-polant:
-
-a= Eqyoz1 — Tayi 212 — C1Y2221 + ©1Y1 222 (13.50)
-1= .
-(2 — 1)(y2 — 41)
-13.6. SURFACE INTERPOLATION 383
-
-Zu 2]
-242
-: Bal
-i / ae Zag
-Le 291)
-ae
-- (%41,¥2)
-(%2, ya)
-x
-
+corner coordinates are \((x_1,y_1),(x_1,y_2),(x_2,y_1)\), and \(x_2,y_2)\) with values \(z_{11},z_{12},z_{21}\), and \(z_{22}\), respectively, as shown in Figure 13.4.
+-->
+</p>
+<center><img src="images/fig13_4.png"></center>
+<p class="margin-large">
+図13.4：双一次補間は、直線グリッド上のサンプル間の値を推定するために使用される。コーナーの値は既知であり、双一次補間の係数を一意に決定する。
+<!--
 Figure 13.4: The bilinear interpolant is used to estimate the value between
 samples on a rectilinear grid. The values at the corners are known and
 uniquely determine the coefficients of the bilincar interpolant.
+-->
+</p><p>
+双一次補間の係数は、グリッド矩形の4隅の値によって決定され、各グリッド座標と値を式13.45に代入することで計算される。
+<!--
+The coefficients of the bilinear interpolant are determined by the values
+at the four corners of the grid rectangle and are computed by plugging each
+grid coordinate and value into Equation 13.45:
+-->
+\[
+\begin{align}
+z_{11} &= a_1 + a_2 x_1 + a_3 y_1 + a_4 x_1 y_1 \tag{13.46} \\
+\\
+z_{12} &= a_1 + a_2 x_1 + a_3 y_2 + a_4 x_1 y_2 \tag{13.47} \\
+\\
+z_{21} &= a_1 + a_2 x_2 + a_3 y_1 + a_4 x_2 y_1 \tag{13.48} \\
+\\
+z_{22} &= a_1 + a_2 x_2 + a_3 y_2 + a_4 x_2 y_2 \tag{13.49}
+\end{align}
+\]
+そして補間式の係数について4つの同時方程式を解く。
+<!--
+and solving the four simultaneous equations for the coefficients of the inter-
+polant:
+-->
+\[
+\begin{align}
+a_1 &=\frac{x_2y_2z_{11}-x_2y_1z_{12}-x_1y_2z_{21}+x_1y_1z{22}}{(x_2-x_1)(y_2-y_1)} \tag{13.50} \\
+\\
+a_2 &=\frac{-y_2z_{11}+y_1z_{12}+y_2z_{21}-y_1z_{22}}{(x_2-x_1)(y_2-y_1)} \tag{13.51} \\
+\\
+a_3 &=\frac{-x_2z_{11}+x_2z_{12}+x_1z_{21}-x_1z_{22}}{(x_2-x_1)(y_2-y_1)} \tag{13.52} \\
+\\
+a_4 &=\frac{z_{11}-z_{12}-z_{21}+z_{22}}{(x_2-x_1)(y_2-y_1)} \tag{13.53} \\
+\end{align}
+\]
 
-a = —yotir t yiZi2 1 Yazar ~ Yi Za2 (13.51)
-
-(xq — #1)(ye — 1)
-
-ay = 9211 + £o%Z12 + £1201 — £1%29 (13.52)
-(@2 — 21) (ya — 1)
-a = 211 ~ 412 — 221+ 22 (13.53)
-(#2 _ wy) (Yo _ yi)
-
+</p><p>
+双一次補間式は、直線グリッドが行と列の間隔が単位の正方形である特殊なケースでは、非常に単純な形をとる。補間が行われる点 (z,y) は、グリッド正方形の左上隅からのオフセット (6x, 6y) として与えられる。双一次補間式は、
+<!--
 The bilinear interpolant has a very simple form for the special case where
 the rectilinear grid is a square with unit spacing between the rows and
 columns. Let the point (z,y) at which interpolation is to be performed
 be given as offsets (6x, 6y) from the upper left corner of a grid square. The
 bilinear interpolant is
-
-f (6x, by) = 211 +82 2a1—241) + Oy (212211) + 6 Sy (241 -2a—Zart ene). (13.54)
-
+-->
+\[
+\begin{align}
+f(\delta x, \delta y) = z_{11} &+\delta x(z_{21}-z_{11})+\delta y(z_{12}-z_{11}) \\
+\\
+&+\delta x\delta y(z_{11}-z_{12}-z_{21}+z_{22}) 
+\end{align}
+\tag{13.54}
+\]
+この式は、ピクセル位置の間にある画像平面上の点のピクセル値を補間するために使用できる。
+<!--
 This formula can be used to interpolate the pixel value at an image plane
 point that is between the pixel locations.
-384 CHAPTER 13. CURVES AND SURFACES
-
-13.6.3 Robust Interpolation
-
+-->
+</p>
+<h3>13.6.3 ロバスト補間</h3>
+<!--
+<h3>13.6.3 Robust Interpolation</h3>
+-->
+<p>
+6.8.3節では、外れ値のあるエッジ点に直線をフィッティングするための最小中央値二乗法アルゴリズムを紹介しました。最小中央値二乗法回帰は、外れ値のある深度測定値に表面パッチをフィッティングするために使用できる。
+<!--
 In Section 6.8.3, we presented the least-median-squares algorithm for fitting
 lines to edge points with outliers. Least-median-squares regression can be
 used to fit surface patches to depth measurements with outliers.
-
+-->
+</p><p>
+最小中央値二乗法は、その基となる中央値の50%をブレイクダウンポイントとするロバスト回帰アルゴリズムである。局所最小中央値二乗推定量は、最小中央値二乗法を用いて、データ内の局所近傍にパラメトリックモデルを当てはめる。このアルゴリズムは、残差の二乗値の中央値を最小化するパラメータを求める。
+<!--
 Least-median-squares is a robust regression algorithm with a breakdown
 point of 50% like the median on which it is based. The local lcast-median-
 squares estimator uses least-median-squares regression to fit a parametric
 model over local neighborhoods in the data. The algorithm finds the param-
 eters that minimize the median of the squared residuals:
-
-mn | ed, [a — Flew ay} (13.55)
-where a is an estimated parameter vector and f(a, yi; a) is an estimate of
-the actual value of the graph surface at point mcasurement (2;, y;, 2).
+-->
+\[
+\min_a \left\{\underset{(x_i,y_i)\in N}{med}\left[\left(z_i-f(x_i,y_i;a)\right)^2\right]\right\} \tag{13.55}
+\]
+ここで、aは推定パラメータベクトルであり、\(f(x_i,y_i;a)\)は点mcasurement\((x_i,y_i,z_i)\)におけるグラフ表面の実際の値の推定値である。
+<!--
+where a is an estimated parameter vector and \(f(x_i,y_i;a)\) is an estimate of
+the actual value of the graph surface at point mcasurement \((x_i,y_i,z_i)\).
+-->
+</p><p>
+最小中央値二乗法は、外れ値を含む表面サンプルをグリッド化するために使用できる。例えば、両眼ステレオによる奥行き計測には不一致のために外れ値が含まれており、距離カメラは表面の不連続点で外れ値を生成する可能性がある。最小中二乗法を使用して表面パッチを局所近傍の奥行き計測にフィッティングすると、表面フィッティングは外れ値の影響を受けない。表面パッチを使用してデータをグリッド化する場合、外れ値はグリッド値に影響を与えない。このアルゴリズムを、外れ値に非常に敏感な、セクション13.6.1で示した三角形メッシュを使用した補間と比較してください。最小中二乗法による表面パッチのフィッティングは、外れ値によって汚染されている可能性のあるまばらな奥行き計測を処理するのに非常に便利である。このプロセスを奥行き計測のクリーニングとグリッド化と呼ぶ。
+<!--
 Least-median-squares can be used to grid surface samples that contain
 outliers. For example, binocular stereo depth measurements contain outliers
 due to mismatches, and range cameras may generate outliers at surface dis-
@@ -846,6 +1119,10 @@ using a triangular mesh, presented in Section 13.6.1, which is very sensitive
 to outliers, Fitting surface patches with least-median-squares is very use-
 ful for processing sparse depth measurcments that may be contaminated by
 outliers. We call this process cleaning and gridding the depth measurements.
+-->
+</p><p>
+最小二乗法の直接的な表現は難しいが、実装アルゴリズムは簡単に説明できる。各グリッドポイントの近傍における深度測定値に表面パッチがフィッティングされていると仮定する。このアルゴリズムは、高次の表面パッチをフィッティングするように簡単に拡張できる。各グリッドポイントについて、グリッドポイントに最も近いn個の深度測定値を選択する。この集合から、m個のデータポイントのすべての可能な組み合わせを試す。ここで、mは表面パッチをフィッティングするために使用されたデータポイントの数である。局所近傍におけるデータポイントのサブセットごとに、
+<!--
 A straightforward expression for least-median-squares is difficult to write,
 but the algorithm for implementing it is easy to explain. Assume that the
 surface patches are fit to the depth measurements in a local neighborhood
@@ -854,119 +1131,177 @@ order surface patches. For cach grid point, select the n depth measurements
 that are closest to the grid point. From this set, try all possible combinations
 of m data points, where m is the number of data points used to fit the surface
 patch. For each of the & subsets of the data points in the local neighborhood,
-
-k= ("). (13.56)
-
-m™m
-13.7, SURFACE APPROXIMATION 385
-
+-->
+\[
+k= 
+\begin{pmatrix}
+n \\
+m
+\end{pmatrix}
+\tag{13.56}
+\]
+部分集合内の点に曲面パッチを当てはめ、対応するパラメータベクトルを\(a_k\)と記す。局所近傍内のすべてのデータ点を曲面パッチと比較し、残差の二乗の中央値を計算する。
+<!--
 fit a surface patch to the points in the subset and denote the corresponding
-parameter vector by a,. Compare all data points in the local neighborhood
+parameter vector by \(a_k\). Compare all data points in the local neighborhood
 with the surface patch by computing the median of the squared residuals:
-
-xE= med (a — fltism, ar))"| . (13.57)
-
+-->
+\[
+\chi_k^2 = \underset{i}{med}\left[(z_i- f(x_i, y_i;a_k))^2\right] \tag{13.57}
+\]
+すべての可能なサブセットに曲面パッチをフィッティングした後、残差の二乗の中央値が最小となる曲面パッチに対応するパラメータベクトル \(a_k\) を選択する。
+<!--
 After surface patches have becn fit to all possible subsets, pick the parameter
-vector a, corresponding to the surface patch with the smallest median of
-
+vector \(a_k\) corresponding to the surface patch with the smallest median of
 squared residuals.
-
+-->
+</p><p>
+この手順は、各局所l近傍に対してモデルのフィッティングを\(\begin{pmatrix}n\\ m\end{pmatrix}\)回繰り返すため、計算コストが高くなる。ただし、各面フィッティングは独立しており、この手順は高度な並列化が可能である。隣接する近傍はデータポイントを共有し、中間結果を共有する可能性がある。実際には、外れ値のないサブセクションの確率が1に近づくように、可能な組み合わせのいくつかのみを試す必要があるかもしれない。
+<!--
 This procedure is computationally expensive since the model fit is re-
-peated (r) times for cach Jocal neighborhood; however, each surface fit is
+peated \(\begin{pmatrix}n\\ m\end{pmatrix}\) times for cach Jocal neighborhood; however, each surface fit is
 independent, and the procedure is highly parallelizable. Adjacent neighbor-
 hoods share data points and could share intermediate results. In practice, it
 may be necessary to try only a few of the possible combinations so that the
 probability of one of the subscts being free of outliers is close to 1.
-
-13.7 Surface Approximation
-
+-->
+</p>
+<h2>13.7 曲面近似</h2>
+<!--
+<h2>13.7 Surface Approximation</h2>
+-->
+<p>
+深度測定には誤差が伴うため、データ点を補間する面を求めるのではなく、データを近似する面を見つけることが望ましい場合がある。
+<!--
 Depth measurements are not. free of errors, and it may be desirable to find
 a surface that approximates the data rather than requiring the surface to
 interpolate the data points.
-
+-->
+</p><p>
+深度測定がグラフ面のサンプルである場合、
+<!--
 If depth measurements are samples of a graph surface,
-
-z= f(x,y), (13.58)
-
+-->
+\[
+z= f(x,y)  \tag{13.58}
+\]
+サンプルからこの表面を再構築することが望ましいかもしれない。表面のモデルがあれば、
+<!--
 then it may be desirable to reconstruct this surface from the samples. If we
 have a model for the surface,
-
-z= f(t, y;a1,02,...,am), (13.59)
-
-with m parameters, then the surface reconstruction problem reduces to the
+-->
+\[
+z= f(x,y;a_1,a_2,\cdots,a_m) \tag{13.59}
+\]
+\(m\) 個のパラメータを持つ場合、表面再構成問題は、データに最も適合する表面モデルのパラメータを決定する回帰問題に帰着する。
+<!--
+with \(m\) parameters, then the surface reconstruction problem reduces to the
 regression problein of determining the parameters of the surface model that
 best fit the data:
+-->
+\[
+\chi^2=\sum_{i=1}^n (z_i-f(x_i,y_i;a_1,a_2,\cdots,a_m))^2 \tag{13.60}
+\]
 
-nm
-xX? = a — Fei yi a1,a2,... | Oin))”- (13.60)
-j=l
-
+</p><p>
+表面のパラメトリックモデルがなく、深度サンプルの取得元となった表面を再構築する必要がある場合は、データに汎用的な（ノンパラメトリックな）表面モデルを当てはめる必要がある。課題は、データに最も適合するグラフ表面 \(z = f(x,y)\) を見つけることである。
+<!--
 If we do not have a parametric model for the surface and still need to
 reconstruct the surface from which the depth samples were obtained, then
-386 CHAPTER 13. CURVES AND SURFACES
-
 we must fit a generic (nonparametric) surface model to the data. The task
-is to find the graph surface z = f(x,y) that best fits the data:
-
-t= Dla Flew)’. (13.61)
-
+is to find the graph surface \(z = f(x,y)\) that best fits the data:
+-->
+\[
+\chi^2=\sum_{i=1}^n (z_i-f(x_i,y_i))^2 \tag{13.61}
+\]
+これは不良設定問題である。なぜなら、データに等しく適合できる関数は多数存在するからである。実際、データを補間する関数は無限にある。「不良」とは、問題の定式化が明確な選択肢を導き出さないことを意味する。一方、良問題は、候補の中から明らかに最良の解を導き出す。
+<!--
 This is an ill-posed problem since there are many functions that can fit the
 data equally well; indeed, there are an infinite number of functions that
 interpolate the data. The term ill-posed means that. the problem formulation
 does not lead to a clear choice, whereas a well-posed problem leads to a
 solution that is clearly the best from the sct of candidates.
-
+-->
+</p><p>
+式13.61の近似ノルムを拡張して、近似面関数の選択を1つに制限する必要がある。
+データを近似する関数を選択する基準は数多くある。一般的な基準は、データを近似すると同時に滑らかな面となる関数を選択することである。滑らかさの尺度は数多くあるが、ここでは1つの尺度を選び、残りは今後の考察に譲る。この議論のために、データ点\)\{(x_i,y_i,z_i)\}\)に対する最良の近似は、\(i= 1,...,n\)に対して、次の式を最小化する関数\(z= f(x,y)\)である。
+<!--
 We need to augment the approximation norm in Equation 13.61 to con-
 strain the sclection of the approximating surface function to a single choice.
 There are many criteria for choosing a function to approximate the data. A
 popular criterion is to choose the function that both approximates the data
 aud is a smooth surface. There are many measures of smoothness, but we will
 choose one measure and leave the rest for further reading. For the purposes
-of this discussion, the best approximation to the data points {(2, y;, 2;)} for
-i= 1,...,n is the function z= f(x,y) that minimizes
-
-afa
-v= De F(@i,)) poof [St4 phot ae edy (13.62)
-
-with a > 0. This norm is the same as Equation 13.61 except for the addition
+of this discussion, the best approximation to the data points \)\{(x_i,y_i,z_i)\}\) for
+ \(i= 1,...,n\) is the function \(z= f(x,y)\) that minimizes
+-->
+\[
+\begin{align}
+\chi^2=& \sum_{i=1}^n (z_i-f(x_i,y_i))^2 \\
+&+\alpha^2\int\int\frac{\partial^2f}{\partial x^2}+2\frac{\partial f}{\partial x}\frac{\partial f}{\partial y}+\frac{\partial^2 f}{\partial y^2} dx\,dy 
+\end{align}
+\tag{13.62}
+\]
+ただし、\(a > 0\) である。このノルムは、a で重み付けされた平滑化項が追加されていることを除いて、式 13.61 と同じである。平滑化項は、正則化項、安定化汎関数、または略してスタビライザーと呼ばれる。重み a は正則化パラメータと呼ばれ、データへの近似値（小さい \(\alpha\)）を達成することと、滑らかな解を強制すること（大きい \(\alpha\)）との間のトレードオフを指定する。式 13.62 の最初の項は、問題制約と呼ばれる。安定化汎関数を追加することで問題の制約を拡張し、不良設定問題を良設定問題に変換するプロセスを正則化と呼ぶ。
+<!--
+with \(a > 0\). This norm is the same as Equation 13.61 except for the addition
 of a smoothness term, weighted by a. The smoothness term is called the
 regularizing term or stabilizing functional, or stabilizer for short. The weight
 a is called the regularizing paramcter and specifies the trade-off between
-achicving a close approximation to the data (small a) and forcing a smooth
-solution (large a). The first term in Eqnation 13.62 is called the problem
+achicving a close approximation to the data (small \(\alpha\)) and forcing a smooth
+solution (large \(\alpha\)). The first term in Eqnation 13.62 is called the problem
 constraint. The process of augmenting a problem constraint by adding a sta-
 bilizing functional to change an ill-posed problem into a well-posed problem
 is called regularization.
-
+-->
+</p><p>
+良設定問題という概念は、単に唯一の解を求めるという概念よりも強力である。式13.61のような近似問題は、唯一の解を持つかもしれないが、解空間の形状によっては、他の多くの、全く異なる解がほぼ同じくらい良い解を持つ可能性がある。適切問題とは、ノルムの最小値に対応する解が唯一の解であるだけでなく、他の解よりも明らかに優れている解空間を持つ問題のことである。
+<!--
 The notion of a well-posed problem is stronger than just requiring a
 unique solution. An approximation problem such as Equation 13.61 may
 have a unique solution, but the shape of the solution space is such that many
 other, very different solutions may be almost as good. A well-posed problem
 has a solution space where the solution corresponding to the minimum of the
 norm is not only unique, but is definitely better than the other solutions.
-13.7, SURFACE APPROXIMATION 387
-
+<!--
+</p><p>
+式13.62の正規化面近似問題の解は、変分法を用いて式13.62を偏微分方程式に変換することによって得られる。数値的手法を用いて、この偏微分方程式を、深度測定値から近似面のサンプルを計算する数値アルゴリズムに変換する。
+<!--
 The solution to the regularized surface approximation problem in Equa-
 tion 13.62 is obtained by using variational calculus to transform Equation
 13.62 into a partial differential equation. Numerical methods are used to
 change the partial differential cquation into a numerical algorithm for com-
 puting samples of the approximating surface from the depth measurements.
-
-The partial differential equation for this problem in the variational cal-
-
-culus is
-a V4 f(a,y) + flay) — (zy) =0, (13.63)
-
+-->
+</p><p>
+変分法におけるこの問題の偏微分方程式は
+<!--
+The partial differential equation for this problem in the variational calculus is
+-->
+\[
+\alpha^2\nabla^4 f(x,y)+f(x,y)-z(x,y)= 0 \tag{13.63}
+\]
+これは、セクションA.4で説明されているように、差分法を使用して解くことができる。
+<!--
 which may be solved using finite difference methods as explained in Section
-AA,
-
+A.4.
+-->
+</p><p>
+もう一つのアプローチは、式13.62の偏微分を有限差分近似に置き換え、解fについて微分することで、数値解析法を用いて解くことができる連立一次方程式を得ることである。
+<!--
 Another approach is to replace the partial derivatives in Equation 13.62
 with finite difference approximations and differentiate with respect to the so-
 lution f to get a system of linear equations that can be solved using numerical
 methods.
-
-13.7.1 Regression Splines
-
+-->
+</p>
+<h3>13.7.1 回帰スプライン</h3>
+<!--
+<h3>13.7.1 Regression Splines</h3>
+-->
+<p>
+曲面近似の別のアプローチは、近似関数の代わりに曲面モデルを代入して式13.61を回帰問題に置き換えることである。もちろん、曲面モデルがわかっていれば、式13.61から始めるのではなく、回帰問題を定式化していたであろう。曲面モデルがわからない場合でも、式13.61から始めて、近似関数の代わりにテンソル積スプラインなどの一般的な曲面表現を代入し、一般的な曲面表現のパラメータについて回帰問題を解くことができる。この手法は回帰スプラインと呼ばれる。
+<!--
 Another approach to surface approximation is to change Equation 13.61 into
 a regression problem by substituting a surface modcl for the approximating
 function. Of course, if we knew the surface model, then we would have for-
@@ -976,73 +1311,98 @@ substitute a gencric surface representation, such as tensor-producl splines, for
 the approximating function and solve the regression problem for the parame-
 ters of the generic surface representation. This technique is called regression
 splines.
-
+-->
+</p><p>
+テンソル積スプラインを含む多くの曲面表現は、基底関数の線形結合として表現できる。
+<!--
 Many surface representations, including tensor-product splines, can be
 represented as a linear combination of basis functions:
+-->
+\[
+f(x,y;a_0,a_1,a_2,\cdots,a_m)=\sum_{i=0}^m a_i B_i(x,y) \tag{13.64}
+\]
+ここで、\(a_i\) はスカラー係数、\(B_i\) は基底関数である。テンソル積スプラインでは、基底関数（とその係数）はグリッド状に整理される。
+<!--
+where \(a_i\) are the scalar coefficicnts and \(B_i\) are the basis functions. With
+tensor-product splines, the basis functions (and their coefficients) arc organized into a grid:
+-->
+\[
+f(x,y)=\sum_{i=0}^n\sum_{j=0}^m a_{ij}B_{ij}(x,y) \tag{13.65}
+\]
 
-f(a, Y5 0,01; 2, ..., Gm) = >" a:B;(2,y) (13.64)
-i=
-
-where a; are the scalar coefficicnts and B,; are the basis functions. With
-tensor-product splines, the basis functions (and their coefficients) arc orga-
-
-nized into a grid: nom
-
-f(2z,y) = OV ay Biy(z,y). (13.65)
-
-i=0 j=0
-388 CHAPTER 13. CURVES AND SURFACES
-
-Figure 13.5: The B-spline curve in one dimension is a linear combination of
-basis functions located at integer positions in the interval [0, m].
-
+</p><p>
+これら2つの方程式のどちらにおいても、一般曲面モデルを式13.61に代入すると、回帰パラメータについて解ける連立一次方程式が得られる。この連立方程式は疎行列であるため、この回帰問題を解くには、特異値分解ではなく疎行列法を用いる方が適切である。
+<!--
 With either of these two equations, if we substitute the generic surface model
 into Equation 13.61, the result is a system of linear equations that can be
 solved for the regression parameters. Since the system of equations is sparse,
 it is better to use sparse matrix techniques, rather than singular value de-
 composition, for solving this regression problem.
+-->
 
+</p><p>
+回帰スプラインの計算方法を、1次元の場合から詳しく説明する。1次元のBスプラインは、基底関数の線形結合である。
+<!--
 The methods for calculating regression splines will be presented in detail,
 starting with the one-dimensional case. The B-spline in one dimension is a
 linear combination of basis functions,
+-->
+\[
+\sum_{i=0}^m a_i B_i (x) \tag{13.66}
+\]
 
-5 a:Bi(e). (13.66)
-
-i=0
-
+</p><p>
+Bスプライン基底関数が整数位置に均一に配置されていると仮定する。Bスプライン基底関数 \(B_i(x)\) は、区間 \([i,i +4)\) において非ゼロである。基底関数は位置 0 から m に配置されているため、Bスプライン基底曲線の形状を定義する係数は m+1 個ある。(図 13.5 を参照)
+!<--
 Assume that. the B-spline basis fictions are spaced uniformly at integer
-locations. The B-spline basis function B,(x) is nonzero over the interval
-[i,i +4). The basis functions are located at positions 0 through m, so there
+locations. The B-spline basis function \(B_i(x)\) is nonzero over the interval
+\([i,i +4)\). The basis functions are located at positions 0 through m, so there
 arc m+1 coefficients that define the shape of the B-spline basis curve. (Refer
 to Figure 13.5.)
-
-The B-spline curve is defined on the interval from « = 3 tog =m+1.
-The basis function at « = 0 extends three intervals to the left of the curve
-and the basis function at e = m + 1 extends three intervals to the right of
+-->
+</p>
+<center><img src="images/fig13_5.png"></center>
+<p class="margin-large">
+図13.5: 1次元のBスプライン曲線は、区間\([0, m]\)内の整数位置にある基底関数の線形結合である。
+<!--
+Figure 13.5: The B-spline curve in one dimension is a linear combination of
+basis functions located at integer positions in the interval \([0, m]\).
+-->
+</p><p>
+Bスプライン曲線は、\(x = 3\) から \(x = m+1\) までの区間で定義される。
+\(x = 0\) における基底関数は曲線の左側に 3 区間拡張され、\(x = m + 1\) における基底関数は曲線の右側に 3 区間拡張される。曲線の両端を超える追加の区間は、曲線の両端の境界条件を確立し、区間 \([0,1)\) と \([m,m +1)\) 上の最初と最後の曲線セグメントが正しく定義されるように、それらを含める必要がある。
+<!--
+The B-spline curve is defined on the interval from \(x = 3\) to \(x =m+1\).
+The basis function at \(x = 0\) extends three intervals to the left of the curve
+and the basis function at \(x = m + 1\) extends three intervals to the right of
 the curve. The extra intervals beyond the ends of the curve establish the
 boundary conditions for the ends of the curve and must be included so that
-the first and last curve segments on the intervals [0,1) and [m,m +1) are
+the first and last curve segments on the intervals \([0,1)\) and \([m,m +1)\) are
 defined correctly.
-
+-->
+</p><p>
+各Bスプライン基底関数は、4つの整数区間（セグメント）にわたって非ゼロである。基底関数は重なり合うため、各区間は4つの基底関数でカバーされる。基底関数\(B_i(x)\)の各セグメント\(b_i(x)\)は、図13.6に示すように、その整数区間でのみ定義される3次多項式である。Bスプラインの各セグメントの3次多項式は、
+<!--
 Each B-spline basis function is nonzero over four integer intervals (seg-
 ments). Since the basis functions overlap, each interval is covered by four
-basis functions. Each segment ;(x) of the basis function B;(x) is a cubic
+basis functions. Each segment \(b_i(x)\) of the basis function \(B_i(x)\) is a cubic
 polynomial that is defined only on its integer interval, as illustrated in Fig-
 ure 13.6. ‘The cubic polynomials for the individual segments of the B-spline
-13.7. SURFACE APPROXIMATION 389
-
-0 1 204 3 4
-
-\
-Figure 13.6: Each B-spline basis function consists of four cubic polynomials
-that are nonzero on adjacent integer intervals.
-
 are
-bo(z) = = (13.67)
-bi(z) = ie tes see (13.68)
-bo(z) = coer (13.69)
-baz) = ote (13.70)
-
+-->
+\[
+\begin{align}
+b_0(x) &= \frac{x^3}{6} \tag{13.67} \\
+\\
+b_1(x) &= \frac{1+3x+3x^2-3x^3}{6} \tag{13.68} \\
+\\
+b_2(x) &= \frac{4-6x^2+3x^3}{6} \tag{13.69} \\
+\\
+b_3(x) &= \frac{1-3x+3x^2-x^3}{6} \tag{13.70}
+\end{align}
+\]
+これらの3次多項式を単純に足し合わせてBスプライン基底関数を得るのは正しくありない。なぜなら、各セグメントはその区間内に制限されているからである。つまり、各セグメントは、それが使用される区間外では非ゼロとして扱う必要がある。特定の位置zにおける特定のBスプライン基底関数を評価するには、zがどのセグメントに位置するか（Bスプライン基底関数xがどの部分に位置するか）を決定し、対応する3次多項式を評価する必要がある。
+<!--
 It is not correct to simply add these cubic polynomials together to get a B-
 spline basis function since each segment is restricted to its interval; that is,
 each segment must be treated as nonzero outside of the interval over which
@@ -1050,186 +1410,279 @@ it is intended to be used. To evaluate a particular B-spline basis function at
 a particular location z, it is necessary to determine in which segment z lies
 (in which piece of the B-spline basis function x is located) and evaluate the
 corresponding cubic polynomial.
-
-Suppose that z is located in the interval [7,7 + 1). The B-spline curve is
-the linear combination of m+ 1 B-spline basis functions:
-
-m
-
-> aBi(e). (13.71)
-390 CHAPTER 13. CURVES AND SURFACES
-
-Since each B-spline basis function covers four intervals, the interval (¢,7+ 1}
-is covered by B-spline basis function B;(x) and the three basis functions to
-the left: B;1(x), By_o(z), and B,_3(x). So to cvaluate the B-spline curve at
-z in the interval [2,7 + 1), it is only necessary to evaluate the portion of the
+-->
+</p>
+<center><img src="images/fig13_6.png"></center>
+<p class="margin-large">
+図13.6: 各Bスプライン基底関数は、隣接する整数区間でゼロでない4つの3次多項式で構成されている。
+<!--
+Figure 13.6: Each B-spline basis function consists of four cubic polynomials
+that are nonzero on adjacent integer intervals.
+-->
+</p><p>
+z が区間 \([i,i+1)\) にあると仮定する。Bスプライン曲線は、\(m+1\) 個の Bスプライン基底関数の線形結合である。
+<!--
+Suppose that z is located in the interval \([i,i+1)\). The B-spline curve is
+the linear combination of \(m+1\) B-spline basis functions:
+-->
+\[
+\sum_{i=0}^m a_i B_i(x) \tag{13.71}
+\]
+各Bスプライン基底関数は4つの区間をカバーするため、区間\([i,i+1)\)はBスプライン基底関数\(B_i(x)\)とその左側の3つの基底関数: \(B_{i-1}(x)\)、B_{i-2}(x)\)、\(B_{i-3}(x)\)によってカバーされる。したがって、区間\([i,i+1)\)の\(x\)におけるBスプライン曲線を評価するには、区間をカバーする4つのBスプライン基底関数に対応する線形結合の部分を評価するだけで済む。
+<!--
+Since each B-spline basis function covers four intervals, the interval \([i,i+1)\) is covered by B-spline basis function \(B_i(x)\) and the three basis functions to
+the left: \(B_{i-1}(x), B_{i-2}(x)\), and \(B_{i-3}(x)\). So to cvaluate the B-spline curve at
+\(x\) in the interval \([i,i+1)\), it is only necessary to evaluate the portion of the
 linear combination that corresponds to the four B-spline basis functions that
 cover the interval:
+-->
+\[
+a_{i-3}B_{i-3}(x)+a_{i-2}B_{i-2}(x)+a_{i-1}B_{i-1}(x)+a_iB_i(x) \tag{13.72}
+\]
 
+各Bスプライン基底関数は4つの3次多項式セグメントで構成され、各セグメントは独自の区間で定義されているため、各基底関数から、3次スプライン曲線が評価される位置を含む区間に対応する3次多項式セグメントを評価すれば十分である。区間\([i,i+1)\)内の位置\(x\)におけるBスプライン曲線の値は、
+<!--
 Since each B-spline basis function consists of four cubic polynomial segments,
 with each segment defined over its own interval, it is only necessary to evalu-
 ate the cubic polynomial segments from cach basis function that correspond
 to the interval containing the location at which the cubic spline curve is being
-evaluated. The value of the B-spline curve at location z in interval [2,4 + 1)
-is
-(1-324 32?—a)a;-3 (4-627? + 32%)aj_2
-5 +
-6 6
-(1+ 3a 4 3a? —327)a;4  x%a;
-+ .
-6 6
+evaluated. The value of the B-spline curve at location \(x\) in interval \([i,i+1)\) is
+-->
+\[
+\begin{align}
+\frac{(1-3x+3x^2-x^3)a_{i-3}}{6}+\frac{(4-6x^2+3x^3)a_{i-2}}{6} & \\
+\\
++\frac{(1+3x+3x^2-3x^3)a_{i-1}}{6}+\frac{x^3a_i}{6} & \tag{13.73}
+\end{align}
+\]
+任意の位置におけるBスプライン曲線を評価するには、位置2が含まれる区間を決定し、式13.73の式を適用する必要がある。この式では、区間の開始点のインデックス\(i\)を使用して、区間をカバーする4つのBスプライン基底関数の正しい係数が使用されるようにする。
+<!--
 To evaluate a B-spline curve at any location, it is necessary to determine the
 interval in which the location 2 lies and apply the formula in Equation 13.73,
-with the index i for the starting point of the interval, so that the correct
+with the index \(i\) for the starting point of the interval, so that the correct
 coefficients for the four B-spline basis functions that cover the interval are
 used.
-
+-->
+</p><p>
+式13.73のBスプライン曲線を評価する式は、係数に関して線形であるため、線形回帰に使用できる。式に\(x\)のべき乗を持つ項が含まれていても問題ない。このモデルは、データ点集合\((x_i, z_i)\)からBスプラインの係数を決定する回帰アルゴリズムを開発するために使用できる。各データ点から、4つのBスプライン係数を制約する1つの式が得られる。
+<!--
 The formula for evaluating a B-spline curve in Equation 13.73 can be
 uscd for linear regression since the model is linear in the coefficients. It does
-not matter that the equation contains terms with powers of x. This model
+not matter that the equation contains terms with powers of \(x\). This model
 can be used to develop a regression algorithm for determining the coefficients
-of the B-spline from a set of data points (2;,2;). Each data point yiclds one
+of the B-spline from a set of data points \((x_i, z_i)\). Each data point yiclds one
 equation that constrains four of the B-spline cocfficients:
-
-(1 — 3a; + 8a? — x3 Jai n (4 — 6x? + 3x? )ai_2
-6 6
-. (1 + 8x; + 32? — 32?)ai—-1 ; raj
-6 6
+-->
+\[
+\begin{align}
+\frac{(1-3x_i+3x_i^2-x_i^3)a_{i-3}}{6}+\frac{(4-6x_i^2+3x_i^3)a_{i-2}}{6} & \\
+\\
++\frac{(1+3x_i+3x_i^2-3x_i^3)a_{i-1}}{6}+\frac{x_i^3a_i}{6} &=z_i \tag{13.74}
+\end{align}
+\]
+これらの方程式は線形方程式のシステムを形成するために使用される。
+<!--
 These equations are used to form a system of linear equations,
-
-Ma =b, (13.75)
-
-(13.73)
-
-=x. (13.74)
-13.7. SURFACE APPROXIMATION 391
-
+-->
+\[
+M\mathbf a =\mathbf b \tag{13.75}
+\]
+ここで、解aはBスプライン係数aの列ベクトルであり、右辺の列ベクトルはデータ値\(z_i\)のベクトルであり、行列\(M\)の各行は、\(x_i\)を含む区間をカバーするBスプライン基底関数の係数に対応する4つの要素を除いてゼロである。この連立一次方程式は特異値分解を用いて解くことができるが、連立一次方程式は疎行列であるため、疎行列法[197]を用いる方がよい。
+<!--
 where the solution a is the column vector of B-spline cocfficients a;, the
-column vector on the right-hand side is the vector of data values z;, and each
-row of the matrix M is zcro except at the four elements corresponding to
+column vector on the right-hand side is the vector of data values \(z_i\), and each
+row of the matrix \(M\) is zero except at the four elements corresponding to
 the coefficients of the B-spline basis functions that cover the interval that
-contains 2;. The system of linear equations can be solved using singular
+contains \(x_i\). The system of linear equations can be solved using singular
 value decomposition, but since the system of equations is sparse, it is better
 to use sparse matrix techniques [197].
-
+-->
+</p><p>
+3次元の曲面近似の場合、モデルはテンソル積Bスプライン曲面になる。
+<!--
 For surface approximation in threc dimensions, the model is a tensor-
 product B-spline surface:
-
-m.
-
-Fl@y) = Ly a,B Bi (ey) = So aj By(2) By). (13.76)
-
-#=0 J=0 i=0 j=0
+-->
+\[
+f(x,y)=\sum_{i=0}^n\sum_{j=0}^m a_{i,j}B_{i,j}(x,y)=\sum_{i=0}^n\sum_{j=0}^m a_{i,j}B_j(x)B_i(y) \tag{13.76}
+\]
+曲面近似問題はノルムを最小化することで解ける。
+<!--
 The surface approximation problem is solved by minimizing the norm
-N
-
-x = V(e(k) — fle,y)?. (13.77)
-k=l
+-->
+\[
+\chi^2=\sum_{k=1}^N (z(k)-f(x,y))^2 \tag{13.77}
+\]
+一般的な表面モデルを、テンソル積Bスプライン表面の式に置き換える。
+<!--
 Replace the general surface model with the expression for the tensor-product
 B-spline surface:
-
-N mom 2
-=> : (k) — (ES asB.ton) . (13.78)
-kal =0 j=0
-
+-->
+\[
+\chi^2=\sum_{k=1}^N\left[z(k)-\left(\sum_{i=0}^n\sum_{j=0}^m a_{i,j}B_{i,j}(x,y)\right)\right]^2 \tag{13.78}
+\]
+データ値は平面上の散在する点に発生する可能性があるため、単一のインデックスの範囲に収まる。各データ値 \(z_k\) は、\(x-y\) 平面上の点 \((x_k, y_k)\) に位置する。
+<!--
 The data values range over a single index since the data can occur at scattered
-points in the plane. Each data value zy is located at point (xp, yx) in the z-y
+points in the plane. Each data value \(z_k\) is located at point \((x_k, y_k)\) in the \(x-y\)
 plane.
-
+-->
+</p><p>
+テンソル積Bスプライン曲面の係数を決定するための回帰問題の定式化は、上記に示した1次元の場合と同様である。各基底関数\(B_{ij}(x,y)\)は、\([i,i +4)\times [j,j+4)\)内の16個のグリッド矩形を覆う。基底関数は重なり合うため、各グリッド矩形は16個の基底関数で覆われる。各基底関数は16個の双3次多項式パッチで構成される。各パッチはグリッド矩形上に定義され、グリッド矩形の外側では非ゼロとなる。
+<!--
 The formulation of the regression problem for determining the coefficients
 of the tensor-product B-spline surface is similar to the one-dimensional case
-presented above. Each basis function B,;(x,y) covers 16 grid rectangles in
-(t,i +4) x [7,7 +4). Since the basis functions overlap, each grid rectangle
+presented above. Each basis function \(B_{ij}(x,y)\) covers 16 grid rectangles in
+\([i,i +4)\times [j,j+4)\). Since the basis functions overlap, each grid rectangle
 is covered by 16 basis functions. Each basis function consists of 16 bicubic
 polynomial patches. Each patch is defined on a grid rectangle and is nonzero
 outside of its grid rectangle.
-
+-->
+</p><p>
+グリッドは均一であると仮定し、すべてのグリッド矩形は同じ大きさの正方形である。Bスプライン基底関数における双三次パッチの式は、各グリッド正方形に対して同じである。各テンソル積基底関数は、1次元基底関数の積に分解できる。
+<!--
 Assume that the grid is uniform, so all grid rectangles are squares of the
 same size. The formulas for the bicubic patches in the B-spline basis functions
 are the same for each grid square. Each tensor-product basis function can
 be separated into the product of one-dimensional basis functions
-
-Bij(2,y) = B;(w)Bily), (13.79)
-392 CHAPTER 13. CURVES AND SURFACES
-
+-->
+\[
+B_{ij}(x,y) = B_j(x)B_i(y) \tag{13.79}
+\]
+そして、各1次元基底関数は4つの3次多項式から構成される。格子長方形上に定義される16個の多項式パッチのそれぞれは、xとyの2つの3次多項式の積である。xの4つの3次多項式は、
+<!--
 and each of the one-dimensional basis functions consists of four cubic poly-
 nomials. Each of the 16 polynomial patches defined on a grid rectangle is
-the product of two cubic polynomials, one in x and the other in y. The four
-cubic polynomials in x are
-
-3
-
-boa) = 7 (13.80)
-bi(e) = oie tier (13.81)
-bo(z) = cote se (13.82)
-
+the product of two cubic polynomials, one in x and the other in \(y\). The four
+cubic polynomials in \(x\) are
+-->
+\[
+\begin{align}
+b_0(x) &= \frac{x^3}{6} \tag{13.80} \\
+\\
+b_1(x) &= \frac{1+3x+3x^2-3x^3}{6} \tag{13.81} \\
+\\
+b_2(x) &= \frac{4-6x^2+3x^3}{6} \tag{13.82} \\
+\\
+b_3(x) &= \frac{1-3x+3x^2-x^3}{6} \tag{13.83}
+\end{align}
+\]
+y の 4 つの 3 次多項式は、変数の変更を除いて同一である。
+<!--
 The four cubic polynomials in y arc identical except for the change of variable:
-
-boy) = u (13.84)
-bi(y) < LSet sy = 8y" ve —3y (13.85)
-boy) = soty sy (13.86)
-bs(y) = osu oy (13.87)
-
+-->
+\[
+\begin{align}
+b_0(y) &= \frac{y^3}{6} \tag{13.84} \\
+\\
+b_1(y) &= \frac{1+3y+3y^2-3y^3}{6} \tag{13.85} \\
+\\
+b_2(y) &= \frac{4-6y^2+3y^3}{6} \tag{13.86} \\
+\\
+b_3(y) &= \frac{1-3y+3y^2-y^3}{6} \tag{13.87}
+\end{align}
+\]
+Bスプライン基底関数の16個の多項式パッチは、上記の多項式の対積から形成される。グリッド内の点\((x, y)\)におけるBスプライン曲面を評価する式は、
+<!--
 The 16 polynomial patches in a B-spline basis function are formed from the
 pairwise products of the polynomials given above. The formula for evaluating
-the B-spline surface at point (x, y) in the grid is
-
-YY aijbs(@)di(y). (13.88)
-
-i=0 j=0
-
+the B-spline surface at point \((x, y)\) in the grid is
+-->
+\[
+\sum_{i=0}^3\sum_{j=0}^3 a_{ij}b_j(x)b_i(y) \tag{13.88}
+\]
+これらの式を1次元3次多項式に代入すると、Bスプライン曲面を評価する式が得られる。16個の係数のそれぞれの項は、次の表に示されている。
+<!--
 Substituting the formulas for the onc-dimensional cubic polynomials yields
 the formula for evaluating the B-spline surface. The terms for each of the 16
-coefficients are listed in the following tahle.
-
-Qi 5-1 2/18 + (a®y + ay? — ay’) /6
-13.7. SURFACE APPROXIMATION 393
-
-5,3 ~2 20° /9 — a? y?/3 + a8 y? /6
-Qj ~3 (x? — 32%y + 32° y? — ay?) /18
-ai-1j (1+ 32 + 32? — 32%)y°/18
-Qj-1,5-1 (1 + 3x + 3x? — 32°)/18 + (1 + 3x 4 32? — 327)y/6
-+ (1+ 3a + 3a? — 824)y?/6 — (14 3x + 327 — 32°)y?/6
-ai-1j—2 Q(1 + 3x + 3x? — 3x3) /9 — (1 + 3x + 3a? — 3x%)y?/3
-+ (1+ 3e + 3x? ~ 327)y?/6
-i153 (1+ 3a + 32? — 32°)/18 — (1 + 3a + 32° — 32*)y/6
-+ (1 + 8a + 8a? — 32%)y?/6 — (1 + 3a + 327 — 3a*)y3/18
-a2; (4 — 62? + 3e*)y*/18
-s—2,5-1 (4 — 6a" + 8a) /18 + (4 — 6a? + 327) y/6
-+ (4 — 6a? + 327)y"/6 — (4 — 6a? + 307) y3 /6
-32,5-2 2(4 — 6x? + 3x3) /9 — (4 — Gr? + 3z°)y?/3
-+ (4 6a? + 327)y?/6
-G;-25-3 (4 ~ 6x? + 3x7) /18 — (4 — 62? + 327)y/6
-+ (4— 62? + 3z°)y?/6 — (4 — 6x? + 3a) y3/18
-Qi-3.5 (1 — 3a + 32? — 2°)y*/18
-Qj3,j—1 (1 — 8a + 3a? ~ 23)/18 + (1 — 3a + 82? — 2 }y/6
-+ (1 — 3a + 3a? — a )y?/6 — (1 — 3a + 3a? — 27 )\y°/6
-Q;-3,3-2 2(1 — 8x + 3a* — a?) /9 — (1-32 + 8a? — a )y?/3
-+ (1-32 + 32? — 2*)y?/6
-Qi-3,5-8 (1 — 32 + 3x? — 29) /18 — (1 ~ 3¢ +32? — 2? )\y/6
-+ (1 — 3a + 32? — #8 )y?/6 — (1 — 3a + 32? — 2 )y?/18
-
-These expressions are evaluated at the desired location (x, y), multiplied by
-the corresponding coefficient a,;, and summed together to get the value of
-the B-spline surface at (x, y).
-
+coefficients are listed in the following table.
+-->
+\[
+\begin{array}{r l}
+a_{i,j} & x^3y^3/18 \\
+\\
+a_{i,j-1} & x^3/18+(x^3y+x^3y^2-x^3y^3)/6 \\
+\\
+a_{i,j-2} & 2x^3/9-x^3y^2/3+x^3y^3/6 \\
+\\
+a_{i,j-3} &  (x^3-3x^3y+3x^3y^2-x^3y^3)/18 \\
+\\
+a_{i-1,j} & (1+3x+3x^2-3x^3)y^3/18 \\
+\\
+a_{i-1,j-1} & (1+3x+3x^2-3x^3)/18+(1+3x+3x^2-3x^3)y/6 \\
+\\
+& +(1+3x+3x^2-3x^3)y^2/6-(1+3x+3x^2-3x^3)y^3/6 \\
+\\
+a_{i-1,j-2} & 2(1+3x+3x^2-3x^3)/9-(1+3x+3x^2-3x^3)y^2/3 \\
+\\
+& +(1+3x+3x^2-3x^3)y^3/6 \\
+\\
+a_{i-1,j-3} & (1+3x+3x^2-3x^3)/18-(1+3x+3x^2-3x^3)y/6 \\
+\\
+& +(1+3x+3x^2-3x^3)y^2/6-(1+3x+3x^2-3x^3)y^3/18 \\
+\\
+a_{i-2,j} & (4-6x^2+3x^3)y^3/18 \\
+\\
+a_{i-2,j-1} & (4-6x^2+3x^3)/18+(4-6x^2+3x^3)y/6 \\
+\\
+& +(4-6x^2+3x^3)y^2/6-(4-6x^2+3x^3)y^3/6 \\
+\\
+a_{i-2,j-2} & 2(4-6x^2+3x^3)/9-(4-6x^2+3x^3)y^2/3 \\
+\\
+& +(4-6x^2+3x^3)y^3/6 \\
+\\
+a_{i-2,j-3} & (4-6x^2+3x^3)/18-(4-6x^2+3x^3)y/6 \\
+\\
+& +(4-6x^2+3x^3)y^2/6-(4-6x^2+3x^3)y^3/18 \\
+\\
+a_{i-3,j} & (1-3x+3x^2-x^3)y^3/18 \\
+\\
+a_{i-3.j-1} & (1-3x+3x^2-x^3)/18+(1-3x+3x^2-x^3)y/6 \\
+\\
+& +(1-3x+3x^2-x^3)y^2/6-(1-3x+3x^2-x^3)y^3/6 \\
+\\
+a_{i-3,j-2} & 2(1-3x+3x^2-x^3)/9-(1-3x+3x^2-x^3)y^2/3 \\
+\\
+& +(1-3x+3x^2-x^3)y^3/6 \\
+\\
+a_{i-3,j-3} & (1-3x+3x^2-x^3)/18-(1-3x+3x^2-x^3)y/6 \\
+\\
+& +(1-3x+3x^2-x^3)y^2/6-(1-3x+3x^2-x^3)y^3/18
+\end{array}
+\] 
+これらの式は目的の位置 \((x, y)\) で評価され、対応する係数 \(a_{i,j}\) が乗算され、合計されて \((x, y)\) におけるBスプライン面の値が得られる。
+<!--
+These expressions are evaluated at the desired location \((x, y)\), multiplied by
+the corresponding coefficient \(a_{i,j}\), and summed together to get the value of
+the B-spline surface at \((x, y)\).
+-->
+</p><p>
+Bスプライン曲面を評価するための式は、Bスプライン曲面の係数を決定する回帰問題でも使用されるモデルである。
+Bスプライン曲面には \((n +1) x (m +1)\) 個の係数がある。各データ点 \((x_k, y_k, z_k)\) は、16個の係数を制約する1つの方程式を生成する。
+1次元の場合と同様に、回帰問題は連立一次方程式へと導く。
+<!--
 The formula for evaluating a B-spline surface is also the model used in
 the regression problem for determining the coetticients of the B-spline surface.
-There are (n +1) x (2 +1) coefficients in the B-spline surface. Each data
-point (xz, ¥, 2%) yields one equation that constrains 16 of the coefficicnts.
+There are \((n +1) x (m +1)\) coefficients in the B-spline surface. Each data
+point \((x_k, y_k,z_k)\) yields one equation that constrains 16 of the coefficicnts.
 As in the one-dimensional case, the regression problem leads to a system of
-394 CHAPTER 13. CURVES AND SURFACES
-
 linear equations,
-Ma=b, (13.89)
-
+-->
+\[
+M\mathbf a=\mathbf b \tag{13.89}
+\]
+ここで、解 a は B スプライン係数のベクトル（係数の 2 次元グリッドは列ベクトルに展開される）、右側の列ベクトル \(\mathbf b\) は \(k =1,...,N\) に対するデータ値 \(x_k\) のベクトルである。また、行列の各行は、\((x_k,y_k)\) を含むグリッド正方形をカバーする基底関数の係数に対応する 16 個の要素を除いて 0 である。
+<!--
 where the solution a is the vector of B-spline coefficients (the two-dimensional
-grid of coefficients is unfolded into a column vector), the column vector b
-on the right-hand side is the vector of data values z; for k =1,...,N, and
+grid of coefficients is unfolded into a column vector), the column vector \(\mathbf b\)
+on the right-hand side is the vector of data values \(x_k\) for \(k =1,...,N\), and
 each row of the matrix is zero except for the 16 elements corresponding to
 the coefficients of the basis functions that cover the grid square containing
-(2k. Yn):
-
+\((x_k,y_k)\).
+-->
+</p><p>
+この手法は、Bスプライン曲面をピクセルの一様グリッドにフィッティングし、スプライン曲面をサンプリングすることで画像を平滑化するために使用できる。Bスプライングリッドが画像グリッドと一致する必要はない。実際、Bスプライングリッドの間隔が広いほど、より平滑化される。Bスプライン基底関数は、第4章で説明したガウス平滑化フィルタに似ており、Bスプライン基底関数の幅はBスプライングリッドの間隔によって決まる。上記のBスプライン回帰問題に対する式を使用する場合、画像内のピクセル値\(z_{ij}\)の画像位置\((x_i,y_i)\)を、Bスプライン曲面のグリッド座標系にマッピングする必要がある。 Bスプライン係数が決定された後、必要に応じてBスプライン面をサンプリングし、元の画像のグリッド座標または他の座標でサンプルを取得して、平滑化された画像のピクセルを計算できる。
+<!--
 This method can be used to smooth images by fitting a B-spline surface
 to the uniform grid of pixels and sampling the spline surface. It is not nec-
 essary for the B-spline grid to correspond to the image grid; in fact, more
@@ -1237,63 +1690,83 @@ smoothing is achieved if the B-spline grid has greater spacing. The B-spline
 basis function is like the Gaussian smoothing filter, covered in Chapter 4,
 and the widths of the B-spline basis functions are determined by the spacing
 of the B-spline grid. When using the formulas presented above for the B-
-spline regression problem, the image locations (x;,y,} for the pixel values 2;
-in the image must be mapped into the grid coordinate system of the B-spline
+spline regression problem, the image locations \((x_i,y_i)\) for the pixel values \(z_{ij}\) in the image must be mapped into the grid coordinate system of the B-spline
 surface. After the B-spline coefficients have been determined, the B-spline
 surface can be sampled as needed, taking samples at the grid coordinates
 of the original image or at other coordinates, to calculate the pixels of the
 smoothed image.
-
+-->
+</p><p>
+Bスプライン曲面の方程式を展開すると、Bスプラインは13.5.2節で示した双3次曲面パッチの集合に過ぎないことがわかる。双3次パッチの集合とBスプライン曲面の違いは、Bスプライン曲面の双3次パッチは2次まで連続であり、パッチは互いに結合しているのに対し、任意の双3次パッチの集合は連続している必要がないことである。テンソル積Bスプライン曲面は、\(C-2\)連続性を持つという意味で滑らかであり、人体や臓器、自動車のボディパネル、航空機の外皮などのオブジェクトをモデル化するために使用できる。
+<!--
 The development of the equation for the B-spline surface shows that a B-
 spline is just a scl of bicubic surface patches, which were presented in Section
 13.5.2. The difference between a set of bicubic patches and the B-spline
 surface is that the bicubic patches in the B-spline surface are continuous up
 to second order, where the patches jom, whereas an arbitrary collection of
 bicubic patches need not be continuous at all. The tensor-product. B-spline
-surface is smooth, in the sense of having C® continuity, and can be used to
+surface is smooth, in the sense of having \(C-2\) continuity, and can be used to
 model objects such as human bodies and organs, automobile body panels,
 and the skin of aircraft.
-
+-->
+</p><p>
+多くの実用アプリケーションでは、テンソル積 B スプライン曲面は、パラメトリック形式、つまり \((x, y, z) = (x(u, v), y(u, v), z(u, v))\) でなければならない。 13.5.3 節で示した表記法と同様に、回帰問題におけるスプライン曲面の係数は、\(x, y,\) 座標と \(z\) 座標のそれぞれに 1 つの要素、合計 3 要素ベクトルになる。 \(u-v\) 領域は長方形で、均一なグリッド (基底関数間の間隔が等間隔) に分割される。 最も難しい部分は、\((x, y, z)\) 点の測定値を u-v 領域にマッピングするための式を構築し、点の測定値が B スプライン曲面を構成する双 3 次パッチに正しく関連付けられるようにすることである。
+<!--
 In many practical applications, the tensor-product B-spline surface must
-be in parametric form: (2, y,z) = (z(u,v), y(u, v), 2(u, v)). As with the no-
+be in parametric form: \((x, y,z) = (x(u,v), y(u, v), z(u, v))\). As with the no-
 tation presented in Section 13.5.3, the cocflicients for the spline surface in
 the regression problem will be three-element vectors, one element for cach
-of the x, y, and z coordinates. The u-v domain is rectangular and is subdi-
-13.7. SURFACE APPROXIMATION 395
-
-vided into a uniform grid (equal spacing between the basis functions). The
-most difficult part is constructing a formula for mapping (z, y, z) point mea-
+of the \(x, y,\) and \(z\) coordinates. The \(u-v\) domain is rectangular and is subdivided into a uniform grid (equal spacing between the basis functions). The
+most difficult part is constructing a formula for mapping \((x, y, z)\) point mea-
 surements into the u-v domain so that the point measurements are correctly
 associated with the bicubic patches that make up the B-spline surface.
-
-13.7.2 Variational Methods
-
+-->
+</p>
+<h3>13.7.2 変分法</h3>
+<!--
+<h3>13.7.2 Variational Methods</h3>
+-->
+<p>
+曲面近似問題は、変分法の問題としても表すことができる。問題は、画像平面上の位置 \((x_k, y_k)\) における奥行き測定値の集合 \(z_k\) を近似する曲面 \(z = f(x, y)\) を決定することである。
+<!--
 The surface approximation problem can also be cast as a problem in vari-
-ational calculus. The problem is to determine the surface z = f(x,y) that
-approximates the set of depth measurements 2, at locations (x, y,) in the
+ational calculus. The problem is to determine the surface \(z = f(x,y)\) that
+approximates the set of depth measurements \(z_k\) at locations \((x_k, y_k)\) in the
 image plane.
-
+-->
+</p><p>
+任意の深度測定値にぴったり合う面は無数に存在するが、最良の近似は、深度測定値に最も近く、かつ滑らかな面として定義できる。最良の近似は、関数の最小化によって得られる。
+<!--
 There are an infinite number of surfaces that will closely fit any set of
 depth measurements, but the best approximation can be defined as the sur-
 face that comes closc to the depth measurements and is a smooth surface.
 The best approximation is obtained by minimizing the functional
-
-: ” 2 a ofa a .
-
-v= dl — flee, ye) +f / Ee +2 + a dxdy. (13.90)
-This minimization problem is solved using variational calculus to obtain the
-partial differential equation
-
-n
-
-ViF(2,¥) = So (ee — flees ye): (13.91)
-
-k=l
-Appropriate boundary conditions must be chosen for the edges of the graph
-surtace.
-
-13.7.3. Weighted Spline Approximation
-
+-->
+\[
+\begin{align}
+\chi^2 = & \sum_{k=1}^n (z_k-f(x_k,y_k))^2 \\
+&+\int\int\left[\frac{\partial^2 f}{\partial x^2}+2\frac{\partial f}{\partial x}\frac{\partial f}{\partial y}+\frac{\partial^2 f}{\partial y^2}\right]dx\,dy \tag{13.90}
+\end{align}
+\]
+この最小化問題は変分法を用いて解かれ、偏微分方程式が得られる。
+<!--
+This minimization problem is solved using variational calculus to obtain the partial differential equation
+-->
+\[
+\nabla^4f(x,y)=\sum_{k=1}^n (z_k-f(x_k,y_k)) \tag{13.91}
+\]
+グラフ表面のエッジには適切な境界条件を選択する必要がある。
+<!--
+Appropriate boundary conditions must be chosen for the edges of the graph surtace.
+-->
+</p>
+<h3>13.7.3. 重み付きスプライン近似</h3>
+<!--
+<h3>13.7.3. Weighted Spline Approximation</h3>
+-->
+<p>
+これまで提示してきた曲面近似法の問題点は、解が滑らかな曲面になることである。これは、シーン内の曲面境界に対応する可能性が高いデータの不連続性を越えても当てはまる。滑らかさは、変分法で使用される平滑性関数において明示的に表され、13.7.2節で示した回帰スプラインの滑らかな一般化関数の選択においては暗黙的に表される。近似曲面を区分的に滑らかな関数の集合として定式化できる場合、
+<!--
 The problem with the surface approximation mcthods presented so far is
 that the solutions are smooth surfaces, even across discontinuities in the data
 that most likely correspond to surface boundaries in the scene. Smoothness
@@ -1301,11 +1774,13 @@ is explicit in the smoothness functional used for the variational methods in
 Section 13.7.2 and is implicit in the choice of a smooth gencric function for the
 regression splines presented in Section 13.7.1. If the approximating surface
 could be formulated as a set of piecewise smooth functions,
-
-Ag
-f(e.y) = U fila.y), (13.92)
-396 CHAPTER 13. CURVES AND SURFACES
-
+-->
+\[
+f(x,y)=\bigcup_{l=1}^M f_l(x,y) \tag{13.92}
+\]
+そして、深度測定値を、区分的に滑らかな関数ごとに1つの領域を持つ領域に分割できれば、解はシーン内の表面の構造をより正確に反映するでしょう。しかし、これは本書の範囲を超える表面操作アルゴリズムにつながる。
+表面セグメンテーションのいくつかの側面については、13.8節で説明する。式13.62の平滑化関数を変更して深度データ内の不連続点を横切る平滑化を減らすことで、表面表現に関するいくつかの難しい問題を回避し、不連続点に適合した良好な表面近似を実現できる。このアプローチは、重み付き正則化につながる。
+<!--
 and the depth measurements could be segmented into regions with one region
 for each piecewise smooth function, then the solution would more accurately
 reflect the structure of the surfaces in the scenc. However, this leads to al-
@@ -1315,30 +1790,48 @@ can avoid some difficult topics in surface representation and still achieve a
 good surface approximation that conforms to discontinuities by changing the
 smoothness functional in Equation 13.62 to reduce smoothing across discon-
 tinuities in the depth data. This approach leads to weighted regularization.
+-->
+</p><p>
+1次元では、重み付き正則化ノルムは
+<!--
 In one dimension, the weighted regularization norm is
-
-tw — fla) + [ @)Ufeol@)? dz. (13.93)
-
+-->
+\[
+\sum_{i=1}^n (y_i - f(x_i))^2+\int w(x)[f_{xx}(x)]^2dx \tag{13.93}
+\]
+重み関数w(z)をデータの不連続点で小さく、それ以外の点で大きく選択すると、重み関数は不連続点における滑らかさの基準を打ち消す。
+<!--
 If the weight function w(z) is choosen to be small at discontinuities in the
 data and large elsewhere, then the weight fumction cancels the smoothness
 criterion at discontinuities.
-
+-->
+</p><p>
+2次元では、重み付きスプリンク面近似のノルムは
+<!--
 In two dimensions, the norm for weighted splinc surface approximation is
-
-af  .ofaf  &
-=D F (xs. ye) yf fu y) Fez +07 f dx dy (13.94)
-
+-->
+\[
+\begin{align}
+\chi^2=& \sum_{i=1}^n (z_i - f(x_i,y_i))^2 \\
+& +\int\int w(x,y)\left[\frac{\partial^2 f}{\partial x^2}+2\frac{\partial f}{\partial x}\frac{\partial f}{\partial y}+\frac{\partial^2 f}{\partial y^2}\right]dx\,dy \tag{13.94}
+\end{align}
+\]
+重み関数は次のように与えられる。
+<!--
 with the weight function given by
-
-a?
-
-1+ le@ vie’ (13.95)
-
-w(2,y) =
-where p(z,y) is the gradient of the surface from which the samples were
+-->
+\[
+w(x,y)=\frac{\alpha^2}{1+||\rho(x,y)||^2} \tag{13.95}
+\]
+ここで、\(\rho(x,y)\)はサンプルが採取された面の勾配である。式13.62の正規化パラメータaは重み関数に吸収されていることに注意してください。
+<!--
+where \(\rho(x,y)\) is the gradient of the surface from which the samples were
 taken. Note that the regularizing parameter a from Equation 13.62 has been
 absorbed into the weight function.
-
+-->
+</p><p>
+変分法を用いて式13.94を偏微分方程式に変換することができる（13.7.2節および付録A.3を参照）。また、回帰スプライン法を用いて式13.94を線型回帰問題に置き換えることもできる。式13.94の重み関数は、テンソル積基底関数が定義されているグリッドの範囲にわたって重みが一定であると仮定して、勾配の近似値から計算される。
+<!--
 Variational methods can be used to transform Equation 13.94 into a par-
 tial differential equation, as shown in Section 13.7.2 and Appendix A.3, or
 the method of regression splines can be used to replace Equation 13.94 with
@@ -1346,14 +1839,23 @@ a linear regression problem. The weight function in Equation 13.94 is com-
 puted from an approximation to the gradient by assuming that the weights
 are constant over the span of the grid on which the tensor-product. basis
 functions are defined.
-13.8. SURFACE SEGMENTATION 397
-
-13.8 Surface Segmentation
-
+-->
+</p>
+<h2>13.8 サーフェスセグメンテーション</h2>
+<!--
+<h2>13.8 Surface Segmentation</h2>
+-->
+<p>
+距離画像は、ピクセウィスクな滑らかなグラフ面のサンプルの均一なグリッドである。
+<!--
 A range image is a uniform grid of samples of a piccewisc smooth graph
 surface
-z= f(x,y). (13.96)
-
+-->
+\[
+z= f(x,y) \tag{13.96}
+\]
+この節では、一様グリッド上に定義された一連の距離サンプルを、同様の曲率を持つ領域に分割する方法と、各領域を低次二変数多項式で近似する方法について説明する。3.5節で説明した領域成長法に似た可変次数表面セグメンテーションアルゴリズムを紹介する。表面の曲率特性を用いてコア領域を推定し、コア領域を拡張して追加の距離サンプルをカバーする。領域は二変量表面パッチによってモデル化される（13.5.2節を参照）。セグメンテーションアルゴリズムは、新しい距離サンプルと表面パッチ間の残差が低い場合、領域に隣接する距離サンプルをカバーするように表面パッチを拡張することで領域を拡張する。
+<!--
 This section will describe how a set of range samples, defined on a uniform
 grid, can be segmented into regions that have similar curvature and how to
 approximate each region with low-order bivariate polynomials. The variable-
@@ -1364,47 +1866,59 @@ range samples. The regions are modeled by bivariate surface patches (see
 Section 13.5.2). The segmentation algorithm grows the regions by extending
 the surface patches to cover range samples that are neighbors of the region
 if the residual between the new range samples and the surface patch is low.
-
+-->
+</p><p>
+曲面分割問題は、次のように正式に述べられる。部分的に滑らかなグラフ曲面\(z = f(x, y)\)は、滑らかな曲面プリミティブに分割できる。
+<!--
 The surface segmentation problem is formally stated as follows. A piecc-
-wise smooth graph surface z = f(z, y) can be partitioned into smooth surface
+wise smooth graph surface \(z = f(x, y)\) can be partitioned into smooth surface
 primitives
-
-[=1
-with one surface primitive for each region R;. The characteristic function
-
-1 if (e,y) € R;
-
-0 otherwise (13.98)
-
-eon) ={
-
+-->
+\[
+z=f(x,y)=\sum_{l=1}^n f_l(x,y)\xi(x,y,l) \tag{13.97}
+\]
+各領域\(R_l\)ごとに1つの表面プリミティブを持つ。特性関数
+<!--
+with one surface primitive for each region \(R_l\). The characteristic function
+-->
+\[
+\xi(x,y,l)=
+\begin{cases}
+1 & if\;(x,y)\in R_i \\
+0 & otherwise
+\end{cases}
+\tag{13.98}
+\]
+レンジデータを表面パッチ（領域）に分割することを表す。各領域の表面は多項式パッチで近似される。
+<!--
 represents the segmentation of the range data into surface patches (regions).
-‘The surface for cach region is approximated by a polynomial patch
-
-f@y= SD ayaiy’ (13.99)
-
-itj<m
-
-for points (x,y) € R;. The surface model includes planar, bilinear bi-
+The surface for cach region is approximated by a polynomial patch
+-->
+\[
+f(x,y)= \sum_{iLj\leq m} a_{ij}x^iy^j \tag{13.99}
+\]
+点 \((x,y)\in R_i\) について。サーフェスモデルには、平面、双一次、双二次、双三次、双四次多項式パッチが含まれており、サーフェス表現のネストされた階層を提供する。
+<!--
+for points \((x,y)\in R_i\). The surface model includes planar, bilinear bi-
 quadratic, bicubic, and biquartic polynomial patches, which provide a nested
 hierarchy of surface representations.
-
-The characteristic function €(z, y,/) can be implemented as a list of the
-locations [i,j] of the pixcls that are in each region. Other representations
+-->
+</p><p>
+特性関数 \(\xi(x, y, l)\) は、各領域内のピクセルの位置 \([i, j]\) のリストとして実装できる。3.3節で説明したビットマスクや四分木などの他の表現も使用できる。
+<!--
+The characteristic function \(\xi(x, y,l)\) can be implemented as a list of the
+locations \([i,j]\) of the pixcls that are in each region. Other representations
 such as bit masks or quad trees, described in Section 3.3, can be used.
-398 CHAPTER 13, CURVES AND SURFACES
+-->
 
-Kiig]
-+ 0 _
-~ Peak Ridge —
-Saddle
-+ Pit Valley oe
-
-Table 13.1: The eight surface types defined by the signs of the mean and
-Gaussian curvatures.
-
-13.8.1 Initial Segmentation
-
+</p>
+<h3>13.8.1 初期セグメンテーション</h3>
+<!--
+<h3>13.8.1 Initial Segmentation</h3>
+-->
+<p>
+初期セグメンテーションのコア領域は、平均曲率とガウス曲率を計算し、平均曲率とガウス曲率の符号を用いて初期領域仮説を形成することによって推定される。領域境界付近の領域には、領域に属さないサンプルが含まれる可能性がある。これは、領域間の遷移付近の曲率を正確に推定することが困難な場合があるためである。初期領域仮説に誤ってラベル付けされたサンプルが含まれないようにするため、領域はコア領域に縮小される（セクション2.5.12を参照）。平均曲率とガウス曲率の符号に対応する8つの表面タイプがあり、表13.1にリストされている。これらの表面タイプはコア領域の形成に使用される。
+<!--
 The core regions for the initial segmentation are estimated by computing the
 mean and Gaussian curvatures and using the signs of the mean and Gaussian
 curvatures to form initial region hypotheses. The portion of the regions near
@@ -1415,43 +1929,69 @@ Section 2.5.12) to cnsure that the initial region hypotheses do not include
 any falsely labeled samples. There are cight surface types corresponding to
 the sigus of the mean and Gaussian curvatures, listed in Table 13.1. These
 surface types are used 10 form core regions.
-
+-->
+</p>
+<center><img src="images/table13_1.png"></center>
+<p class="margin-large">
+表13.1: 平均曲率とガウス曲率の符号によって定義される8つの曲面タイプ。
+<!--
+Table 13.1: The eight surface types defined by the signs of the mean and
+Gaussian curvatures.
+-->
+</p><p>
+距離データは、画像のように処理できる距離サンプルの正方格子であると仮定する。距離画像の1次および2次偏微分\(f_x, f_y, f_{xx}, f_{xy}, f_{yy}\)は、偏微分を推定するための分離可能なフィルターを用いて距離画像を畳み込むことで推定される。平均曲率を計算する。
+<!--
 Assume that the range data are a square grid of range samples that may
 be processed like an image. The first and second partial derivatives of the
-range image, fr, fy, fea, fay, fy, are estimated by convolving the range
+range image, \(f_x, f_y, f_{xx}, f_{xy}, f_{yy}\), are estimated by convolving the range
 image with separable filters to estimate the partial derivatives. Compute the
-13.8. SURFACE SEGMENTATION 399
-
 mean curvature
-
-(13.100)
+-->
+\[
+H[i,j]=\frac{(1+f_y^2[i,j])f_{xx}[i,j]+(1+f_x^2[i,j])f_{yy}-2f_x[i,j]f_y[i,j]f_{xy}[i,j]}{2\left(\sqrt{1+f_x^2[i,j]+f_y^2[i,j]}\right)^3} \tag{13.100}
+\]
+ガウス曲率
+<!--
 and the Gaussian curvature
-
-_ Feali, J] Fuylt, J] _ ryt J
-(1+ Pld) + Rl)
+-->
+\[
+K[i,j]=\frac{f_{xx}[i,j]f_{yy}[i,j]-f_{xy}^2[i,j]}{\left(1+f_x^2[i,j]+f_y^2[i,j]\right)^2}
+\]
+範囲画像の1次および2次偏微分の推定値を用いて、平均とガウス曲率の符号を表す整数ラベルを以下の式を用いて計算する。
+<!--
 using the estimates of the first and sccond partial derivatives of the range
 
 image. Compute an integer label that encodes the signs of the mean and
 Gaussian curvatures using the formula
-
-Ali, j]
-
-Tii, j] = 1+ 3(1 + sgn(A[i, J) + CL + sen(K (i, 3). (13.101)
-
+-->
+\[
+T[i, j] = 1+ 3(1 + sgn(H[i,j])) + (1+sgn(K[i,j])) \tag{13.101}
+\]
+連続連結成分アルゴリズム（セクション2.5.2）を用いて、同一ラベルを持つレンジサンプルを連結領域にグループ化し、シュリンクまたはエロージョン演算子を用いて領域のサイズをレンジサンプルの保守的なコアまで縮小する。サイズフィルターを用いて、シーンのサーフェスに対応するには小さすぎる領域を破棄することができる。残った領域は、領域拡張プロセスを初期化するシードとなる。
+<!--
 Use the sequential connected components algorithm (Section 2.5.2) to group
 range samples with identical labels into connected regions and reduce the
 size of the regions to a conscrvative core of range samples using a shrink or
 erosion operator. A size filter can be used to discard regions that arc too
 small to correspond to scene surfaces. The regions that remain form the
 seeds that initialize the region-growing process.
-
-13.8.2. Extending Surface Patches
-
+-->
+</p>
+<h3>13.8.2. サーフェスパッチの拡張</h3>
+<!--
+<h3>13.8.2. Extending Surface Patches</h3>
+-->
+<p>
+コア領域内のレンジサンプルに二変数多項式をフィッティングする。表面フィッティングは平面パッチ（m = 1）から開始し、良好なフィッティング（二乗平均平方根誤差が閾値以下）が得られるまで表面パッチの次数を増やしていく。良好なフィッティングが得られない場合、その領域は破棄される。
+<!--
 Bivariate polynomials are fit to the range samples in the core regions. The
-surface fit starts with a planar patch, m = 1, and the order of the surface
+surface fit starts with a planar patch, \(m = 1\), and the order of the surface
 patch is increased until a good fit (root-mean-square error below a threshold)
 is achieved. If a good fit is not achieved, then the region is discarded.
-
+-->
+</p><p>
+セグメンテーションアルゴリズムの残りの部分は、隣接する範囲サンプルをカバーするように領域を拡張するために使用される。割り当てられていない範囲サンプルは、領域拡張プロセスを使用して領域に追加される。範囲サンプルを領域に追加するかどうかを決定するための類似性述語は、範囲サンプルの値と、範囲サンプルと同じ場所で評価された2変量サーフェスパッチの値を比較することに基づいている。サーフェスパッチと範囲サンプル間の残差が閾値を下回る場合、範囲サンプルは領域に含める候補セットに含められる。それ以外の場合、範囲サンプルは領域に追加されない。2変量サーフェスパッチは、領域内のすべての範囲サンプル（現在領域内にあるサンプルと候補セットを含む）に再フィッティングされ、必要に応じてサーフェスパッチの次数を最大次数まで上げる。フィッティングエラーが閾値を下回る場合、候補は領域に恒久的に追加される。それ以外の場合、候補セット全体が破棄される。領域拡張は、領域が拡大されなくなるまで継続される。セグメンテーション アルゴリズムはアルゴリズム 13.3 にまとめられている。
+<!--
 The rest of the segmentation algorithm trics to extend the regions to cover
 neighboring range samples. Unassigned range samples are added to regions
 using a region-growing process. The similarity predicate for deciding if a
@@ -1461,49 +2001,81 @@ location as the range sample. If the residual between the surface patch and
 range sample is below a threshold, then the range sample is included in the set
 of candidates for inclusion in the region; otherwise, the range sample is not
 added to the region. The bivariate surface patch is refit to all range samples
-400 CHAPTER 13. CURVES AND SURFACES
-
 in the region, including the samples that are currently in the region and the
 set of candidates, increasing the order of the surface patch if necessary, up
 to the maximum order. If the fitting error is below a threshold, then the
 candidates are permanently added to the region; otherwise, the entire set
 of candidates is discarded. Region growing continues until no regions are
 enlarged. The segmentation algorithm is summarized in Algorithm 13.3.
+-->
+</p><p>
+<strong>アルゴリズム 13.3 曲面セグメンテーション</strong><br>
+距離画像を、曲面パッチとして表現される領域に分割する。
+<div class="styleBullet">
+<ul>
+<li>1. 分離可能なフィルタを用いて、距離画像の1次および2次偏微分を計算する。
 
+</li><br><li>2. 画像の各位置における平均曲率とガウス曲率を計算する。
+</li><br><li>3. 各距離ピクセルに曲面タイプをラベル付けする。
+</li><br><li>4. 領域境界付近の誤ったラベルを除去するために、領域を縮小する。
+
+</li><br><li>5. 逐次連結成分アルゴリズムを用いてコア領域を特定する。
+
+</li><br><li>6. 小さすぎるコア領域を削除する。
+</li><br><li>7. 各領域に2変量パッチを当てはめる。
+
+</li><br><li>8.各領域について、近傍の位置で評価された表面パッチの値に近い値を持つ隣接ピクセルの集合を特定する。このピクセル集合は、領域に含める候補となる。
+
+</li><br><li>9. 表面パッチを、領域内のピクセル集合と候補集合の和集合に再フィッティングする。フィッティングが許容範囲内であれば、候補集合を領域に追加する。そうでない場合は、候補集合を破棄する。
+
+</li><br><li>10. 領域が変化しなくなるまで、手順8～9を繰り返す。</li>
+</ul></div>
+<!--
 Algorithm 13.3 Surface Segmentation
 Segment a range image into regions represented as a surface patches.
-
-1. Compute the first and second partial derivatives of the range image
+<div class="styleBullet">
+<ul>
+<li>1. Compute the first and second partial derivatives of the range image
 using separable filters.
 
-2. Compute the mean and Gaussian curvature at each image location.
-3. Label each range pixel with the surface type.
-4. Shrink the regions to eliminate false labels near the region boundaries.
+</li><br><li>2. Compute the mean and Gaussian curvature at each image location.
+</li><br><li>3. Label each range pixel with the surface type.
+</li><br><li>4. Shrink the regions to eliminate false labels near the region boundaries.
 
-5. Identify core regions using the sequential connected components algo-
+</li><br><li>5. Identify core regions using the sequential connected components algo-
 rithm.
 
-6. Remove core regions that are too small.
-7. Fit a bivariate patch to each region.
+</li><br><li>6. Remove core regions that are too small.
+</li><br><li>7. Fit a bivariate patch to each region.
 
-8. For each region, determine the set of neighboring pixels with values that
+</li><br><li>8. For each region, determine the set of neighboring pixels with values that
 are close to the value of the surface patch evaluated at the location of the
 neighbor. This set of pixels are candidates for inclusion in the region.
 
-9. Refit the surface patch to the union of the set of pixels in the region and
+</li><br><li>9. Refit the surface patch to the union of the set of pixels in the region and
 the set of candidates. If the fit is acceptable, add the set of candidates
 to the region; otherwise, discard the set of candidates.
 
-10. Repeat steps 8 through 9 until no region is changed.
-
+</li><br><li>10. Repeat steps 8 through 9 until no region is changed.</li>
+</ul></div>
+-->
+</p><p>
+候補セットの一部は、別の領域に含める必要があるため、破棄される可能性がある。後ほど、候補の一部が再検査され、その領域に含まれる可能性がある。ピクセルが領域に割り当てられると、その割り当てを元に戻すことはできない。
+<!--
 Note that. it is possible for a set of candidates to be discarded because
 some of the candidates should be included in another region. Later, some of
 the candidates may be retested and included in the region. Once a pixel is
 assigned to a region, the assignment cannot be reversed.
-13.9. SURFACE REGISTRATION 401
+-->
+</p>
 
-13.9 Surface Registration
-
+<h2>13.9 表面位置合わせ</h2>
+<!--
+<h2>13.9 Surface Registration</h2>
+-->
+<p>
+共役なペアの集合における対応する点間の変換は、絶対方向問題（12.3節）を解くことによって決定できるが、点の対応関係なしに2つの図形を位置合わせする必要があるアプリケーションもある。例えば、点のサンプルが物体上の点とどのように対応するかを事前に知らなくても、距離サンプルの集合を物体モデルに位置合わせする必要がある場合がある。この節では、点の対応関係を使用せずに物体の2つのビュー間の剛体変換を決定するための反復最近点アルゴリズムについて説明する。
+<!--
 The transformation between corresponding points in a set of conjugate pairs
 can be determined by solving the absolute orientation problem (Section 12.3),
 but there are applications where it is necessary to align two shapes without
@@ -1512,7 +2084,10 @@ range samples to an object model without advance knowledge of how the
 point samples correspond to points on the object. This section describes the
 iterative closest point algorithm for determining the rigid body transforma-
 tion between two views of an object without using point correspondences.
-
+-->
+</p><p>
+反復最近点アルゴリズムは、点集合、2次元または3次元の曲線、様々な曲面表現など、幅広いオブジェクトモデルに適応できる。曲線は折れ線、暗黙曲線、またはパラメトリック曲線として表現でき、曲面はファセット面（ポリゴンメッシュ）、暗黙曲面またはパラメトリック曲面、またはテンソル積Bスプラインとして表現できる。オブジェクトの両方のビューが同じ表現を持つ必要はない。例えば、一方のビューは能動的な三角測量によって得られた空間曲線の集合であり、もう一方のビューはテンソル積3次スプライン曲面である可能性がある。重要な考え方は、一方のビューの表現からサンプリングされた点を、もう一方のビューの表現上の最近点にマッピングすることで、共役ペアの集合を近似できるというものである。これらの対応関係を用いて絶対方向の問題を解決することで、ビュー間の位置合わせが改善される。最近点の対応関係を見つけ、これらの近似共役ペアを使用して絶対方向問題を解くプロセスは、2つのビューが一致するまで繰り返すことができる。
+<!--
 The iterative closest point algorithm can be adapted to a wide variety of
 object models including sets of points, curves in two or three dimensions, and
 various surface representations. The curves may be represented as polylines,
@@ -1529,31 +2104,38 @@ will improve the alignment between views. The process of finding closest
 point correspondences and solving the absolute orientation problem with
 these approximate conjugate pairs can be repeated until the two views are
 aligned.
-
+-->
+</p><p>
+反復最近点アルゴリズムを用いて、点群を表面モデルに登録するケースを提示する。物体の表面からサンプリングされた点群Pと、その物体のモデル\(M\)が与えられたとき、各サンプル点に最も近いモデル上の点群を求める。サンプル集合内の点pとモデル\(M\)間の距離は、
+<!--
 The iterative closest point algorithm will be presented for the case of
 registering a set of points with a surface model. Given a set of points P
-sampled over the surface of an object and a model M for the object, determine
+sampled over the surface of an object and a model \(M\) for the object, determine
 the set of points on the model that arc the closest points to each sample point.
-The distance between a point p in the sample set and the model M is
-
-d(p,M) = mii a — Pl (13.102)
-
-Compute Q = {q1,42,--+;@n}, the sect of points q € M that are the closest
-points to each point in the sample set P = {p1,po,..., pn}. Pair each sample
-point p with its closest point g in the model to form a set of conjugate
-402 CHAPTER 13. CURVES AND SURFACES
-
-pairs {(pi, g1), (pa, d2),---; (Pn; @n)}. Solve the absolute orientation problem
+The distance between a point p in the sample set and the model \(M\) is
+-->
+\[
+d(p,M) = \min_{q\in M} ||q-p|| \tag{13.102}
+\]
+標本集合 \(P = \{p_1,p_2,\cdots,p_n\}\) 内の各点に最も近い点 \(q\in M\) の集合 \(Q = \{q_1,q_2,\cdots,q_n\}\) を計算する。各標本点 \(p\) とモデル内の最も近い点 \(q\) をペアにして、共役ペアの集合 \(\{(p_1, q_1), (p_2,q_2),\cdots,(p_n,q_n)\}\) を形成する。この共役ペアの集合を使用して、絶対方向問題を解く。点集合は真の共役ペアではないが、ビュー間の変換のおおよその解が得られる。この変換を点集合 P に適用し、最近点集合 \(Q\) を再計算する。これで点集合はモデルに近づき、\(P\) と \(Q\) の点のペアは正しい共役ペアに近づく。絶対方向問題を再度解き、新しい変換を点集合 \(P\) に適用する。この手順は、最近点間の距離の二乗和（最近点距離の二乗平均平方根）が閾値を下回るまで繰り返される。
+<!--
+Compute \(Q = \{q_1,q_2,\cdots,q_n\}\), the sect of points \(q\in M\) that are the closest
+points to each point in the sample set \(P = \{p_1,p_2,\cdots,p_n\}\). Pair each sample
+point \(p\) with its closest point \(q\) in the model to form a set of conjugate
+pairs \(\{(p_1, q_1), (p_2,q_2),\cdots,(p_n,q_n)\}\). Solve the absolute orientation problem
 using this set of conjugate pairs. Even though the point sets are not true
 conjugate pairs, an approximate solution to the transformation between the
 views will be obtained. Apply the transformation to the point set P and
-recompute the set of closest points Q@. Now the point set is closcr to the
-model and the pairs of points in P and @ will be closer to correct conjugate
+recompute the set of closest points \(Q\). Now the point set is closcr to the
+model and the pairs of points in \(P\) and \(Q\) will be closer to correct conjugate
 pairs. The absolute orientation problem can be solved again and the new
-transformation applied to point set P. This procedure is repeated until the
+transformation applied to point set \(P\). This procedure is repeated until the
 sum of the squared distances between closest points (the root-mean-square
 closest point distance) is below a threshold.
-
+-->
+</p><p>
+最初の反復では、最も近い点のペアは真の共役ペアの近似としてはあまり良くないかもしれないが、これらの近似共役ペアで絶対方向問題を解くことによって得られる剛体変換を適用すると、点集合はモデルに近づく。反復が続くと、最も近い点のペアは有効な共役ペアに近づいていく。たとえば、点集合が最初はモデルから非常に離れている場合、すべての点がモデル上の同じ点にマッピングされる可能性がある。明らかに、このような多対一のマッピングは有効な共役ペアの集合にはなり得えないが、最初の反復では点集合をモデルに引き寄せ、対応するモデル点に点が中心となるようにする。その後の反復では、点集合の中心をモデルの中心に合わる。最後の反復では、点集合を回転させて位置を調整し、点集合がモデルの中心に揃うようにする。反復的な最近点位置合わせの手順はアルゴリズム13.4に記載されている。
+<!--
 In the carly itcrations, the closest point pairs may be very poor approxi-
 mations to true conjugate pairs, but applying the rigid body transformation
 obtained by solving the absolute orientation problem with these approximate
@@ -1567,126 +2149,31 @@ model point and subsequent iterations align the center of the point sct with
 the center of the model. The final iterations rotate the point sct and adjust
 its position so that the point set is aligned with the modcl. The steps of
 iterative closest point registration are listed in Algorithm 13.4.
+-->
+</p><p>
+<strong>アルゴリズム 13.4 反復的最近点位置合わせ</strong><br>
+ポリゴンメッシュとしてモデル化されたサーフェスに点群を位置合わせする。
+<div class="styleBullet">
+<ul>
+<li>1. 最近点群を計算する。
+</li><br><li>2. 点群間の位置合わせを計算する。
+</li><br><li>3. 変換を適用して点群を位置合わせする。
 
+</li><br><li>4. 位置合わせ誤差が許容範囲内でない限り、手順 1 に戻る。</li>
+</ul>
+</div>
+<!--
 Algorithm 13.4 Iterative Closest Point Registration
 Register a set of points to a surface modeled as a polygonal mesh.
+<div class="styleBullet">
+<ul>
+<li>1. Compute the set of closest points.
+</li><br><li>2. Compute the registration between the point sets.
+</li><br><li>3. Apply the transform to register the point sets.
 
-1. Compute the set of closest points.
-2. Compute the registration between the point sets.
-3. Apply the transform to register the point sets.
-
-4. Return to step 1 unless the registration error is within tolerance.
-FURTHER READING 403
-
-Further Reading
-
-An execllent introduction to the differential geometry of curves and surfaces
-is the book by do Carmo 67]. Bartels, Beatty, and Barsky [22] have written
-an excellent introduction to spline curves and surfaces. The scries of books,
-called Graphics Gems, contains much useful information on geometry, curves,
-and surfaces [89]. The most recent volume includes a disk with code for all
-of the algorithms presented in the series.
-
-Surface reconstruction is a common problem in computer vision [92, 232,
-233, 35]. Surface reconstruction is required for fitting a surface to sparse
-depth values from binocular stereo and range sensors [28, 92, 232]. Sinha
-and Schunck [223] have proposed a two-stage algorithm for surface recon-
-struction. The first stage removes outliers from the depth measurements and
-interpolates the sparse depth values onto a uniform grid. The second stage
-fits weighted bicubic splines to the output from the second stage.
-
-The section on surface segmentation is based on the work of Besl and
-Jain [28]. The iterative closest point algorithm was developed by Besl and
-McKay [29].
-
-Exercises
-
-13.1 Define implicit, explicit, and parametric representations of a surface.
-When we consider an image as a two-dimensional mathematical func-
-tion, can we consider the image as a surface? If so, which of the three
-representations above corresponds to an image?
-
-13.2 Given four points in space, how will you determine whcther they are
-coplanar?
-
-13.3 Define principal curvature, Gaussian curvature, and mean curvature
-for a surface. What information about the nature of a surface do
-you get by knowing these curvature valucs at a point? Do you get
-local information or global information about the surface from these
-curvature valucs?
-
-13.4 What is a spline curve? Why are cubic splincs frequently used to
-represent curves?
-404
-
-13.5
-
-13.6
-
-13.7
-
-13.8
-
-13.9
-
-CHAPTER 13. CURVES AND SURFACES
-
-Polygonal meshes are commonly used to represent surfaces. What are
-polygonal meshes? Why are they used to represent arbitrary curved
-surfaces? How closcly can you represent an arbitrary curved surface
-using a polygonal mesh?
-
-What is a winged edge data structure? Where and why is one used?
-
-What is a graph surface? Show that a graph surface can be mod-
-eled using a bivariate polynomial surface representation. Discuss the
-limitations of polynomial patch representations for surfaces.
-
-Define tensor product surface. Compare it with the polynomial sur-
-face representation for applications m machine vision. You should
-consider three concrete applications in inspection, measurement, and
-object recognition and study the requirements of these applications.
-Then compare these representations for the specific task requirements.
-
-What is the difference between surface approximation and surface in-
-terpolation? What is segmentation: approximation or interpolation?
-Explain your answer.
-
-13.10 What is regularization? When should it be used in computer vision?
-
-Explain your answer using an example where regularization may be
-used to solve a problem effectively.
-
-13.11 Give the mathematical formulation of a B-spline surface. How do you
-
-evaluate the quality of fit for these surfaces?
-
-13.12 How can you use B-splines for smoothing imges? Which type of ap-
-
-plications will be suitable for spline smoothing?
-
-13.13 Using differential geometric characteristics, it is possible to classify
-
-the local nature of a surface as one of the eight. surface types. Which
-characteristics are used and what are the classes?
-
-Computer Projects
-
-13.1
-
-Write a program to segment images, including range images, starting
-with a seod that contains local regions of similar type based on the
-COMPUTER PROJECTS 405
-
-differential geometric characteristics. Use a region growing method
-to fit biquadratic and bicubic surfaces in an image. Sclect suitable
-region growing and region termination criterion. Apply this program to
-several images. Study the error characteristics of surfaces approximated
-by your program.
-
-13.2 Implement an algorithm to take scattered three-dimensional points and
-convert them to a uniform grid representation using an interpolation
-algorithm. Test the algorithm using the output of a stereo algorithm.
+</li><br><li>4. Return to step 1 unless the registration error is within tolerance.</li>
+</ul>
+</div>
 -->
 </p>
     </body>
