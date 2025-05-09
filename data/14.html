@@ -4,7 +4,7 @@
         <script type="text/javascript" id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
         <meta charset="utf-8" />
-        <title>ダイナミックビジョン</title>
+        <title>14章</title>
         <style type="text/css">
             p
             {
@@ -75,7 +75,7 @@
     </style>
     </head>
     <body>
-        <h1><center>14章 ダイナミックビジョン(準備中)</center></h1>
+        <h1><center>14章 ダイナミックビジョン</center></h1>
 <p>
 ほとんどの生物視覚システムは、変化する世界に対応するために進化してきた。
 マシンビジョンシステムも同様に発展してきた。コンピュータビジョンシステムにとって、移動・変化する物体、変化する照明、そして変化する視点に対応する能力は、様々なタスクを実行する上で不可欠である。初期のコンピュータビジョンシステムは主に静的なシーンを対象としていたが、動的なシーンを分析するためのコンピュータビジョンシステムは、様々な用途向けに設計されている。
@@ -166,8 +166,8 @@ computer vision.-->
 動的シーン分析には3つの段階がある。
 <div class="styleBullet">
 <ul>
-<li>● 周辺フェーズ</li>
-<li>● 注意フェーズ</li>
+<li>● 周辺フェーズ</li><br>
+<li>● 注意フェーズ</li><br>
 <li>● 認知フェーズ</li>
 </ul>
 </div>
@@ -256,61 +256,87 @@ DP_{jk}(x,y)=\Big\{
 \end{array}
 \tag{14.1}
 \]
-where \(\tau\) is a threshold.-->
+where \(\tau\) is a threshold.
+-->
 </p><p>
-<!-- In a difference picture, pixels which have value 1 may be considered to be
+差分画像において、値が1のピクセルは、物体の動きまたは照明の変化によるものとみなすことができる。これは、フレームが適切に位置合わせされていることを前提としている。図14.1と14.2に変化検出の2つの例を示す。1つは画像の一部における照明の変化によるもので、もう1つは物体の動きによるものである。
+<!--
+In a difference picture, pixels which have value 1 may be considered to be
 the result of object motion or illumination changes. This assumes that the
 frames are properly registered. In Figures 14.1 and 14.2 we show two cases
 of change detection, one due to illumination changes in a part of image and
-the other due to motion of an object. ,
-
+the other due to motion of an object. 
+-->
+</p>
+<center><img src="images/fig14_1.png"></center>
+<p class="margin-large">
+図14.1: シーケンスの2つのフレーム (a) と (b)、およびそれらの差分画像 (c)。変化した領域（黒で表示）は物体の動きによるものであることに注目。\(\tau = 25\) を使用した。
+<!--
+Figure 14.1: ‘I'wo frames from a sequence, (a) and (b), and their difference
+picture, (c). Notice that the changed areas (shown in black) are due to the
+motion of objects. We used \(\tau = 25\).
+-->
+</p>
+<center><img src="images/fig14_2.png"></center>
+<p class="margin-large">
+図14.2: シーケンスの2つのフレーム(a)と(b)、およびそれらの差分画像(c)。変化した領域は、シーンの一部における照明の変化によるものであることに注目。\(\tau = 25\)を使用した。
+<!--
+Figure 14.2: Two frames from a sequence, (a) and (b), and their difference
+picture, (c). Notice that the changed areas are due to the changes in the
+illumination in the part of the scene. We used \(\tau = 25\).
+-->
+</p><p>
+3章で説明した概念である閾値設定は、ここでも非常に重要な役割を果たす。ゆっくりと移動する物体や、ゆっくりと変化する強度変化は、与えられた閾値では検出されない可能性がある。
+<!--
 A concept discussed in Chapter 3, thresholding, will play a very important
 role here also. Slow-moving objects and slowly varying intensity changes may
 not be detected for a given threshold value.
-
-Size Filter
-
+-->
+</p>
+<h4>サイズフィルター</h4>
+<!--
+<h4>Size Filter</h4>
+-->
+<p>
+実際のシーンで上記の簡単なテストを用いて得られた差分画像では、通常、ノイズの多いピクセルが多くなる。単純なサイズフィルターは、差分画像内の多くのノイズ領域を除去するのに効果的である。最小サイズの連結クラスターに属さないピクセルは通常、ノイズによるものであり、フィルターで除去できる。差分画像において、ある閾値サイズより大きい4連結（または8連結）コンポーネントに属するピクセルのみが、更なる分析のために保持される。動き検出において、このフィルターは非常に効果的であるが、残念ながら、低速または小型の移動物体からの信号など、一部の望ましい信号もフィルター処理してしまう。図14.3は、図14.1に示したフレームの差分画像において\(\tau = 10\)とサイズフィルター処理の結果を示している。
+<!--
 A difference picture obtained using the above simple test on real scenes usu-
-ally results in too many noisy pixels. A simple size filter is effective in elimi-
-410 CHAPTER 14. DYNAMIC VISION
-
-(a) (b)
-
-Figure 14.1: ‘I'wo frames from a sequence, (a) and (b), and their difference
-picture, (c). Notice that the changed areas (shown in black) are due to the
-motion of objects. We used 7 = 25.
-
-(a)
-
-Figure 14.2: Two frames from a sequence, (a) and (b), and their difference
-picture, (c). Notice that the changed areas are due to the changes in the
-illumination in the part of the scene. We used r = 25.
-
-(c)
-
-nating many noisy areas in the difference picture. Pixels that do not belong
+ally results in too many noisy pixels. A simple size filter is effective in eliminating many noisy areas in the difference picture. Pixels that do not belong
 to a connected cluster of a minimum size are usually due to noise and can be
 filtered out. Only pixels in a difference picture that belong to a 4-connected
 (or 8-connected) component larger than some threshold size are retained
 for further analysis. For motion detection, this filter is very effective, but
 unfortunately it also filters some desirable signals, such as those from slow or
 small moving objects. In Figure 14.3 we show the difference picture for the
-frames shown in Figure 14.1 with 7 = 10 and the result of the size filtering.
-14.1. CHANGE DETECTION 41]
-
+frames shown in Figure 14.1 with \(\tau = 10\) and the result of the size filtering.
+-->
+<p>
+<center><img src="images/fig14_3.png"></center>
+<p class="margin-large">
+図14.3: 図14.1に示したフレームの差分画像（\(\tau = 10\)）とサイズフィルタリングの結果をそれぞれ(a)と(b)に示す。サイズフィルタリングによって、画像内の多くのノイズ領域が除去されていることがわかる。10ピクセル未満の領域はすべてフィルタリングされている。
+<!--
 Figure 14.3: The difference picture for the frames shown in Figure 14.1 with
-7 = 10 and the result of the size filtering are shown in (a) and (b), respec-
+\(\tau = 10\) and the result of the size filtering are shown in (a) and (b), respec-
 tively. Notice that size filtering has removed many noisy regions in the image.
 All regions below 10 pixels were filtered out.
-
-Robust Change Detection
-
+-->
+</p>
+<h4>堅牢な変化検出</h4>
+<!--
+<h4>Robust Change Detection</h4>
+-->
+<p>
+変化検出をより堅牢にするために、2つのフレーム内の同じ位置にあるピクセル領域またはピクセルグループの輝度特性を、統計的アプローチ、または輝度分布の局所近似に基づくアプローチのいずれかを用いて比較することができる。このような比較により、計算量の増加はあるものの、より信頼性の高い変化検出が可能になる。
+<!--
 To make change detection more robust, intensity characteristics of regions or
 groups of pixels at the same location in two frames may be compared using
 either a statistical approach or an approach based on the local approxima-
 tion of intensity distributions. Such comparisons will result in more reliable
 change detection at the cost of added computation.
-
+-->
+</p><p>
+画像内の領域を比較するための、ドメインに依存しない簡単な方法は、フレームの対応する領域を考慮することである。これらの対応する領域は、m行n列の重なり合わない長方形領域のピクセルによって形成されるスーパーピクセルである可能性がある。mとnの値は、カメラのアスペクト比を補正するように選択される。したがって、図14.4(a)に示すように、フレームを互いに素なスーパーピクセルに分割することが考えられる。別の可能性としては、すべての畳み込みと同様にローカルマスクを使用し、図14.4(b)に示すように、ピクセル周辺の強度分布を比較することが挙げられる。
+<!--
 A straightforward domain-independent method for comparing regions in
 images is to consider corresponding areas of the frames. These corresponding
 areas may be the superpixels formed by pixels in nonoverlapping rectangular
@@ -319,100 +345,141 @@ to compensate for the aspect ratio of the camera. ‘Thus, a frame partitioned
 into disjoint superpixels, as shown in Figure 14.4(a), may be considered.
 Another possibility is to use a local mask, as in all convolutions, and compare
 the intensity distributions around the pixel, as shown in Figure 14.4(b).
-
-One such method is based on comparing the frames using the likelihood
-412° | CHAPTER 14. DYNAMIC VISION
-
+-->
+</p>
+<center><img src="images/fig14_4.png"></center>
+<p class="margin-large">
+図14.4: 尤度比検定を適用するためのフレームの分割。(a) はスーパーピクセルと呼ばれる重複しない領域を示し、(b) はピクセルの局所領域を表す規則的なマスクを示している。
+<!--
 Figure 14.4: Partitioning frames for applying the likelihood ratio test. In
 (a) we show nonoverlapping areas, called superpixels, and (b) shows regular
 masks representing the local area of a pixel.
-
+-->
+</p><p>
+そのような方法の一つは、尤度比を用いてフレームを比較することに基づいている。したがって、
+<!--
+One such method is based on comparing the frames using the likelihood
 ratio. Thus, we may compute
-
-2
-i a (14.2)
-
-Oy * 05
-
-7 ekped + (e)"]
-
-(where » and o? denote the mean gray value and the variance for the sample
-areas from the frames) and then use |
-
-1 ifA>T
-
-DPix(2, y) = 0 otherwise (14.3)
-
-where 7 is a threshold. The likelihood ratio test combined with the size filter
+-->
+\[
+\lambda =\frac{\left[\frac{\sigma_1^2+\sigma_2^2}{2}+\left(\frac{\mu_1-\mu_2}{2}\right)^2\right]^2}{\sigma_1^2*\sigma_2^2} \tag{14.2}
+\]
+ここで、\(\mu\) と \(\sigma^2\) はフレームのサンプル領域の平均グレー値と分散を表す。
+<!--
+where \(\mu\) and \(\sigma^2\) denote the mean gray value and the variance for the sample areas from the frames) and then use 
+-->
+\[
+DP_{jk}(x,y)=
+\begin{cases}
+1 & if\;\lambda\gt \tau \\
+0 & otherwise
+\end{cases}
+\tag{14.3}
+\]
+ここで、\(\tau\) は閾値である。サイズフィルタと組み合わせた尤度比検定は、多くの現実世界のシーンで非常にうまく機能する。図14.5に、尤度比検定を用いた変化検出の結果を示す。
+<!--
+where \(\tau\) is a threshold. The likelihood ratio test combined with the size filter
 works quite well for many real world scenes. In Figure 14.5, we show the
 results of change detection using the likelihood ratio test.
-
+-->
+</p><p>
+上述の尤度検定は、領域全体にわたって均一な2次統計量を仮定していた。尤度比検定の性能は、ファセットと2次曲面を用いてスーパーピクセルに属するピクセルの輝度値を近似することで大幅に向上する。これらの高次近似により、輝度値の特性をより適切に評価でき、より堅牢な変化検出が可能になる。
+<!--
 The likelihood test discussed above was based on the assumption of uni-
 form second-order statistics over a region. The performance of the likelihood
 ratio test can be improved significantly by using facets and quadratic sur-
 faces to approximate the intensity values of pixels belonging to superpixels.
 These-higher order approximations allow for better characterization of inten-
 sity values and result in more robust change detection.
-14.1. CHANGE DETECTION 413
-
-(b)
+-->
+</p>
+<center><img src="images/fig14_5.png"></center>
+<p class="margin-large">
+図14.5: 図14.1の画像ペアに対する尤度比検定の結果。(a)スーパーピクセルと(b)通常のマスク。
+<!--
 Figure 14.5: The results of the likelihood ratio test on the image pair in Fig.
 14.1 for (a) superpixels and (b) regular masks.
-
+-->
+</p><p>
+尤度比検定では、スーパーピクセルレベルでの相違点を検出することに注意。尤度比検定は、対象領域が類似したグレーレベル特性を持つかどうかのみを判定する。領域の相対的な強度に関する情報は保持されない。後述のように、変化の符号も動きの解析に有用な情報を提供する。
+<!--
 Note that the likelihood ratio test results in detecting dissimilarities at
 the superpixel level. Since the tests use the likelihood ratio, they can only
 determine whether or not the areas under consideration have similar gray-
 level characteristics; information about the relative intensities of the areas is
 not retained. As shown later, the sign of the changes can also provide useful
 information for the analysis of motion.
-
-Accumulative Difference Pictures
-
+-->
+</p>
+<h4>累積差分画像</h4>
+<!--
+<h4>Accumulative Difference Pictures</h4>
+-->
+<p>
+小さな物体や動きの遅い物体は、差分手法を用いると通常、変化の数がわずかである。サイズフィルターを用いると、このようなピクセルはノイズとして除去される可能性がある。
+ロバストな差分手法を用いると、スーパーピクセルがそのような物体の検出におけるサイズの閾値を実質的に引き上げるため、小さく動きの遅い物体の検出が難しいという問題は、さらに深刻化する。
+<!--
 Small or slow-moving objects will usually result in a small number of changes
 using differencing approaches. A size filter may eliminate such pixels as noise.
 This problem of detecting small and slow-moving objects is exacerbated when
 using robust differencing approaches since superpixels effectively raise the size
 threshold for the detection of such objects.
-
-By analyzing the changes over a sequence of frames, instead of just be-
-414 | CHAPTER 14. DYNAMIC VISION
-
-(a) (by (c)
-
-Figure 14.6: Results for change detection using accumulative difference pic-
-tures. In (a) and (b) we show the first and last frames, respectively, of a
-synthetic object in motion. The accumulative difference picture is given in
-
-tween two frames, this problem may be solved. An accumulative difference
+-->
+</p><p>
+この問題は、2つのフレーム間だけでなく、フレームシーケンス全体にわたる変化を分析することで解決できる。累積差分画像を使用することで、小さく動きの遅い物体の動きをより確実に検出できる。累積差分画像は、画像シーケンスの各フレームを参照フレームと比較し、ピクセルの差分、またはスーパーピクセルの何らかの測定値が閾値を超えるたびに、累積差分画像のエントリを1ずつ増やすことによって形成される。したがって、累積差分画像ADPは、kフレームにわたって次のように計算される。
+<!--
+By analyzing the changes over a sequence of frames, instead of just between two frames, this problem may be solved. An accumulative difference
 picture may be used to detect the motion of small and slow-moving objects
 more reliably. An accumulative difference picture is formed by comparing
 every frame of an image sequence to a reference frame and increasing the
 entry in the accumulative difference picture by 1 whenever the difference for
 the pixel, or some measure for the superpixel, exceeds the threshold. Thus,
 an accumulative difference picture ADP, is computed over k frames by
-
-ADP (z,y) = 0 | — (14.4)
-ADP, (z,y) = ADP_1(2,y) + DP; (2, y). (14.5)
-
+-->
+\[
+\begin{align}
+ADP_0(x,y) &= 0  \tag{14.4}\\
+\\
+ADP_k(x,y) &= ADP_{k-1}(x,y) + DP_{1k}(x,y) \tag{14.5}
+\end{align}
+\]
+シーケンスの最初のフレームは通常参照フレームであり、累積差分画像 \(ADP_0\) は0に初期化される。\(ADP\) を用いることで、小さく動きの遅い物体を検出できる。図14.6に、累積差分画像を用いて変化を検出した結果を示す。
+<!--
 The first frame of a sequence is usually the reference frame, and the accu-
-mulative difference picture ADP) is initialized to 0. Small and slow-moving
-objects can be detected using an ADP. In Figure 14.6, results of detecting
+mulative difference picture \(ADP_0\) is initialized to 0. Small and slow-moving
+objects can be detected using an \(ADP\). In Figure 14.6, results of detecting
 changes using accumulative difference pictures are shown.
-
-Difference Pictures in Motion Detection
-
-_ The most attractive aspect of the difference picture for motion detection is its
+-->
+</p>
+<center><img src="images/fig14_6.png"></center>
+<p class="margin-large">
+図14.6: 累積差分画像を用いた変化検出の結果。(a)と(b)は、それぞれ運動中の合成物体の最初のフレームと最後のフレームを示す。累積差分画像は(c)に示されている。
+<!--
+Figure 14.6: Results for change detection using accumulative difference pic-
+tures. In (a) and (b) we show the first and last frames, respectively, of a
+synthetic object in motion. The accumulative difference picture is given in (c).
+-->
+</p>
+<h4>動き検出における差分画像</h4>
+<!--
+<h4>Difference Pictures in Motion Detection</h4>
+-->
+<p>
+動き検出における差分画像の最大の魅力は、そのシンプルさである。最も単純な形式では、差分画像はノイズの影響を受けやすい。カメラの照明や位置合わせの変化、さらにはカメラの電子ノイズが、多くの誤報につながる可能性がある。尤度比とサイズフィルタを組み合わせることで、カメラノイズの大部分を除去できる。照明の変化は、すべての強度ベースのアプローチで問題を引き起こし、記号レベルでしか処理できない。フレームの位置合わせのずれは、誤った動き成分の割り当てにつながる。位置合わせのずれがそれほど大きくない場合は、差分画像を累積することでそれを排除できる。
+<!--
+The most attractive aspect of the difference picture for motion detection is its
 simplicity. In its simplest form, the difference picture is noise-prone. Changes
 in illumination and registration of the camera, in addition to electronic noise
 of the camera, can result in many false alarms. A likelihood ratio in conjunc-
 tion with a size filter can eliminate most of the camera noise. Changes in
-14.1. CHANGE DETECTION 415
-
 illumination will create problems for all intensity-based approaches and can
 be handled only at a symbolic level. Misregistration of frames results in the
 assignment of false motion components. If the misregistration is not severe,
 accumulative difference pictures can eliminate it.
-
+-->
+</p><p>
+ピクセルレベルでの相違点の測定では、強度の変化しか検出できないことを強調しておくべきである。動的シーン解析において、これは最も低いレベルの解析である。このような変化が検出された後、これらの変化を解釈するには他のプロセスが必要となる。経験上、差分画像を最も効率的に使用するには、周辺プロセスによって解釈プロセスの注意をシーン内の何らかの活動が起こっている領域に向けることである。差分画像のいくつかの特徴を用いることで、シーン内の出来事に関するおおよその情報を抽出できる可能性がある。
+<!--
 It should be emphasized that measuring dissimilarities at the pixel level
 can only detect intensity changes. In dynamic scene analysis, this is the low-
 est level of analysis. After such changes have been detected, other processes
@@ -421,9 +488,15 @@ efficient use of the difference picture is to have peripheral processes direct
 the attention of interpretation processes to areas of the scene where some
 activity is taking place. Approximate information about events in a scene
 may be extracted using some features of difference pictures.
-
-14.1.2 Static Segmentation and Matching
-
+-->
+</p>
+<h3>14.1.2 静的セグメンテーションとマッチング</h3>
+<!--
+<h3>14.1.2 Static Segmentation and Matching</h3>
+-->
+<p>
+セグメンテーションとは、画像内の意味のある構成要素を識別し、それらの構成要素に属するピクセルをグループ化する作業である。セグメンテーションは必ずしもオブジェクト単位で行う必要はなく、輝度特性に基づく述語も使用できる。輝度特性に基づく述語は通常、特徴と呼ばれる。あるオブジェクトまたは特徴が2枚以上の画像に現れる場合、画像内のオブジェクトを識別するためにセグメンテーションが必要になることがある。2枚以上のフレームで同じオブジェクトまたは特徴を識別するプロセスは、対応付けプロセスと呼ばれる。
+<!--
 Segmentation is the task of identifying the semantically meaningful compo-
 nents of an image and grouping the pixels belonging to such components.
 Segmentation need not be performed in terms of objects; some predicates
@@ -432,7 +505,10 @@ intensity characteristics are usually called features. If an object or feature
 appears in two or more images, segmentation may be necessary in order to
 identify the object in the images. The process of identifying the same object
 or feature in two or more frames is called the correspondence process.
-
+-->
+</p><p>
+静的シーン解析技術は、動的なシーケンスの各フレームをセグメント化、または少なくとも部分的にセグメント化するために使用できる。その後、マッチングを使用して対応関係を決定し、対応するセグメントの位置の変化を検出できる。相互相関とフーリエ領域の特徴は、雲の動きを検出するために使用されている。シーケンスの各フレームをセグメント化し、フレーム内の領域、コーナー、エッジ、またはその他の特徴を検出するシステムがいくつか開発されている。その後、特徴は連続するフレーム間でマッチングされ、変位が検出される。以前のフレームの変位に基づいて特徴の新しい位置を予測することにより、特徴の可能なマッチングをある程度制限できる。
+<!--
 Static-scene analysis techniques can be used to segment, or at least par-
 tially segment, each frame of a dynamic sequence. Matching can then be
 used to determine correspondences and detect changes in the location of cor-
@@ -443,29 +519,39 @@ other features in the frames. The features are then matched in consecutive
 frames to detect any displacement. Some restriction on the possible matches
 for a feature can be achieved by predicting the new location of the feature
 based on the displacements in previous frames.
-
+-->
+</p><p>
+上記のアプローチにおける最大の難しさは、セグメンテーションにある。静止シーンの画像のセグメンテーションは、これまで難しい問題だった。多くの場合、セグメンテーションアルゴリズムは各フレームに多数の特徴を生成するため、対応付け問題の計算コストが非常に高くなる。さらに、上記の動きの判定に使用されるセグメンテーションとマッチングの手法ではなく、動き検出を用いることで、より優れたセグメンテーションを生成できると広く考えられている。
+<!--
 The major difficulty in the approaches described above is in segmentation.
 Segmentation of an image of a static scene has been a difficult problem. In
 most cases, a segmentation algorithm results in a large number of features
 in each frame, which makes the correspondence problem computationally
-416 CHAPTER 14. DYNAMIC VISION
-
 quite expensive. Moreover, it is widely believed that motion detection can
 be used to produce better segmentation, as opposed to the techniques of
 segmentation and matching used to determine motion above.
-
-14.2 Segmentation Using Motion
-
+-->
+</p>
+<h2>14.2 動きを使ったセグメンテーション</h2>
+<!--
+<h2>14.2 Segmentation Using Motion</h2>
+-->
+<p>
+多くの動的シーン解析システムの目的は、移動する物体を認識し、その動きの特徴を見つけることである。システムが固定カメラを使用する場合、セグメンテーションでは通常、シーン内の移動する要素を静止した要素から分離する。次に、個々の移動物体は、速度またはその他の特徴に基づいて識別される。移動カメラを使用するシステムの場合、セグメンテーションタスクは上記と同じになる場合もあれば、カメラの動きを利用してシーンの静止した要素をさらにセグメンテーションする場合もある。動的シーンのセグメンテーションに関する研究のほとんどは、固定カメラを前提としている。
+<!--
 The goal of many dynamic-scene analysis systems is to recognize moving
 objects and to find their motion characteristics. If the system uses a sta-
 tionary camera, segmentation generally involves separating moving compo-
 nents in the scene from stationary components. Then the individual moving
 objects are identified based either on their velocity or on other characteris-
 tics. For systems using a moving camera, the segmentation task may be the ©
-same as above or may include further segmentation of the scene’s stationary
+same as above or may include further segmentation of the scene's stationary
 - components by exploiting the camera motion. Most research efforts for the
 segmentation of dynamic scenes have assumed a stationary camera.
-
+-->
+</p><p>
+知覚の研究者は、動きの手がかりがセグメンテーションに役立つことを長年知っていた。SCMOシーンをセグメンテーションするコンピュータビジョン技術は、静止シーンをセグメンテーションする技術と比較して優れた性能を発揮する。移動カメラを用いたシステムにおける静止コンポーネントと非静止コンポーネントへのセグメンテーションは、ごく最近になって注目を集めるようになった。移動する観察者シーンをセグメンテーションする際の課題の1つは、シーン内のすべての表面に画像平面の動きがあることである。これはまさに、静止カメラシーンにおける移動物体と静止物体の分離を支援するために使用できるものである。移動カメラシーンをセグメンテーションするには、カメラの動きによって画像内のコンポーネントに割り当てられた動きを除去する必要がある。表面の画像の動きは、カメラからの表面までの距離と表面の構造の両方に依存するという事実が、状況を複雑にしている。
+<!--
 Researchers in perception have known for a long time that motion cues
 are helpful for segmentation. Computer vision techniques for segmenting
 SCMO scenes perform well compared to techniques for segmenting stationary
@@ -476,42 +562,50 @@ scene has image plane motion. This is precisely what can be used to aid the
 separation of moving and stationary objects in stationary-camera scenes. For
 segmenting moving-camera scenes, the motion assigned to components in the
 Images due to the motion of the camera should be removed. The fact that
-the image motion of a surface depends both on the surface’s distance from
+the image motion of a surface depends both on the surface's distance from
 the camera and on the structure of the surface complicates the situation.
-
+-->
+</p><p>
+セグメンテーションは、領域ベースまたはエッジベースのいずれかのアプローチを用いて実行できる。このセクションでは、動的シーンのセグメンテーションのためのいくつかのアプローチについて説明する。
+<!--
 Segmentation may be performed using either region-based or edge-based
 approaches. In this section, some approaches for the segmenting of dynamic
 scenes are discussed.
-
-14.2.1 Time-Varying Edge Detection
-
+-->
+</p>
+<h3>14.2.1 時変(時間変動)エッジ検出</h3>
+<!--
+<h3>14.2.1 Time-Varying Edge Detection</h3>
+-->
+<p>
+静止シーンにおけるエッジ検出の重要性を考えると、時間的に変化するエッジ検出が動シーン解析において非常に重要になる可能性は当然ある。セグメント・アンド・マッチ手法では、静止特徴と動特徴をマッチングさせようとする試みに労力が浪費される。これらの静止特徴は、動き情報抽出の障害となる。動特徴のみを検出できれば、マッチングに必要な計算量を大幅に削減できる可能性がある。
+<!--
 As a result of the importance of edge detection in static scenes, it is rea-
 sonable to expect that time-varying edge detection may be very important
 in dynamic-scene analysis. In segment-and-match approaches, efforts are
-14.2. SEGMENTATION USING MOTION 417
-
-mK on
-(a) (b) (c)
-
-Figure 14.7: In (a) and (b), two frames of a sequence are shown. In (c),
-edges are detected using the time-varying edge detector.
-
 wasted on attempting to match static features to moving features. These
 static features are obstacles to extracting motion information. If only mov-
 ing features are detected, the computation needed to perform matching may
 be substantially reduced.
-
+-->
+</p><p>
+フレーム内の移動エッジはエッジであり、移動する。移動エッジは、時間的勾配と空間的勾配を論理積演算子で組み合わせることで検出できる。この論理積は乗算で実現できる。したがって、フレーム内の点の時間変動エッジ度 \(E(x, y, t)\) は次のように表される。
+<!--
 A moving edge in a frame is an edge, and moves. Moving edges can be de-
 tected by combining the temporal and spatial gradients using a logical AND
 operator. This AND can be implemented through multiplication. Thus, the
-time-varying edginess of a point in a frame E(z, y,t) is given by
-
-Ex(z,y,t) = Jo (14.6)
-
-= E(x,y,t) - D(z, y) (14.7)
-
-where dF(z, y,t)/dS and dF(z, y, t)/dt are, respectively, the spatial and tem-
-poral gradients of the intensity at point (z,y,t). Various conventional edge
+time-varying edginess of a point in a frame \(E(x, y,t)\) is given by
+-->
+\[
+\begin{align}
+E_t(x,y,t) &= \frac{dF(x,y,t)}{dS}\cdot\frac{dF(x,y,t)}{dt} \tag{14.6} \\
+\\
+&= E(x,y,t)\cdot D(x, y) \tag{14.7}
+\end{align}
+\]
+ここで、\(dF(x, y, t)/dS\) と \(dF(x, y, t)/dt\) は、それぞれ点 \((x, y, t)\) における強度の空間勾配と時間勾配である。空間勾配の計算には、従来のさまざまなエッジ検出器を使用できる。また、時間勾配の計算には単純な差分を使用できる。ほとんどの場合、このエッジ検出器は効果的に機能する。最初に差分をとってからエッジ検出器を適用したり、最初にエッジを検出してから時間勾配を計算したりするのではなく、積にしきい値を適用することで、この方法は動きの遅いエッジや弱いエッジを見逃すという問題を克服する。図 14.7 と 14.8 を参照。
+<!--
+where \(dF(x, y,t)/dS\) and \(dF(x, y, t)/dt\) are, respectively, the spatial and temporal gradients of the intensity at point \((x,y,t)\). Various conventional edge
 detectors can be used to compute the spatial gradient, and a simple differ-
 ence can be used to compute the temporal gradient. In most cases, this edge
 detector works effectively. By applying a threshold to the product, rather
@@ -519,22 +613,43 @@ than first differencing and then applying an edge detector or first detecting
 edges and then computing their temporal gradient, this method overcomes
 the problem of missing slow-moving or weak edges. See Figures 14.7 and
 14.8.
-
+-->
+</p>
+<center><img src="images/fig14_7.png"></center>
+<p class="margin-large">
+図14.7: (a)と(b)は、シーケンスの2つのフレームを示している。(c)は、時間変動エッジ検出器を用いてエッジが検出されている。
+<!--
+Figure 14.7: In (a) and (b), two frames of a sequence are shown. In (c),
+edges are detected using the time-varying edge detector.
+-->
+</p><p>
+図14.8に示すように、このエッジ検出器は、エッジ性の良い低速エッジにも、かなり高速で移動する低速エッジにも反応する。この検出器のもう一つの重要な点は、変位の大きさを想定していないことである。エッジの動きが非常に大きい場合でも、検出器の性能は満足のいくものである。
+<!--
 As shown in Figure 14.8, this edge detector will respond to slow-moving
 edges that have good edginess and to poor edges that are moving with ap-
 preciable speed. Another important fact about this detector is that it does
-418 CHAPTER 14. DYNAMIC VISION
-
+not assume any displacement size. The performance of the detector is satis-
+factory even when the motion of an edge is very large.
+-->
+</p>
+<center><img src="images/fig14_8.png"></center>
+<p class="margin-large">
+図14.8: エッジ検出器の性能を示すグラフ。動きの遅いエッジはコントラストが良好であれば検出され、動きの速いエッジはコントラストの低いエッジが検出されることに注意。
+<!--
 Figure 14.8: A plot showing the performance of the edge detector. Note
 that slow-moving edges will be detected if they have good contrast, and that
 poor-contrast edges will be detected if they move well.
-
-not assume any displacement size. The performance of the detector is satis-
-factory even when the motion of an edge is very large.
-
-14.2.2 Stationary Camera
-Using Difference Pictures
-
+-->
+</p>
+<h3>14.2.2 固定カメラ</h3>
+<h4>差分画像の使用</h4>
+<!--
+<h3>14.2.2 Stationary Camera</h3>
+<h4>Using Difference Pictures</h4>
+-->
+<p>
+差分画像と累積差分画像は、シーン内の変化している領域を検出する。領域の変化は通常、物体の動きによって生じる。差分画像に基づく変化検出結果はノイズの影響を受けやすいものの、差分画像によって生成された領域はセグメンテーションの開始点として適している。実際、累積差分画像を用いることで、非常に少ない計算量でシーンをセグメンテーションすることが可能である。本節では、このようなアプローチについて説明する。
+<!--
 Difference and accumulative difference pictures find the areas in a scene which
 are changing. An area is usually changing due to the movement of an object.
 Although change detection results based on difference pictures are sensitive to
@@ -542,21 +657,49 @@ noise, the areas produced by a difference picture are a good place from which
 to start segmentation. In fact, it is possible to segment a scene with very
 little computation using accumulative difference pictures. In this section,
 such an approach is discussed.
-
+-->
+</p><p>
+絶対差分図(DP)、正差分図(PDP)、負差分図(NDP)、累積差分図(AADP/PADP/NADP)を次のように定義する。
+<!--
 Let us define absolute, positive, and negative difference pictures and ac-
 cumulative difference pictures as follows:
-14.2. SEGMENTATION USING MOTION 419
-
-_ f 1. if |F(z,y,1) - F(z,y,2)| > T
-DPix(z,y) = 0 otherwise. (14.8)
-
-J 1 if F(x,y,1)— Flz,y,2) >T
-PDP12(2,y) = 0 otherwise (14.9)
-NDPi2(z,y) = 0 otherwise (14.10)
-AADP,(2,y) = AADP,_1(2,y) + DPin(z, y) (14.11)
-PADP,(2,y) = PADP,-1(2,y) + PDPin(z, y) (14.12)
-NADP, (2,y) = NADP,-1(2,y) + NDPiy(2, y). — (14.13)
-
+-->
+\[
+\begin{align}
+DP_{12}(x,y) &=
+\begin{cases}
+1 & if\;|F(x,y,1)-F(x,y,2)|\gt T \\
+\\
+0 & otherwise
+\end{cases}
+\tag{14.8} \\
+\\
+PDP_{12}(x,y) &=
+\begin{cases}
+1 & if\;F(x,y,1)-F(x,y,2)\gt T \\
+\\
+0 & otherwise
+\end{cases}
+\tag{14.9} \\
+\\
+NDP_{12}(x,y) &=
+\begin{cases}
+1 & if\;(F(x,y,1)-F(x,y,2) \lt T \\
+\\
+0 & otherwise
+\end{cases}
+\tag{14.10} \\
+\\
+AADP_n(x,y) &= AADP_{n-1}(x,y)+DP_{1n}(x,y) \tag{14.11} \\
+\\
+PADP_n(x,y) &= PADP_{n-1}(x,y)+PDP_{1n}(x,y) \tag{14.12} \\
+\\
+NADP_n(x,y) &= NADP_{n-1}(x,y)+NDP_{1n}(x,y) \tag{14.13}
+\end{align}
+\]
+</p><p>
+移動する物体と、覆われる背景／覆われない背景の相対的な強度値に応じて、PADP と NADP は補完的な情報を提供する。PADP と NADP のどちらかでは、物体の動きによる領域は、物体が参照フレームの投影から完全に移動した後も拡大し続けるが、もう一方は拡大を停止する。PADP または NADP の領域は、参照フレームで物体画像が覆う領域に対応する。この領域のエントリの値は増加し続けるが、領域のサイズは拡大を停止する。合成シーンの累積差分画像を図 14.9 に示す。物体のマスクを取得するには、領域がまだ拡大しているかどうかを判断するテストが必要である。マスクは、物体が投影から移動した後、物体の領域の成長が停止する累積差分画像から取得できる。最も単純な形では、このアプローチには明らかな制限が 1 つある。移動する物体のマスクは、物体が参照フレームへの投影から完全にずれた後にのみ抽出できる。しかし、差分画像と累積差分画像の特性は、ランニングオクルージョンなどの複雑な状況における画像のセグメンテーションに利用できるようである。ランニングオクルージョンがセグメンテーションを妨害するのを防ぐため、セグメンテーション処理は、物体の現在の位置が参照フレームへの投影から完全にずれるまで待つべきではない。物体の参照フレーム投影を監視するのではなく、累積差分画像内の領域を監視することができる。領域の成長率と古いエントリの存在に関する簡単なテストにより、システムはどの領域が最終的に成熟し、参照フレーム内の物体のマスクを生成するかを判断できる。物体の参照フレーム位置を早期に決定し、したがって物体のマスクを抽出することで、システムはランニングオクルージョンを防止するために必要なアクションを実行できる。
+<!--
 Depending on the relative intensity values of the moving object and the
 background being covered and uncovered, PADP and NADP provide com-
 plementary information. In either the PADP or NADP, the region due to the
@@ -568,47 +711,57 @@ continue to increase in value, but the region stops growing in size. Accumu-
 lative difference pictures for a synthetic scene are shown in Figure 14.9. A
 test to determine whether or not a region is still growing is needed in order
 to obtain a mask of an object. The mask can then be obtained from the ac-
-cumulative difference picture where the object’s area stops growing after the
+cumulative difference picture where the object's area stops growing after the
 object is displaced from its projection. In its simplest form, this approach has
 one obvious limitation. Masks of moving objects can be extracted only after
 the object has been completely displaced from its projection in the reference
 frame. However, it appears that properties of difference and accumulative
 difference pictures can be used to segment images in complex situations,
 such as running occlusion. To prevent running occlusions from disrupting
-segmentation, the segmentation process should not wait for an object’s cur-
+segmentation, the segmentation process should not wait for an object's cur-
 rent position to be completely displaced from its projection in the reference
 frame. Regions in the accumulative difference pictures can be monitored as
 opposed to monitoring the reference frame projections of objects. Simple
 tests on the rate of region growth and on the presence of stale entries allow a
 system to determine which regions are eventually going to mature and result
-420 CHAPTER 14. DYNAMIC VISION
 
-(d) (e) (f)
-Figure 14.9: (a)-(c) show frames 1, 5, and 7 of a scene containing a moving
-object. The intensity-coded positive, negative, and absolute ADPs are shown
-
-in parts (d), (e), and (f), respectively.
-
--. in a mask for an object in the reference frame. Early determination of refer-
+in a mask for an object in the reference frame. Early determination of refer-
 ence frame positions of objects, and hence, extraction of masks for objects,
 allows a system to take the action necessary to prevent running occlusion.
-
-14.3. Motion Correspondence
-
+-->
+</p>
+<center><img src="images/fig14_9.png"></center>
+<p class="margin-large">
+図14.9: (a)-(c)は、移動する物体を含むシーンのフレーム1、5、7を示している。輝度符号化された正、負、絶対ADPが表示されている。
+<!--
+Figure 14.9: (a)-(c) show frames 1, 5, and 7 of a scene containing a moving
+object. The intensity-coded positive, negative, and absolute ADPs are shown
+-->
+</p>
+<h2>14.3. 動き対応</h2>
+<!--
+<h2>14.3. Motion Correspondence</h2>
+-->
+<p>
+シーケンスの2つのフレームが与えられれば、それらを解析して各フレームの特徴を特定できる。物体の動きを特定するには、これらの特徴間の対応関係を確立する必要がある。動きにおける対応関係の問題は、ステレオにおける対応関係の問題に似ている。ステレオでは、主にエピポーラ拘束が使用される。しかし、動きの場合は、他の拘束も使用する必要がある。以下では、対応関係の問題を解くための拘束伝播アプローチについて説明する。このアプローチはステレオの問題に類似しており、歴史的な理由から、ステレオの場合と同様の定式化を示す。
+<!--
 Given two frames of a sequence, one can analyze them to determine fea-
 tures in each frame. To determine the motion of objects, one can establish
 the correspondence among these features. The correspondence problem in
 motion is similar to the correspondence problem in stereo. In stereo, the
 major constraint used is the epipolar constraint. However, in motion, other
-constraints must be used. In the following we describe a constraint propaga-
-14.3. MOTION CORRESPONDENCE 42]
-
-tion approach to solve the correspondence problem. Since this approach is
+constraints must be used. In the following we describe a constraint propagation approach to solve the correspondence problem. Since this approach is
 similar to the problem for stereo, and for historical reasons, we present the
 formulation similar to that for stereo.
-
-Relaxation Labeling
-
+-->
+</p>
+<h4>緩和ラベリング</h4>
+<!--
+<h4>Relaxation Labeling</h4>
+-->
+<p>
+多くのアプリケーションでは、「世界」に現れる可能性のあるオブジェクトに割り当てられる可能性のあるラベルの集合が与えられる。この世界における異なるオブジェクト間の関係性、および特定のラベルの集合がオブジェクトの集合に適用される場合、あるいは適用されない場合の条件も既知である(とする)。画像内のオブジェクト間の関係性は、これまでの章で説明した手法を用いて見つけることができる。次に、ドメイン内のラベルに関する知識に基づいて、画像内のオブジェクトに適切なラベルを割り当てる必要がある。この問題はラベリング問題と呼ばれる。
+<!--
 In many applications, we are given a set of labels that may be assigned
 _ to objects that may appear in the “world.” Possible relationships among
 different objects in this world and the conditions under which a certain set
@@ -617,73 +770,88 @@ relationships among the objects in the image may be found using techniques
 discussed in earlier chapters. Now, based on the knowledge about the labels
 in the domain, proper labels must be assigned to the objects in the image.
 This problem is called the labeling problem.
-
+-->
+</p><p>
+ラベリング問題は、図14.10のように表すことができる。各ノードは、ラベルを割り当てる必要があるオブジェクトまたはエンティティを表す。ノードを接続するアークは、オブジェクト間の関係を表す。この図は、特定の状況における観測エンティティとそれらの関係を表している。与えられたドメインにおけるラベルセットとラベル間の制約に基づいて、各エンティティにラベルを割り当てる必要がある。
+<!--
 The labeling problem may be represented as shown in Figure 14.10. Each
 node represents an object or entity which should be assigned a label. The arcs
 connecting nodes represent relations between objects. This figure represents
 the observed entities and relations among them in a given situation. We
 have to assign labels to each entity based on the label set and the constraints
 among the labels for the given domain.
-
-Assume that we have a processor at each node. We define sets R, C, L,
-and P for each node. The set R contains all possible relations among the
-nodes. The set C' represents the compatibility among these relations. The
+-->
+</p><p>
+各ノードにプロセッサがあると仮定する。各ノードに対して、集合 \(R, C, L\)、および \(P\) を定義する。集合 \(R\) には、ノード間のすべての可能な関係が含まれる。集合 \(C\) は、これらの関係間の互換性を表す。関係間の互換性は、画像内の各エンティティの関係とラベルを制約するのに役立つ。集合 \(L\) には、ノードに割り当てることができるすべてのラベルが含まれ、集合 \(P\) は、計算の任意の時点でノードに割り当てることができる可能性のあるレベルの集合を表します。各プロセッサは、自身のノードと、それに接続されているすべてのノードのラベルを認識しています。また、自身のノードと集合 \(R\) および \(C\) を含むすべての関係も認識しています。最初の反復処理では、ノード \(i\) の可能なラベル集合 \(P_i^1\) がすべての i に対して \(L\) であると仮定します。つまり、すべてのノードには最初にすべての可能なラベルが割り当てられます。その後、ラベル付けプロセスは、\(P_i^k\) から無効なラベルを反復的に削除して、\(P_i^{k+1}\) を作成します。
+どの段階でも、ノードの現在のラベル、他のノードとの関係、および制約のみを考慮してラベルが破棄されるため、各プロセッサはラベルセット \(P_i^k\) を精緻化するのに十分な情報を持ちます。したがって、すべてのプロセッサが同期して動作することが可能になります。プロセッサは常に、直接利用可能な情報、つまりそのオブジェクトにのみ関連する情報のみを使用することに注意してください。ただし、各反復処理では、その影響は隣接ノードまたは関連ノードを介して、直接関連していない他のノードにも伝播します。ノードの影響範囲は、各反復処理ごとに拡大します。この影響の伝播により、直接的な局所的影響を通じてグローバルな一貫性が確保されます。
+<!--
+Assume that we have a processor at each node. We define sets \(R, C, L\),
+and \(P\) for each node. The set \(R\) contains all possible relations among the
+nodes. The set \(C\) represents the compatibility among these relations. The
 compatability among relations helps in constraining the relationships and
-labels for each entity in an image. The set D contains all labels that can be
-assigned to nodes, and the set P represents the set of possible levels that
+labels for each entity in an image. The set \(L\) contains all labels that can be
+assigned to nodes, and the set \(P\) represents the set of possible levels that
 can be assigned to a node at any instant in computation. Each processor
 knows the label of its node and all nodes which are connected to it. It also
-knows all relations involving its node and the sets R and C. Assume that
-in the first iteration the possible label set P} of node i is L for all i. In
+knows all relations involving its node and the sets \(R\) and \(C\). Assume that
+in the first iteration the possible label set \(P_i^1\) of node \(i\) is \(L\) for all i. In
 other words, all nodes are assigned all possible labels initially. The labeling
-process should then iteratively remove invalid labels from P* to give P*+?.
+process should then iteratively remove invalid labels from \(P_i^k\) to give \(P_i^{k+1}\).
 Since at any stage labels are discarded considering only the current labels of
 the node, its relations with other nodes, and the constraints, each processor
-has sufficient information to refine its label set P*. Thus, it is possible for
+has sufficient information to refine its label set \(P_i^k\). Thus, it is possible for
 all processors to work synchronously. Note that at any time a processor
 
 uses only information directly available to it, that is, information pertaining
-— 422 | CHAPTER 14. DYNAMIC VISION
-
-Third propagation | |
-
-Figure 14.10: Parallel propagation in graphs.
-
 only to its object. Each iteration, however, propagates the effect through its
 neighbor or related nodes, to other nodes that are not directly related. The
 circle of influence of a node increases with each iteration. This propagation
 of influence results in global consistency through direct local effects.
-
+-->
+</p>
+<center><img src="images/fig14_10.png"></center>
+<p class="margin-large">
+<center>図 14.10: グラフにおける並列伝播</center>
+<!--
+<center>Figure 14.10: Parallel propagation in graphs.</center>
+-->
+</p><p>
+ほとんどのアプリケーションでは、オブジェクトに関する何らかの知識は、ラベリングプロセスの開始時に得られます。セグメンテーション、あるいはラベリング前に行われるその他のプロセスは、多くの場合、ノードの初期セット \(P_i\) を洗練するために使用できる情報を提供します。この知識は、オブジェクトの初期ラベルセットを洗練するために使用できます。そして、ラベリングプロセスは、これらのセットをさらに洗練させ、各オブジェクトに一意のラベルを生成します。ここで、ラベリング問題は、上記とは少し異なる形で考えることができます。いくつかの単項関係に基づいて、ラベルセット \(P_i^1\) をオブジェクトに割り当てることができます。正しいラベルは不確実です。ただし、各ラベルに信頼度値 \(l_k\in P_i^1\) を割り当てることができます。信頼度値は、主観確率と同様に、画像内の利用可能な証拠に基づいて、エンティティにこのラベルが割り当てられる可能性があるという確信を示します。したがって、P_i内の各要素\(l_k\in P_i\)について、非負の確率\(p_{ik}\)は、ラベル\(l_k\)がノード\(i\)の正しいラベルであるという確信度を表す。この確信度は、制約伝播においてファジィ集合論のアプローチを用いる場合、メンバーシップ値とみなされる場合がある。
+<!--
 In most applications, some knowledge about the objects is available at
 the start of the labeling process. Segmentation, or some other process which
 takes place before labeling, often gives information that can be used to refine
-the initial set P; for a node. This knowledge can be used to refine the initial
+the initial set \(P_i\) for a node. This knowledge can be used to refine the initial
 label sets for objects. The labeling process is then used to further refine these
 sets to yield a unique label for each object. The labeling problem now may
 be considered in a slightly different form than the above. Based on some
-unary relations, a label set P/ can be assigned to an object. The correct
+unary relations, a label set \(P_i^1\) can be assigned to an object. The correct
 label is uncertain. However, a confidence value can be assigned to each label
-l, € P}. The confidence value, like a subjective probability, indicates a belief
+ \(l_k\in P_i^1\). The confidence value, like a subjective probability, indicates a belief
 that the entity may be assigned this label based on the available evidence
-in the image. Thus, for each element J, € P;, a nonnegative probability pj,
-represents the confidence that the label J; is the correct label for node z. This
+in the image. Thus, for each element \(l_k\in P_i\), a nonnegative probability \(p_{ik}\),
+represents the confidence that the label \(l_k\) is the correct label for node \(i\). This
 confidence value may be considered the membership value if approaches from
 fuzzy set theory are used in constraint propogation.
-
+-->
+</p><p>
+ラベリングプロセスのタスクは、制約を用いて各ラベルの信頼度を精緻化することです。信頼度 p は、接続されたノードのラベルの信頼度によって影響を受けます。したがって、t 回目の反復では、ノード \(i\) のラベル \(l_k\) の信頼度 \(p_{ik}^t\) は、信頼度 \(p_{ik}^{t-1}\) とすべての直接関連するノードのラベルの信頼度の関数となります。各反復において、ノードは関連するすべてのノードのラベルを確認し、既知の制約を用いてラベルの信頼度を更新します。このプロセスは、各ノードに一意のラベルが割り当てられたとき、または信頼度が安定状態に達したときに終了します。ラベルの有無だけでなく、オブジェクトのラベルの信頼度が連続的に存在することに注意してください。
+<!--
 The task of the labeling process is to use the constraints to refine the
-14.3. MOTION CORRESPONDENCE | 423
-
 confidence value for each label. The confidence value p, is influenced by
 the confidence values in the labels of the connected nodes. Thus, in the tth
-iteration, the confidence value p‘, for the label J, at node i is the function
-of the confidence value pj,’ and the confidence values of the labels of all
+iteration, the confidence value \(p_{ik}^t\) for the label \(l_k\) at node \(i\) is the function
+of the confidence value \(p_{ik}^{t-1}\) and the confidence values of the labels of all
 directly related nodes. In each iteration a node looks at the labels of all its
 related nodes and then uses the known constraints to update the confidence
 in its labels. The process may terminate either when each node has been
 assigned a unique label or when the confidence values achieve a steady state.
 Note that in place of just the presence or absence of a label, there is now a
 continuum of confidence values in a label for an object.
-
+-->
+</p><p>
+上記のプロセスは、一般に緩和ラベリングプロセスと呼ばれ、局所的な証拠に基づいて、可能な解釈のうちどれが正しいかを判断しようとします。しかし興味深いことに、最終的な解釈は全体的に正しいです。各反復において、ラベルの信頼度は直接関連するノードによってのみ直接影響を受けます。しかし、この影響は後の反復で他のノードに伝播します。影響範囲は反復回数とともに拡大します。緩和ラベリングでは、制約は適合性関数によって指定されます。オブジェクト \(O_i\) と \(O_j\) が \(R_{ij}\) によって関連付けられており、この関係下でラベル \(L_{ik}\) と \(L_{jl}\) が出現する可能性が非常に高いと仮定します。これらのラベルの尤度に関する知識は、検討中のオブジェクトに対するこれらのラベルの信頼度を高める関数によって表現できます。このような状況では、\(O_i\)に\(L_{ik}\)が存在すると、\(O_j\)に\(L_{jl}\)が割り当てられやすくなります。また、特定のラベルの非互換性を利用して、ラベルの信頼度を下げ、ラベルの使用を抑制することも可能です。
+<!--
 The above process, commonly called the relaxation labeling process, at-
 tempts to decide which of the possible interpretations is correct on the basis
 of local evidence. Interestingly, though, the final interpretation is globally
@@ -691,52 +859,100 @@ correct. In each iteration, the confidence in a label is directly influenced onl
 by directly related nodes. However, this influence is propagated to other
 nodes in later iterations. The sphere of influence increases with the number
 of iterations. In relaxation labeling, the constraints are specified in terms of
-compatibility functions. Suppose that objects O; and O, are related by R,;,
-and under this relation labels L;, and L,, are highly “likely” to occur. The
+compatibility functions. Suppose that objects \(O_i\) and \(O_j\) are related by \(R_{ij}\), and under this relation labels \(L_{ik}\) and \(L_{jl}\) are highly “likely” to occur. The
 knowledge about the likelihood of these labels can be expressed in terms of a
 function that will increase the confidence in these labels for the objects under
-consideration. In such a situation, the presence of L;, at O; encourages the
-assignment of L;, to O;. It is also possible that the incompatibility of certain
+consideration. In such a situation, the presence of \(L_{ik}\) at \(O_i\) encourages the
+assignment of \(L_{jl}\) to \(O_j\). It is also possible that the incompatibility of certain
 labels can be used to discourage labels by decreasing their confidence values.
-
+-->
+</p><p>
+以下では、緩和ラベリングを用いて画像の視差値を求めるアルゴリズムについて説明します。この章の後半で説明するオプティカルフローを求めるアルゴリズムも、緩和ラベリングの一例です。
+<!--
 In the following, we discuss an algorithm that uses relaxation labeling
 to determine disparity values in images. The algorithm to determine optical
 
 flow, discussed later in this chapter, also is an example of relaxation labeling.
-
-Disparity Computations as Relaxation Labeling
-
-The matching problem is to pair a point p; = (2;, y;) in the first image with
-a point p; = (z;,y;) in the second image. The disparity between these points
+-->
+</p>
+<h4>緩和ラベリングとしての視差計算</h4>
+<!--
+<h4>Disparity Computations as Relaxation Labeling</h4>
+-->
+<p>
+マッチング問題は、最初の画像内の点 \(p_i = (x_i,y_i)\) と、2番目の画像内の点 \(p_j = (x_j,y_j\) をペアリングすることです。これらの点間の視差は、2点間の変位ベクトルです。
+<!--
+The matching problem is to pair a point \(p_i = (x_i,y_i)\) in the first image with
+a point \(p_j = (x_j,y_j\) in the second image. The disparity between these points
 is the displacement vector between the two points:
-
+-->
+\[
+d_{ij}=(x_i-x_j,y_i-y_j) \tag{14.14}
+\]
+マッチングの結果は共役ペアのセットになります。
+<!--
 The result of matching is a set of conjugate pairs.
-424 CHAPTER 14. DYNAMIC VISION
-
+-->
+</p><p>
+あらゆる種類のマッチング問題には、答えなければならない2つの質問があります。
+<!--
 In any kind of matching problem, there are two questions that must be
-answered: ,
+answered: 
+-->
+<div class="styleBullet">
+<ul>
 
-e How are points selected for matching? In other words, what are the
+<li>
+●マッチングのための点はどのように選択されるのか？言い換えれば、マッチングされる特徴とはどのようなものか？
+
+</li><br><li>●正しいマッチングはどのように選択されるのか？変位ベクトルにはどのような制約が課されるのか？ 
+<!--
+●How are points selected for matching? In other words, what are the
 features that are matched?
 
-e How are the correct matches chosen? What constraints, if any, are
-placed on the displacement vectors? |
-
+</li><br><li>●How are the correct matches chosen? What constraints, if any, are
+placed on the displacement vectors? 
+-->
+</li>
+</ul>
+</div>
+</p><p>
+マッチングは 3 つのプロパティによってガイドされます。
+<!--
 Three properties guide matching:
+-->
+<div class="styleBullet">
+<ul>
+<li>
+<strong>離散性</strong>：個々の点の特異性を測る尺度
+
+</li><br><li><strong>類似性</strong>：2つの点が互いにどれだけ類似しているかを測る尺度
+
+</li><br><li><strong>一貫性</strong>：一致が近傍の一致とどれだけよく一致するかを測る尺度
+<!--
 Discreteness, which is a measure of the distinctiveness of individual points
 
-Similarity, which is a measure of how closely two points resemble one an-
+</li><br><li>Similarity, which is a measure of how closely two points resemble one an-
 other
 
-Consistency, which is a measure of how well a match conforms to nearby
-matches , ,
-
+</li><br><li>Consistency, which is a measure of how well a match conforms to nearby
+matches
+-->
+</li>
+</ul>
+</div>
+</p><p>
+離散性という性質は、特徴が孤立した点であるべきであることを意味します。例えば、線分は良い特徴とはなり得ません。なぜなら、ある点は線分上の多くの点と対応付けられる可能性があるからです。離散性はまた、画像の視差を解析する問題を有限個の点を対応付ける問題に縮小することで、コストのかかる探索を最小限に抑えます。
+<!--
 The property of discreteness means that features should be isolated points.
 For example, line segments would not make good features since a point can
 be matched to many points along a line segment. Discreteness also minimizes
 expensive searching by reducing the problem of analyzing image disparities
 to the problem of matching a finite number of points.
-
+-->
+</p><p>
+潜在的な一致点の集合は二部グラフを形成し、対応付け問題はこのグラフの（部分的な）被覆を選択することです。図14.11に示すように、最初は各ノードは他の区画の各ノードと一致すると見なすことができます。何らかの基準を用いて、対応付け問題の目的は、各ノードについて1つを除くすべての接続を削除することです。類似度という特性は、2つの潜在的な一致点が互いにどれだけ近いかを示し、親和性の尺度です。類似度は、離散性を実現するために選択された特徴の任意の特性に基づくことができます。
+<!--
 The set of potential matches form a bipartite graph, and the matching
 problem is to choose a (partial) covering of this graph. As shown in Figure
 14.11, initially each node can be considered as a match for each node in
@@ -745,120 +961,173 @@ problem is to remove all other connections except one for each node. The
 property of similarity indicates how close two potential matching points are
 to one another; it is a measure of affinity. Similarity could be based on any
 property of the features that are selected to implement discreteness.
-
+-->
+</p><p>
+一貫性という特性は、シーン内の表面の空間的な連続性によって暗示され、動きが適切に振る舞うことを前提としています。一貫性により、明らかな一致は、より困難な一致の分析を改善することを可能にします。いくつかの点は十分に異なっていて類似しているため、簡単に一致させることができます。この一致は、近くの点の一致に役立ちます。
+<!--
 The property of consistency is implied by the spatial continuity of surfaces
 in the scene and assumes that the motion is well behaved. Consistency allows
 the obvious matches to improve the analysis of more difficult matches. Some
 points are sufficiently distinct and similar that it is easy to match them; this
 match can assist in matching nearby points.
-
+-->
+</p><p>
+離散特徴点は、任意のコーナー検出器または特徴検出器を用いて選択できます。そのような特徴検出器の一つに、Moravec Interest演算子があります。
+<!--
 The discrete feature points can be selected using any corner detector or a
 feature detector. One such feature detector is the Moravec interest operator.
-14.3. MOTION CORRESPONDENCE 425
-
-(a) (b)
-
+-->
+</p>
+<center><img src="images/fig14_11.png"></center>
+<p class="margin-large">
+図14.11: (a) 完全二部グラフ。ここでは、グループAの各ノードはグループBの各ノードと接続しています。ノードの特性（点）とその他の知識を用いて、対応アルゴリズムは各ノードについて1つを除くすべての接続を削除する必要があります（(b)を参照）。
+<!--
 Figure 14.11: (a) A complete bipartite graph. Here each node in group A
 has a connection with each node in group B. Using a characteristic of nodes
 (points) and some other knowledge, a correspondence algorithm must remove
 all but one connection for each node, as shown in (b).
-
+-->
+</p><p>
+この演算子は、少なくとも一方向に強度値が急激に変化する点を検出します。この演算子は、以下の手順で実装できます。
+<!--
 This operator detects points at which intensity values are varying quickly in
 at least one direction. This operator can be implemented in the following
-steps: }
+steps: 
+-->
+<div class="styleBullet">
+<ul>
+<li>
+1. 5 x 5のウィンドウ内の4方向（水平、垂直、両対角）のピクセル差の二乗和を計算します。
 
+</li><br><li>2. これらの分散の最小値を計算し、最小値以外の値をすべて抑制します。
+
+</li><br><li>4. 閾値を適用して、弱い特徴点を除去します。
+<!--
 1. Compute sums of the squares of pixel differences in four directions
 (horizontal, vertical, and both diagonals) over a 5 x 5 window.
 
-2. Compute the minimum value of these variances.
-_ 3. Suppress all values that are not local maxima.
+</li><br><li>2. Compute the minimum value of these variances.
+</li><br><li>3. Suppress all values that are not local maxima.
 
-4. Apply a threshold to remove weak feature points.
-
+</li><br><li>4. Apply a threshold to remove weak feature points.
+-->
+</li></ul></div>
+</p><p>
+上記の演算子の代わりに、任意の特徴検出器を使用できます。コーナー検出器や各点で計算された曲率値を使用して、高曲率点を特徴として選択することもできます。
+<!--
 Any feature detector can be used in place of the above operator. One can
 use a corner detector or computed curvature values at every point and select
 high curvature points as features.
-
+-->
+</p><p>
+次に、最初の画像の各特徴点と、2番目の画像にある最大距離以内のすべての点をペアリングする必要があります。これにより、完全な二部グラフから多くの接続が除去されます。除去される接続は、2つの画像内で遠く離れた点間の接続であり、したがってマッチング候補となる可能性が低いものです。各ノードa;は、最初の画像における位置(z;, y;)と、可能なラベル（視差ベクトル）の集合を持ちます。視差ラベルは、変位ベクトルまたは未定義の視差であり、これにより、一部の特徴点がマッチングされないままになることがあります。
+<!--
 Next one must pair each feature point in the first image with all points in
 the second image within some maximum distance. This will eliminate many
-_ connections from the complete bipartite graph. The connections removed are
+connections from the complete bipartite graph. The connections removed are
 those that are between points far away in two images and hence unlikely to
 be candidate matches. Each node a; has position (z;, y;) in the first image
 and a set of possible labels (disparity vectors). The disparity labels are
 displacement vectors or the undefined disparity, which allows some feature
-points to remain unmatched. ,
-426 | CHAPTER 14. DYNAMIC VISION
-
+points to remain unmatched. 
+-->
+</p><p>
+マッチングの初期確率は、2枚の画像の特徴点間の類似度を測る尺度を用いて計算されます。適切な尺度は、対応するウィンドウ内のピクセル差の二乗和siです。これらの確率を割り当てるには、以下のアプローチを使用できます。
+<!--
 The initial probabilities of a match are computed using a measure of
 similarity between the feature points in the two images. A good measure is
 the sum of the squares of the pixel differences, s;, in corresponding windows.
 The following approach may be used for assigning these probabilities.
-
-Let { be a candidate label at a point. This label represents a disparity
-vector at the point. First we compute w,(/), which represents the similarity
-between the point (z;, y;) and its potential match at disparity I.
-
-1
-~ 1+es,(1)’
-where s;(1) is the sum of the squared differences corresponding to label J, and
-
-c is some positive constant. ‘The probability that this point has undefined
-disparity is obtained by first defining |
-
-py (undefined) = 1 — max(w;,(1)). | (14.16)
-
+-->
+</p><p>
+ある点における候補ラベルを\(l\)とします。このラベルは、その点における視差ベクトルを表します。まず、点\((x_i,y_i)\)と視差\(l\)における潜在的な一致点との類似度を表す\(w_i(l)\)を計算します。
+<!--
+Let \(l\) be a candidate label at a point. This label represents a disparity
+vector at the point. First we compute \(w_i(l)\), which represents the similarity
+between the point \((x_i,y_i)\) and its potential match at disparity \(l\).
+-->
+\[
+w_i(l)=\frac{1}{1+cs_i(l)} \tag{14.15}
+\]
+ここで、\(s_i(1)\)はラベル\(l\)に対応する差の二乗和であり、\(c\)は正の定数である。この点が未定義の視差を持つ確率は、まず次のように定義される。
+<!--
+where \(s_i(1)\) is the sum of the squared differences corresponding to label \(l\), and \(c\) is some positive constant. The probability that this point has undefined disparity is obtained by first defining 
+-->
+\[
+p_i^0(undefined) = 1 - \max(w_i(l)) \tag{14.16}
+\]
+</p><p>
+この確率は、\((x_i,y_i)\) に最も類似する点の強度に基づいて決定されます。強く類似する点がない場合、その点はこの画像内で一致するものがない可能性が高いです。様々な一致（ラベル）の確率は次のとおりです。
+<!--
 This probability is determined based on the strength of the most similar
-point for (x;,y;). If there are no strongly similar points, then it is likely
+point for \((x_i,y_i)\). If there are no strongly similar points, then it is likely
 that the point has no match in this image. The probabilities of the various
-
 matches (labels) are
-
-will
-Pill) = <n (14.17)
-where p;(l/i) is the conditional probability that a; has label | given a, is
-matchable, and the sum is over all labels I’ excluding the “undefined” label.
+-->
+\[
+p_i(l|i)=\frac{w_i(l)}{\sum w_i(l^\prime)} \tag{14.17}
+\]
+ここで、\(p_i(l|i)\) は、\(a_i\) がマッチング可能である場合に、\(a_i\) がラベル \(l\) を持つ条件付き確率であり、その合計は「未定義」ラベルを除くすべてのラベル I' について行われます。
+確率推定値は、一貫性特性と反復緩和アルゴリズムを用いて精緻化されます。このアプローチでは、各ノードのラベルは、その反復における隣接ノードのラベルに基づいて強化または弱められます。ここで使用される最も重要な特性は、すべての視差が特定の近傍において類似している必要があるということです。したがって、近傍内の類似するノードの視差は互いに強め合い、類似しないノードの視差は弱め合う必要があります。これは、以下のアプローチを用いて実現されます。
+<!--
+where \(p_i(l|i)\) is the conditional probability that \(a_i\) has label \(l\) given \(a_i\) is matchable, and the sum is over all labels I' excluding the “undefined” label.
 The probability estimates are refined using the consistency property and
 iterative relaxation algorithm. In this approach, the labels at each node are
 strengthened or weakened based on the labels of the neighboring nodes in
 that iteration. The most important property used here is that all disparities
 should be similar in a given neighborhood. Thus, similar disparities of nodes
 in a neighborhood should strengthen each other and dissimilar ones should
-
 be weakened. This is accomplished using the following approach.
-
+-->
+</p><p>
+点aのすべての近傍の視差ベクトルの確率を考えてみましょう。各近傍について、\(a_i\)の視差に近い、または類似するラベル（視差）の確率を合計します。
+<!--
 Let us consider probability for disparity vectors of all neighbors of a;. For
 each neighbor, sum the probability of labels (disparities) that are close to,
+or similar to, the disparity of \(a_i\):
+-->
+\[
+q_i^k(l)=\sum_{a_iの近傍}\sum_{近くの視差}p_j^k(l^\prime) \tag{14.18}
+\]
 
-or similar to, the disparity of a;:
-
-agQ= Yo Dd v5). (14.18)
-
-Neighbors. Nearby
-of a; disparities
-14.3. MOTION CORRESPONDENCE | 427
-
-(c)
-
-Figure 14.12: This figure shows two frames of a sequence and the disparities of
-
-the matched feature points (shown magnified by a factor of 5) after applying
-the relaxation labeling algorithm.
-428 , | CHAPTER 14. DYNAMIC VISION
-
+</p><p>
+反復計算によって確率が精緻化された。
+<!--
 The probabilities are now refined with the iterative calculation:
-pit *(L) = pi(A+ BaF ()) (14.19)
-
-for constants A and B. Constants A and B are selected to control the rate of
-convergence of the algorithm. The updated probabilities must be normalized.
+-->
+\[
+p_i^{k+1}(l)=p_i^k(A+Bq_i^k(l)) \tag{14.19}
+\]
+定数\(A\)と\(B\)について。定数\(A\)と\(B\)は、アルゴリズムの収束速度を制御するために選択されます。更新された確率は正規化する必要があります。通常、数回の反復で良好な解が得られます。アルゴリズムを高速化するために、確率の低い一致は削除されます。
+<!--
+for constants \(A\) and \(B\). Constants \(A\) and \(B\) are selected to control the rate of convergence of the algorithm. The updated probabilities must be normalized.
 Usually, a good solution is obtained after only a few iterations. To speed up
 the algorithm, matches with low probability are removed.
-
+-->
+</p><p>
+図14.12は、シーケンスの2つのフレームと、上記のアルゴリズムを用いて算出された視差を示しています。関心のある読者は、視差計算の詳細な分析については[21]を参照してください。
+<!--
 In Figure 14.12, we show two frames of a sequence and disparities found
 using the above algorithm. Interested readers should see [21] for an in-depth
 analysis of disparity calculations.
-
-14.4 Image Flow
-
+-->
+</p>
+<center><img src="images/fig14_12.png"></center>
+<p class="margin-large">
+図14.12：この図は、2つのフレームのシーケンスと、緩和ラベリングアルゴリズムを適用した後の一致した特徴点の視差（5倍に拡大して表示）を示しています。
+<!--
+Figure 14.12: This figure shows two frames of a sequence and the disparities of
+the matched feature points (shown magnified by a factor of 5) after applying
+the relaxation labeling algorithm.
+-->
+</p>
+<h2>14.4 画像フロー</h2>
+<!--
+<h2>14.4 Image Flow</h2>
+-->
+<p>
+画像フローとは、画像上の点群における観察者に対する相対的な速度分布である。画像フローは、動的なシーンの解析に有用な情報を伝える。画像フロー情報が利用可能であることを前提とした、動的なシーン解析のためのいくつかの手法が提案されている。しかしながら残念なことに、画像フローは研究者から多大な注目を集めているにもかかわらず、画像フローを計算するために開発された技術は、有用な情報を復元できるほどの品質の結果を生み出していない。本節では、画像フローを計算するための現在の手法、オプティカルフローにおいて重要な情報、そしてそのような情報の復元について論じる。
+<!--
 Image flow is the distribution of velocity, relative to the observer, over the
 points of an image. Image flow carries information which is valuable for an-
 alyzing dynamic scenes. Several methods for dynamic-scene analysis have
@@ -869,26 +1138,40 @@ age flow do not produce results of the quality which will allow the valuable
 information to be recovered. Current methods for computing image flow,
 information which is critical in optical flow, and the recovery of such infor-
 mation are discussed in this section.
-
-Definition 14.1 Image flow is the velocity field in the image plane due to
+-->
+</p><p>
+<strong>定義 14.1</strong>　画像フローとは、観察者の動き、シーン内の物体の動き、または物体または観察者の動きを模倣するフレーム間の画像強度の変化である見かけの動きによって生じる画像平面内の速度場である。
+<!--
+<strong>Definition 14.1</strong>　Image flow is the velocity field in the image plane due to
 the motion of the observer, the motion of objects in the scene, or apparent
 motion which is a change in the image intensity between frames that mimics
 object or observer motion.
-
-14.4.1 Computing Image Flow
-
+-->
+</p><p>
+<h3>14.4.1 画像フローの計算</h3>
+<!--
+<h3>14.4.1 Computing Image Flow</h3>
+-->
+<p>
+画像フローは、画像内の各ピクセルの速度ベクトルによって決定されます。
+シーケンス内の2フレーム以上に基づいて画像フローを計算するための手法がいくつか考案されています。これらの手法は、特徴ベースと勾配ベースの2つの一般的なカテゴリに分類できます。静止したカメラを使用する場合、画像フレーム内のほとんどの点の速度はゼロになります。これは、シーンのごく一部が動いているという仮定に基づいていますが、これは通常当てはまります。したがって、画像フローのほとんどのアプリケーションでは、移動するカメラが用いられます。
+<!--
 Image flow is determined by the velocity vector of each pixel in an image.
 Several schemes have been devised for calculating image flow based on two or
 more frames of a sequence. These schemes can be classified into two general
 categories: feature-based and gradient-based. Ii a stationary camera is used,
 most of the points in an image frame will have zero velocity. This is assuming
-14.4. IMAGE FLOW a 429
-
 that a very small subset of the scene is in motion, which is usually true. Thus,
 most applications for image flow involve a moving camera.
-
-14.4.2 Feature-Based Methods
-
+-->
+</p>
+<h3>14.4.2 特徴ベースの手法</h3>
+<!--
+<h3>14.4.2 Feature-Based Methods</h3>
+-->
+<p>
+画像フローを計算する特徴ベースの手法では、まず画像フレーム内のいくつかの特徴を選択し、次にそれらの特徴を対応付けてフレーム間の視差を計算します。前のセクションで説明したように、対応関係は緩和法を用いてステレオ画像ペア上で解決できます。同じアプローチは、動的なシーンにおける対応関係の解決にも使用できます。しかし、特徴を選択して対応関係を確立するという問題は容易ではありません。さらに、この手法では、疎な点における速度ベクトルしか生成されません。このアプローチは、上記で視差解析として説明しました。
+<!--
 Feature-based methods for computing image flow first select some features in
 the image frames and then match these features and calculate the disparities —
 between frames. As discussed in an earlier section, the correspondence may
@@ -897,76 +1180,123 @@ be used to solve the correspondence problem in dynamic scenes. However,
 the problem of selecting features and establishing correspondence is not easy.
 Moreover, this method only produces velocity vectors at sparse points. This
 approach was discussed above as disparity analysis.
-
-14.4.3. Gradient-Based Methods
-
+-->
+</p>
+<h3>14.4.3. 勾配ベースの手法</h3>
+<!--
+<h3>14.4.3. Gradient-Based Methods</h3>
+-->
+<p>
+勾配ベースの手法は、強度の空間勾配と時間勾配の関係を利用します。この関係を利用して、点の速度に基づいて画像を分割することができます。
+<!--
 Gradient-based methods exploit the relationship between the spatial and
 temporal gradients of intensity. This relationship can be used to segment
 images based on the velocity of points.
-
+-->
+</p><p>
+像面上の一点における像強度が
+\(E(x,y,t)\) と与えられると仮定する。小さな動きを仮定すると、この点における強度は一定のままであるので、
+<!--
 Suppose the image intensity at a point in the image plane is given as
-E(z,y,t). Assuming small motion, the intensity at this point will remain
-constant, so that ,
-
-dE |
-a =
+\(E(x,y,t)\). Assuming small motion, the intensity at this point will remain
+constant, so that 
+-->
+\[
+\frac{dE}{dt}=0 \tag{14.20}
+\]
+微分の連鎖律を用いると、
+<!--
 Using the chain rule for differentiation, we see that
-
-0. (14.20)
-
-—— 4 —~4—=9. (14.21)
-
+-->
+\[
+\frac{\partial E}{\partial x}\frac{dx}{dt}+\frac{\partial E}{\partial y}\frac{dy}{dt}+\frac{\partial E}{\partial t}=0 \tag{14.21}
+\]
+以下、
+<!--
 Using
-dz
-and q
-_w
-v= 7 (14.23)
-
-the relationship between the spatial and temporal gradients and the velocity
-
+-->
+\[
+u=\frac{dx}{xt} \tag{14.22}
+\]
+および以下を使うと
+<!--
+and
+-->
+\[
+v=\frac{dy}{dy} \tag{14.23}
+\]
+空間的および時間的な勾配と速度成分の関係は次の通りである。
+<!--
+ the relationship between the spatial and temporal gradients and the velocity
 components is:
-h,ut+ Eyv+ BE; = 0. (14.24)
-430 CHAPTER 14. DYNAMIC VISION
+-->
+\[
+E_xu+E_yv=E_t=0 \tag{14.24}
+\]
 
-Figure 14.13: If one sees a point using a tube such that only one point is
-visible, then motion of the point cannot be determined. One can only get the
-_ sense of the motion, not the components of the motion vector. This problem
-is commonly called the aperture problem.
-
-In the above equation, #,, E,, and &, can be computed directly from the
-image. Thus, at every point in an image, there are two unknowns, u and
-v, and only one equation. Using information only at a point, image flow
+</p><p>
+上記の式において、\(E_x,E_y\)、\(E_t\) は画像から直接計算できます。したがって、画像内の各点には、2つの未知数 \(u\) と \(v\) があり、方程式は1つだけです。ある点の情報のみを使用して、画像の流れを決定することはできません。これは図14.13で説明できます。これはアパーチャ問題として知られています。画像内の1点の情報のみを使用して、さらなる仮定を立てずに、ある点における速度成分を決定することはできません。
+<!--
+In the above equation, \(E_x,E_y\), and \(E_t\) can be computed directly from the
+image. Thus, at every point in an image, there are two unknowns, \(u\) and
+\(v\), and only one equation. Using information only at a point, image flow
 cannot be determined. This can be explained using Figure 14.13. This is
 known as the aperture problem. The velocity components at a point cannot
 be determined using the information at only one point in the image without
 making further assumptions.
-
+-->
+</p>
+<center><img src="images/fig14_13.png"></center>
+<p class="margin-large">
+図14.13: チューブを使って点を観察すると、1点しか見えなくなるため、その点の動きを判定することはできません。動きの方向しか把握できず、動きベクトルの成分は把握できません。この問題は一般に「アパーチャ問題」と呼ばれます。
+<!--
+Figure 14.13: If one sees a point using a tube such that only one point is
+visible, then motion of the point cannot be determined. One can only get the
+_ sense of the motion, not the components of the motion vector. This problem
+is commonly called the aperture problem.
+-->
+</p><p>
+速度場は画像上で滑らかに変化すると仮定できます。
+この仮定の下で、2フレーム以上のフレームを用いて画像フローを計算するための反復法を開発できます。画像フローの計算には、以下の反復方程式が使用されます。これらの方程式は、以下で説明する変分法を用いて導出できます。
+<!--
 It can be assumed that the velocity field varies smoothly over an image.
 Under this assumption, an iterative approach for computing image flow using
 two or more frames can be developed. The following iterative equations are
 used for the computation of image flow. These equations can be derived
 using the variational approach discussed below.
-
-P ,
-
-Us Uaverage — bas , (14.25)
-P
-
-U = Vaverage — Ey (14.26)
-
+-->
+\[
+\begin{align}
+u &= u_{average}-E_x\frac{P}{D} \tag{14.25} \\
+\\
+v &= v_{average}-E_y\frac{P}{D} \tag{14.26}
+\end{align}
+\]
+ここで
+<!--
 where
-P= Fez Uaverage + Foy Vaverage + Fx (14.27)
-14.4. IMAGE FLOW 7 | 431]
-
+-->
+\[
+P =E_xu_{average}+E_yv_{average}+E_t \tag{14.27}
+\]
+および
+<!--
 and
-D=°+Ei+ E. (14.28)
-
-In the above equations £,, Ey, E;, and A represent the spatial gradients
-in the x and y directions, the temporal gradient, and a constant multiplier,
+-->
+\[
+D= \lambda^2+{E_x}^2+{E_y}^2 \tag{14.28}
+\]
+上記の式において、\(E_x,E_y,E_t\)、\(\lambda\) はそれぞれ、\(x\) 方向と \(y\) 方向の空間勾配、時間勾配、定数乗数を表します。フレームが 2 つだけの場合、計算は同じフレームで何度も反復されます。フレームが 3 つを超える場合、反復ごとに新しいフレームが使用されます。
+<!--
+In the above equations \(E_x,E_y,E_t\), and \(\lambda\) represent the spatial gradients
+in the \(x\) and \(y\) directions, the temporal gradient, and a constant multiplier,
 respectively. When only two frames are used, the computation is iterated
 over the same frames many times. For more than two frames, each iteration
 uses a new frame.
-
+-->
+</p><p>
+勾配ベースの手法について覚えておくべき重要な事実は、強度の線形変化を仮定し、この仮定の下で点ごとの速度を計算することです。通常、この仮定は画像のエッジ点では満たされると予想されるため、これらの点では速度を計算できます。物体の境界では、物体の表面の深さが異なる場合があるため、滑らかさの制約は満たされません。重なり合う物体が異なる方向に移動している場合、この制約も破られます。境界における速度場のこのような急激な変化は問題を引き起こします。これらの問題を解決するには、上記の方法で決定されたオプティカルフローを改良するために、他の情報を使用する必要があります。
+<!--
 An important fact to remember about gradient-based methods is that
 they assume a linear variation of intensities and compute the point-wise
 velocities under this assumption. It is typically expected that this assumption
@@ -977,57 +1307,79 @@ overlapping objects are moving in different directions, the constraint will also
 be violated. These abrupt changes in the velocity field at the boundaries
 cause problems. ‘To remove these problems, some other information must be
 used to refine the optical flow determined by the above method.
-
-14.4.4 Variational Methods for Image Flow
-
+-->
+</p>
+<h3>14.4.4 画像フローの変分法</h3>
+<!--
+<h3>14.4.4 Variational Methods for Image Flow</h3>
+-->
+<p>
+絞り問題では、像面上の一点における像流速度は、他の情報源からの情報を用いずに、その点における像の変化のみを用いて計算することはできない、ということを思い出してください。像流は、像流制約方程式と像流速度場の滑らかさに関する仮定を組み合わせた変分法を用いて計算できます。像流制約方程式は、
+<!--
 Recall that the aperture problem says that the image-flow velocity at a point
 in the image plane cannot be computed by only using the changes in the
 image at that point without using information from other sources. Image
 flow can be computed using variational methods that combine the image
 flow constraint equation with an assumption about the smoothness of the
 image-flow velocity field. The image-flow constraint equation is
-
-E,u+ Eyv+E,=0 (14.29)
-
-where u and v are the z and y components of the image-flow, respectively,
-and f,, By, and &; are the spatial and temporal derivatives of the image
+-->
+\[
+E_xu+ E_yv+E_t=0 \tag{14.29}
+\]
+ここで、\(u\) と \(v\) はそれぞれ画像フローの \(x\) と \(y\) 成分であり、\(E_x,E_y\) と \(E_t\) は画像強度の空間微分と時間微分です。滑らかさの尺度として、各画像フロー成分の振幅の二乗和を正則化項の積分関数として使用します。
+<!--
+where \(u\) and \(v\) are the \(x\) and \(y\) components of the image-flow, respectively,
+and \(E_x,E_y\), and \(E_t\) are the spatial and temporal derivatives of the image
 intensity. For a smoothness measure, use the sum of the squared magnitudes
 of each image flow component as the integrand in the regularization term:
-432 CHAPTER 14. DYNAMIC VISION
-
+-->
+\[
+\int\int\left[\left(\frac{\partial u}{\partial x}\right)^2+\left(\frac{\partial u}{\partial y}\right)^2+\left(\frac{\partial v}{\partial x}\right)^2+\left(\frac{\partial v}{\partial y}\right)^2\right]dx\;dy \tag{14.30}
+\]
+滑らかさの尺度と、問題の制約からの逸脱の尺度を、画像フロー制約からの逸脱と滑らかさからの逸脱のバランスを制御するパラメータで重み付けして組み合わせる。
+<!--
 Combine the smoothness measure with a measure of deviations from the
 problem constraint weighted by a parameter that controls the balance be-
-tween deviations from the image-flow constraint and deviations from smooth-
-
-ness: ,
-Bu\* (Au\* (dv \? Av\?
-(5) + (F) + (5 + (=) dx dy.
-
-| [eer By+ Be v
-| (14.31)
-
+tween deviations from the image-flow constraint and deviations from smoothness: 
+-->
+\[
+\int\int\left\{(E_xu+E_yv+E_t)^2+\nu^2\left[\left(\frac{\partial u}{\partial x}\right)^2+\left(\frac{\partial u}{\partial y}\right)^2+\left(\frac{\partial v}{\partial x}\right)^2+\left(\frac{\partial v}{\partial y}\right)^2\right]\right\}dx\;dy \tag{14.31}
+\]
+変分法を用いてこのノルムを一対の偏微分方程式に変換する。
+<!--
 Use the calculus of variations to transform this norm into a pair of partial
 differential equations
-
-v?V7u
-
-y2V7¥
-
-Evu+ E,Eyv+ E,E; (14.32)
-E,Eyu+ Eiv + EyE;. (14.33)
-
+-->
+\[
+\begin{align}
+\nu^2\nabla^2u &= E_x^2u+E_xE_yv+E_xE_t \tag{14.32} \\
+\\
+\nu^2\nabla^2v &= E_xE_yu+E_y^2v+E_yE_t \tag{14.33}
+\end{align}
+\]
+有限差分法を用いて、各方程式のラプラシアンを局所近傍のフローベクトルの重み付き和に置き換え、反復法を用いて差分方程式を解きます。
+<!--
 Use finite difference methods to replace the Laplacian in each equation with
 a weighted sum of the flow vectors in a local neighborhood, and use iterative
 methods to solve the difference equations.
-
-14.4.5 Robust Computation of Image Flow
-
+-->
+</p><p>
+<h3>14.4.5 画像フローの堅牢な計算</h3>
+<!--
+<h3>14.4.5 Robust Computation of Image Flow</h3>
+-->
+<p>
+背景の遮蔽または遮蔽解除のプロセスが式14.24のイメージフロー制約に従わないため、動きの境界では動き情報が信頼できない場合があります。誤った動き制約は外れ値です。ロバストな手法は、境界における誤った動き制約によって引き起こされる問題を回避します。
+<!--
 The motion information can be unreliable at motion boundaries, since the
 process of occluding or disoccluding the background does not obey the image-
 flow constraints of Equation 14.24. The incorrect motion constraints are
 outliers. Robust methods avoid the problems caused by incorrect motion
 constraints at boundaries.
-
+-->
+</p><p>
+イメージフローは、最小中央値二乗回帰を用いたロバスト回帰を用いて計算できます。最小中央値二乗アルゴリズムは、連続する近傍領域に適用されます。各近傍領域内で、アルゴリズムはすべての可能な制約線のペアを試行します。各制約線のペアの交点が計算され、残差の二乗の中央値が計算されて、各推定値にコストが割り当てられます。各交点とそのコストは保存されます。すべての可能なペアを試行した後、最小コストに対応する交点が、近傍領域の中心におけるイメージフロー速度の推定値として使用されます。
+<!--
 Image flow can be computed using robust regression with least-median-
 squares regression. ‘The least-median-squares algorithm is applied over suc-
 cessive neighborhoods. Within each neighborhood, the algorithm tries all
@@ -1037,88 +1389,77 @@ to assign a cost to each estimate. Each intersection and its cost are stored.
 After all possible pairs have been tried, the intersection corresponding to
 the minimum cost is used as the estimate for the image-flow velocity for the
 center of the neighborhood.
-
+-->
+</p><p>
+拘束線と残差の交点を計算するには、いくつかのステップがあります。拘束線は、速度空間における原点からの拘束線の距離 \(d\) と画像勾配の角度 \(\alpha\) を用いて極形式で表されます。
+<!--
 There are several steps in computing the intersection of the constraint
 lines and the residuals. The constraint lines are represented in polar form
-using the distance d of the constraint line from the origin in velocity space
-and the angle a of the image gradient:
-14.4. IMAGE FLOW 433
-
-d = pcos(a — 8), (14.34)
-
-where p(x, y) and G(z, y) are the speed and direction of motion, respectively.
-Let the coordinates of the first constraint line be d; and a1, and the co-
-ordinates of the second constraint line be d; and ay. The position of the
+using the distance \(d\) of the constraint line from the origin in velocity space
+and the angle \(\alpha\) of the image gradient:
+-->
+\[
+d = \rho\cos(\alpha-\beta)  \tag{14.34}
+\]
+ここで、\(\rho(x, y)\) と \(\beta(x, y)\) はそれぞれ運動の速度と方向です。
+最初の拘束線の座標を \(d_1\) と \(\alpha_1\)、2番目の拘束線の座標を \(d_2\) と \(\alpha_2|) とします。直交座標における交点の位置は
+<!--
+where \(\rho(x, y)\) and \(\beta(x,y)\) are the speed and direction of motion, respectively.
+Let the coordinates of the first constraint line be \(d_1\) and \(\alpha_1\), and the co-
+ordinates of the second constraint line be \(d_2\) and \(\alpha_2|). The position of the
 intersection in rectangular coordinates is
-—_ dy sin Q2 — dosinay (14.35)
-| sin(ay — Q2)
-— dp cosa, — d, cosa»
-
-y (14.36)
-
-sin(ay — 2)
+-->
+\[
+\begin{align}
+x &=\frac{d_1\sin\alpha_2-d_2\sin\alpha_1}{\sin(\alpha_1-\alpha_2)} \tag{14.35} \\
+\\
+y &= \frac{d_2\cos\alpha_1-d_1\cos\alpha_2}{\sin(\alpha_1-\alpha_2)} \tag{14.36}
+\end{align}
+\]
+</p><p>
+制約線へのモデルの適合度は、残差の二乗の中央値です。
+<!--
 The fit of the model to the constraint lines is the median of the squared
 residuals:
-
-med (r?). (14.37)
-
-The r residual between the motion estimate and each constraint line is the
-perpendicular distance of the constraint line from the estimate x and y. The
-residual is given by ,
-r=zcosa+ ysina. (14.38)
-
+-->
+\[
+\underset{i}{med}(r_i^2) \tag{14.37}
+\]
+動き推定値と各拘束線との間の残差\(r\)は、拘束線から推定値\(x\)および\(y\)までの垂直距離である。残差は次のように与えられる。
+<!--
+The \(r\) residual between the motion estimate and each constraint line is the
+perpendicular distance of the constraint line from the estimate \(x\) and \(y\). The residual is given by
+-->
+\[
+r=x\cos\alpha+ y\sin\alpha  \tag{14.38}
+\]
+式14.36で与えられる一対の拘束線の交点の位置が候補解である。候補解に対する拘束線の残差の二乗の中央値が計算され、候補解とともに潜在的解として保存される。残差の二乗の中央値は、近傍にある各拘束線から候補までの垂直距離の二乗の中央値である。
+<!--
 The position of the intersection of the pair of constraint lines, given by Equa-
 tion 14.36, is a candidate solution. The median of the squared residuals of
 the constraint lines with respect to the candidate is computed and saved,
 along with the candidate, as a potential solution. The median of the squared
 residuals is the median of the square of the perpendicular distance of each
 constraint line in the neighborhood from the candidate.
-
-The typical neighborhood size is 5 x 5. An n x n neighborhood contains
-n* constraint lines. The number of possible pairs of constraint lines in an
-n X n neighborhood would be
-
-n*(n? — 1)
-
-5 (14.39)
-
-A 5 x 5 neighborhood would yield 300 pairs. It is not necessary to try all
+-->
+</p><p>
+典型的な近傍のサイズは \(5\times 5\) です。\(n\times n\) 近傍には、\(n^2\) 本の制約線が含まれます。\(n\times n\) 近傍における制約線の可能なペアの数は、
+<!--
+The typical neighborhood size is \(5\times 5\). An \(n\times n\) neighborhood contains
+\(n^2\) constraint lines. The number of possible pairs of constraint lines in an
+\(n\times n\) neighborhood would be
+-->
+\[
+\frac{n^2(n^2 -1)}{2} \tag{14.39}
+\]
+\(5\times 5\) 近傍では 300 組のペアが得られます。計算時間が制限されている場合、すべての可能なペアを試す必要はありません。Rousseeuw と Leroy [207,
+p. 198] は、さまざまな割合の外れ値を含むデータセットに、\(p\) パラメータと 95% の信頼度を持つモデルを適合させるために必要な試行回数を示す表を示しています。近傍内の制約の最大 50% が外れ値になると仮定します。イメージフロー速度場の局所推定には、2 つの制約線のみが必要です。Rousseeuw と Leroy によって公開された表によると、95% の信頼度で一貫​​した推定値を得るためには、11 組の制約のみを試す必要があります。より多くの制約組を使用すれば、一貫した推定値を見つける確率は高まります。制約線の可能なペアをすべて使用しない場合は、各ペアの制約線が離れるようにペアを選択する必要があります。これにより、ほぼ同じ方向の制約線が交差することによって引き起こされる悪条件の問題を軽減できます。各近傍における制約線ペアの選択には、事前にプログラムされたスキームを使用できます。このアプローチを使用した結果を図14.14に示します。
+<!--
+A \(5\times 5\) neighborhood would yield 300 pairs. It is not necessary to try all
 possible pairs if computation time is restricted. Rousseeuw and Leroy [207,
 p. 198] provide a table showing the number of trials that must be run to
-fit a model with p parameters and 95% confidence to data sets with var-
+fit a model with \(p\) parameters and 95% confidence to data sets with var-
 lous percentages of outliers. Assume that at most 50% of the constraints
-434 CHAPTER 14. DYNAMIC VISION
-
-1 Re ee ie ae te ae ate ge ae
-Or See Be ae ae a a ae ne See.
-re re a ee eee
-RP re ae Re ie rt a ne ee a oe
-a ee ae a ee ee a ee ee
-we Baie iar ale Be Ser ne ae ar ne a ee
-
-ede ie ae ae ie ee ee ee
-re er ae ae i ee ee eee
-Pe Se ae aap ee ae Se a ae ae ee ee
-Se ae ae ie ak er re rr ree
-See ee ee eh ty ee
-
-Rr ae Re ae wr a a ee ar
-
-Ae a a a a le
-ee ea ae ee ae ne ne a eee
-Oe Se ae a i ae a ee ee
-
-ene Be iy ae a ae nr ee ee ae
-
-(c)
-
-Figure 14.14: Image flow computed using the least-median-squares algo-
-rithm. ‘T'wo frames of a synthetic image sequence were computed by filling a
-64 x 64 background image and a 32 x 32 foreground image with pixels from a
-uniform random number generator. The foreground image was overlayed on
-the center of the background image to create the first frame and overlayed
-one pixel to the right to create the second frame.
-
 in the neighborhood will be outliers. The local estimate of the image-flow
 velocity field requires only two constraint lines. From the table published by
 Rousseeuw and Leroy, only 11 pairs of constraints would have to be tried to
@@ -1130,10 +1471,27 @@ ill-conditioning caused by intersecting constraint lines that have nearly the
 same orientation. A preprogrammed scheme could be used for selecting the
 constraint line pairs in each neighborhood. The results using this approach
 are shown in Figure 14.14.
-14.4. IMAGE FLOW | 435
-
-14.4.6 Information in Image Flow
-
+-->
+</p>
+<center><img src="images/fig14_14.png"></center>
+<p class="margin-large">
+図14.14: 最小二乗法アルゴリズムを用いて計算された画像フロー。64×64の背景画像と32×32の前景画像を、一様乱数生成器からのピクセルで埋め込むことで、合成画像シーケンスの2つのフレームが計算されました。前景画像は背景画像の中央に重ね合わせて最初のフレームを作成し、1ピクセル右に重ね合わせて2番目のフレームを作成しました。
+<!--
+Figure 14.14: Image flow computed using the least-median-squares algo-
+rithm. ‘T'wo frames of a synthetic image sequence were computed by filling a
+64 x 64 background image and a 32 x 32 foreground image with pixels from a
+uniform random number generator. The foreground image was overlayed on
+the center of the background image to create the first frame and overlayed
+one pixel to the right to create the second frame.
+-->
+</p>
+<h3>14.4.6 画像フロー内の情報</h3>
+<!--
+<h3>14.4.6 Information in Image Flow</h3>
+-->
+<p>
+多くの研究者が、高品質の画像フローが計算されているという仮定のもと、画像フローフィールドからどのような情報を抽出できるかを研究してきました。既知の深度に剛体で静止した表面を持つ環境と、観察者（カメラ）がこの世界を移動する環境を想定してみましょう。画像フローは既知の構造から導き出すことができます。したがって、原理的には、計算された画像フローフィールドから環境の構造を得ることができます。
+<!--
 Many researchers have studied the types of information that can be extracted
 from an image-flow field, assuming that high-quality image flow has been
 computed. Let us assume an environment which contains rigid, stationary
@@ -1141,16 +1499,22 @@ surfaces at known depths, and that the observer, the camera, moves through
 this world. The image flow can be derived from the known structure. Thus,
 the structure of the environment can be obtained, in principle, from the
 computed image-flow field.
-
+-->
+</p><p>
+滑らかな速度勾配を持つ領域は、画像内の単一の表面に対応し、表面の構造に関する情報を含んでいます。大きな勾配を持つ領域には、オクルージョンと境界に関する情報が含まれています。これは、異なる深度にある異なる物体のみがカメラに対して異なる速度で移動できるためです。観測者ベースの座標系を用いることで、表面の向きと滑らかな速度勾配の関係を導き出すことができます。向きは、観測者の移動方向を基準として指定されます。
+<!--
 Areas with smooth velocity gradients correspond to single surfaces in the
 image and contain information about the structure of the surface. Areas with
 large gradients contain information about occlusion and boundaries, since
 only different objects at different depths can move at different speeds relative
 to the camera. Using an observer-based coordinate system, a relationship
 between the surface orientation and the smooth velocity gradients can be
-derived. ‘he orientation is specified with respect to the direction of motion
-of the observer. ,
-
+derived. The orientation is specified with respect to the direction of motion
+of the observer. 
+-->
+</p><p>
+物体運動の並進成分は、観察者が近づいているときは拡大焦点（FOE）と呼ばれる像内の点に、遠ざかっているときは縮小焦点と呼ばれる像内の点に向けられます（図14.15を参照）。この点は、像面における物体運動の方向と交わる点です。表面構造は、並進成分の1次および2次空間微分から復元できます。角速度iは、回転成分によって完全に決定されます。
+<!--
 The translational component of object motion is directed toward a point
 in the image called the focus of expansion (FOE) when the observer is ap-
 proaching or the focus of contraction when the observer is receding; see Figure
@@ -1158,7 +1522,10 @@ proaching or the focus of contraction when the observer is receding; see Figure
 image plane. Surface structure can be recovered from the first and second
 spatial derivatives of the translational component. The angular velocity i is
 fully determined by the rotational component.
-
+-->
+</p><p>
+画像フローの並進成分から構造を復元する上でのFOEの重要性から、多くの研究者がFOEを決定する手法の開発に取り組みました。FOEが正しく決定されれば、画像フローの並進成分の計算に使用できます。すべてのフローベクトルはFOEで交わるため、その方向は既に分かっており、残るは大きさの計算だけです。したがって、画像フローの計算という2次元の問題は1次元の問題に縮減されます。この事実は多くの研究者によって指摘されてきましたが、実際のシーンにおけるFOEの位置を特定するための提案されたアプローチの不確実性のためか、適用されていません。
+<!--
 The importance of the FOE for recovering structure from the translational
 components of image flow encouraged several researchers to develop methods
 for determining the FOE. If the FOE is correctly determined, it may be used
@@ -1169,258 +1536,403 @@ the computation of image flow is reduced to a one-dimensional problem. This
 fact has been noted by many researchers. However, it has not been applied,
 possibly due to the uncertainty in the proposed approaches for locating the
 FOE in real scenes.
-436 CHAPTER 14. DYNAMIC VISION
-
+-->
+</p>
+<center><img src="images/fig14_15.png"></center>
+<p class="margin-large">
+図14.15: 移動する観測者から見た、シーンの静止成分の速度ベクトルは、拡大焦点（FOE）で交わります。
+<!--
 Figure 14.15: The velocity vectors for the stationary components of a scene,
 as seen by a translating observer, meet at the focus of expansion (FOE).
-
-14.5 Segmentation Using a Moving Camera
-
+-->
+</p>
+<h2>14.5 移動カメラを用いたセグメンテーション</h2>
+<!--
+<h2>14.5 Segmentation Using a Moving Camera</h2>
+-->
+<p>
+カメラが動いている場合、画像内のすべての点はカメラに対して非ゼロの速度を持ちます。<sup>1</sup> カメラに対する点の速度は、点自身の速度とカメラからの距離の両方に依存します。差分画像ベースのアプローチは、動いているカメラシーンのセグメント化にも拡張できます。ただし、ある点の動きが深度のみによるものなのか、深度と動きの組み合わせによるものなのかを判断するには、追加の情報が必要になります。勾配ベースのアプローチでも追加の情報が必要になります。
+<!--
 If the camera is moving, then every point in the image has nonzero velocity
-relative to it.' The velocity of points relative to the camera depends both
-on their own velocity and on their distance from the camera. Difference
-picture-based approaches may be extended for segmenting moving camera
-scenes. Additional information will be required, however, to decide whether
-the motion at a point is due solely to its depth or is due to a combination
+relative to it.<sup>1</sup> The velocity of points relative to the camera depends both on their own velocity and on their distance from the camera. Difference picture-based approaches may be extended for segmenting moving camera scenes. Additional information will be required, however, to decide whether the motion at a point is due solely to its depth or is due to a combination
 of its depth and its motion. Gradient-based approaches will also require
-additional information. -
-
-If the camera’s direction of motion is known, then the FOE with respect
+additional information. 
+-->
+</p><p class="margine-large">
+<sup>1</sup>　
+ただし、オブジェクト ポイントがカメラと同じ速度で移動している異常なケースは除きます。
+<!--
+With the exception of the pathological case where object points are moving with the same velocity as the camera.
+-->
+</p><p>
+カメラの移動方向が分かっていれば、シーン内の静止した要素に対するFOEは簡単に計算できます。FOEは座標を持ちます。
+<!--
+If the camera's direction of motion is known, then the FOE with respect
 to the stationary components in a scene can easily be computed. The FOE
 will have coordinates
-
-, ae
-ay = = (14.40)
-and q
-y= (14.41)
-
-‘With the exception of the pathological case where object points are moving with the
-same velocity as the camera.
-14.5. SEGMENTATION USING A MOVING CAMERA 437
-
-in the image plane, where dz, dy, dz is the camera displacement between
+-->
+\[
+x_f^\prime =\frac{dx}{dz} \tag{14.40}
+\]
+および
+<!--
+and 
+-->
+\[
+y_f^\prime=\frac{dy}{dz} \tag{14.41}
+\]
+ここで、\(dx, dy, dz\) はフレーム間のカメラの変位です。後のセクションで説明するように、シーン内のすべての静止点の速度ベクトルは、FOE で交差するように画像平面に投影されます。FOE に関する変換は、セグメンテーションのタスクを簡素化するために使用できます。画像の自己運動極座標変換 (EMP) は、フレーム \(F(x^\prime,y^\prime,t)\) を \(E(r^\prime,\theta,t)\) に変換します。
+<!--
+in the image plane, where \(dx, dy, dz\) is the camera displacement between
 frames. As discussed in a later section, the velocity vectors of all the station-
 ary points in a scene project onto the image plane so that they intersect at
 the FOE. A transformation with respect to the FOE may be used to simplify
 the task of segmentation. The ego-motion polar (EMP) transformation of an
-image transforms a frame F(z’, y’,t) into E(r’,6,t) using
-
-E(r',6,t) = F(2',y’,t) (14.42)
-where ,
-r= y/(2! — 2)? + (y' — yf)? (14.43)
-and | ,
-6=tan™! (4 i , (14.44)
-x! — xp
-
-In EMP space, stationary points are displaced only along the 6 axis be-
+image transforms a frame \(F(x^\prime,y^\prime,t)\) into \(E(r^\prime,\theta,t)\) using
+-->
+\[
+E(r^\prime,\theta,t)= F(x^\prime,y^\prime,t) \tag{14.42}
+\]
+ここで
+<!--
+where 
+-->
+\[
+r^\prime = \sqrt{(x^\prime-x_f^\prime)^2+(y^\prime-y_f^\prime)^2} \tag{14.43}
+\]
+および
+<!--
+and
+-->
+\[
+\theta=\tan^{-1}\left(\frac{y^\prime-y_f^\prime}{x^\prime-x_f^\prime} \right) \tag{14.44}
+\]
+</p><p>
+EMP空間では、静止点は画像シーケンスのフレーム間で\(\theta\)軸に沿ってのみ移動しますが、移動物体上の点は\(\theta\)軸に加えて\(r^\prime\)軸にも移動します。したがって、EMP空間における移動を利用して、シーンを静止部分と非静止部分に分割することができます。図14.16には、移動カメラで取得したシーケンスの3つのフレームが示されています。分割の結果は図14.17に示されています。
+<!--
+In EMP space, stationary points are displaced only along the \(\theta\) axis be-
 
 tween the frames of an image sequence, while points on moving objects are
-displaced along the r’ axis as well as the @ axis. Thus, the displacement in
+displaced along the \(r^\prime\) axis as well as the\(\theta\) axis. Thus, the displacement in
 the EMP space may be used to segment a scene into its stationary and non-
 stationary components. In Figure 14.16, three frames of a sequence acquired
 by a moving camera are shown. The results of the segmentation are shown
 in Figure 14.17.
-_ A method for representing object motion in images, acquired by a moving
+-->
+</p>
+<center><img src="images/fig14_16.png"></center>
+<p class="margin-large">
+図14.16: 移動するカメラで取得したシーンの３つのフレームを(a)、(b)、(c)に示します。
+<!--
+Figure 14.16: Three frames of a scene acquired by a moving camera are
+shown in (a), (b), and (c).
+-->
+</p>
+<center><img src="images/fig14_17.png"></center>
+<p class="margin-large">
+図14.17: 図14.16に示すフレームでは、EMPセグメンテーションを用いて、移動物体と静止物体が分割されています。移動物体はより明るく表示されます。
+<!--
+Figure 14.17: Moving objects are segmented from stationary objects, in the
+frames shown in Figure 14.16, using EMP segmentation. Moving objects
+appear brighter.
+-->
+</p><p>
+移動するカメラによって取得された画像における物体の動きを表現する方法は、並進する観測者によって取得されたシーン内の静止物体の速度ベクトルがすべてFOEで交差するという事実から導かれる。画像フレームは、FOEを基準として、横軸がr'、縦軸がθである第2のフレームに変換することができる。この変換により、前述のように、動的シーンを移動要素と静止要素に分割することが可能になる。
+<!--
+A method for representing object motion in images, acquired by a moving
 camera, is derived from the fact that all of the velocity vectors of stationary
 objects in a scene acquired by a translating observer intersect at the FOE. An
 image frame may be transformed, with respect to the FOE, to a second frame
-in which the abscissa is r’ and the ordinate is 6. Under this transformation,
+in which the abscissa is r' and the ordinate is 6. Under this transformation,
 it is possible to segment a dynamic scene into its moving and stationary
-components, as discussed earlier. | |
-
-14.5.1 Ego-Motion Complex Log Mapping
-
+components, as discussed earlier. 
+-->
+</p>
+<h3>14.5.1 自己運動複素対数マッピング</h3>
+<!--
+<h3>14.5.1 Ego-Motion Complex Log Mapping</h3>
+-->
+<p>
+単純な極座標マッピングではなく、複素対数マッピング（CLM）を用いることで、静止物体だけでなく移動物体についてもより多くの情報を抽出できる。以下を定義する。
+<!--
 More information about moving, as well as stationary, objects may be ex-
 tracted using a complex logarithmic mapping (CLM) rather than the simple
 polar mapping. Let us define ,
-
-w = loga, (14.45)
-438 , CHAPTER 14. DYNAMIC VISION
-
-(a) (b) (c)
-Figure 14.16: Three frames of a scene acquired by a moving camera are
-shown in (a), (b), and (c).
-
-Figure 14.17: Moving objects are segmented from stationary objects, in the
-
-frames shown in Figure 14.16, using EMP segmentation. Moving objects
-appear brighter.
-14.5. SEGMENTATION USING A MOVING CAMERA | 439
-
-where w and a@ are complex variables:
-
-a=a2'+ jy =r'(cosé+jsing) = r'e® (14.46)
-and | ,
-w = u(z) + jo(z). (14.47)
+-->
+\[
+\omega = \log \alpha  \tag{14.45}
+\]
+ここで、\(\omega\) と \(\alpha\) は複素変数です。
+<!--
+where \(\omega\) and \(\alpha\) are complex variables:
+-->
+\[
+\alpha=x^\prime+jy^\prime=r^\prime(\cos\theta+j\sin\theta)=r^\prime e^{j\theta} \tag{14.46}
+\]
+および
+<!--
+and
+-->
+\[
+\omega = u(z) + jv(z)  \tag{14.47}
+\]
+この変換により、
+<!--
 Under this transformation, it can be shown that
-u(r’, 0) = logr’ , (14.48)
-u(r’, 0) = 8. (14.49)
-
+-->
+\[
+\begin{align}
+u(r^\prime, \theta) &= \log r^\prime \tag{14.48} \\
+\\
+v(r^\prime, \theta) &= \theta  \tag{14.49}
+\end{align}
+\]
+</p><p>
+上記の結果は、観察者が移動している場合、CLM空間における静止点の水平方向の変位はその点の奥行きのみに依存し、さらに垂直方向の変位はゼロであることを示しています。この事実は、動的なシーンを移動する要素と静止する要素に分割するだけでなく、静止点の奥行きを決定する際にも非常に有用です。網膜線条体マッピングは複素対数関数で近似できることが示されています。このマッピングは、生物系におけるサイズ、回転、および投影の不変性を担っていると考えられています。以下の議論では、マッピングを画像の中心ではなくFOEを基準に取得すると、他のいくつかの利点が得られることを示します。
+<!--
 The above results state that if the observer is moving, the horizontal dis-
 placement of a stationary point in CLM space depends only on the depth
 of the point and, furthermore, the vertical displacement is zero. This fact is
-_ very useful, not only in segmenting dynamic scenes into moving and station-
+ very useful, not only in segmenting dynamic scenes into moving and station-
 ary components, but also in determining the depth of stationary points. It
 has been shown that the retino-striate mapping can be approximated by a
 complex log function. This mapping is considered to be responsible for size,
 rotation, and projection invariances in biological systems. In the following
-_ discussion it is shown that if the mapping is obtained with respect to the
+ discussion it is shown that if the mapping is obtained with respect to the
 FOE, rather than the center of the image, some other advantages can be
-achieved. ,
-
-14.5.2 Depth Determination
-
+achieved.
+-->
+</p>
+<h3>14.5.2 深度の決定</h3>
+<!--
+<h3>14.5.2 Depth Determination</h3>
+-->
+<p>
+まず、静止した世界においてカメラが光軸に沿って移動していると仮定します。
+ある瞬間の観測者を基準とした実世界座標 \((x, y, z)\) を持つ環境内の静止点について、この点の画像平面への透視投影 \((x^\prime, y^\prime)\) は次のように表されます。
+<!--
 First assume a camera is translating along its optical axis in a static world.
-For a stationary point in the environment, with real-world coordinates (x, y, z)
-relative to the observer at a time instant, the perspective projection, (z’, y/ )
-of this point onto the image plane is given by
-
-)
-
-/
-ZT =
-
-(14.50)
-
-IL
-ra
-y
-
-/
-
-y = (14.51)
-
-Zz
-
-assuming that the projection plane is parallel to the z-y plane at z = 1.
+For a stationary point in the environment, with real-world coordinates \((x, y, z)\)
+relative to the observer at a time instant, the perspective projection, \((x^\prime, y^\prime)\) of this point onto the image plane is given by
+-->
+\[
+\begin{align}
+x^\prime &=\frac{x}{z} \tag{14.50} \\
+\\
+y^\prime &= \frac{y}{z} \tag{14.51}
+\end{align}
+\]
+投影面が \(x-y\) 平面と \(z = 1\) において平行であると仮定する。
+後者の仮定は、一般性を失うことなく導出を簡素化する。
+観察者の視線方向に沿った並進運動の場合、画像の中心からの点の投影距離 r' と観察者からのシーン点の距離 z との関係は、
+<!--
+assuming that the projection plane is parallel to the \(x-y\) plane at \(z = 1\).
 The latter assumption simplifies the derivation without loss of generality.
 For translational motion along the direction of the gaze of the observer, the
-4400 CHAPTER 14. DYNAMIC VISION
-
-relationship between the distance r’ of the projection of the point from the
+relationship between the distance r' of the projection of the point from the
 center of the image and the distance z of the scene point from the observer
-
-1s
-dr! d gl? + 2 / |
-- - i (14.52)
-
-dz dz ge
-By the chain rule for differentiation, ,
-du du dr 14.53
-dz dr’ dz’ (14.53)
+is
+-->
+\[
+\frac{dr^\prime}{dz}=\frac{d\sqrt{{x^\prime}^2+{y^\prime}^2}}{dz}=-\frac{r^\prime}{z} \tag{14.52}
+\]
+微分の連鎖律によれば、
+<!--
+By the chain rule for differentiation, 
+-->
+\[
+\frac{du}{dz}=\frac{du}{dr^\prime}\frac{dr^\prime}{dz} \tag{14.53}
+\]
+そして式14.48から、
+<!--
 and from Equation 14.48,
-a 14.54
-dr! _ rl ( . )
-Therefore, we have , ,
-dz =r’ zpos (14.55)
+-->
+\[
+\frac{du}{dr^\prime}=\frac{1}{r^\prime} \tag{14.54}
+\]
+したがって、以下を得る
+<!--
+Therefore, we have
+-->
+\[
+\frac{du}{dz}=\frac{1}{r^\prime}\cdot\left(-\frac{r^\prime}{z}\right)=-\frac{1}{z} \tag{14.55}
+\]
+同様にdv/dzを求めるには、
+<!--
 Similarly, to find dv/dz,
-d9  d(tan7? 4)
-a in 0 | (14.56)
-d
-/ nr ae 14.57
-dz dO0dz ~~ (14.57)
-
+-->
+\[
+\frac{d\theta}{dz}=\frac{d(\tan^{-1}\frac{y^\prime}{x^\prime})}{dz}=0 \tag{14.56}
+\]
+および
+<!--
+and
+-->
+\[
+\frac{dv}{dz}=\frac{dv}{d\theta}\frac{d\theta}{dz}=0 \tag{14.57}
+\]
+</p><p>
+式14.55において、点の奥行きzは、その点のCLM空間における水平変位\(du\)と観測者の速度\(dz\)から決定できることがわかります。これは、近くの物体は遠くの物体よりも近づくにつれて大きく見えるという観測可能な現象を形式化したものです。さらに、観測者の軸方向の移動は、\(dv/dz = 0\)であるため、画像点のマッピングにおいて水平方向の変化のみをもたらします。マッピングされた点の垂直方向の移動はありません。したがって、点の位置は時間とともに水平方向にのみ変化するため、2つのマッピングされた画像間の点の対応付けは容易になります。ここで、カメラの移動量を決定できるほど十分に制御できると仮定すると、画像の奥行きを決定するために必要な両方の変数は容易に利用できます。したがって、カメラの動きが光軸に沿っている場合、原理的には奥行きを復元することが可能です。
+<!--
 In Equation 14.55 we see that the depth, z, of a point can be determined
-from the horizontal displacement, du, in CLM space for that point and from
-the velocity, dz, of the observer. This is a formalization of the observable
+from the horizontal displacement, \(du\), in CLM space for that point and from
+the velocity, \(dz\), of the observer. This is a formalization of the observable
 phenomenon that near objects appear to get bigger faster than far objects,
-- as you approach them. Furthermore, the axial movement of the observer will
+as you approach them. Furthermore, the axial movement of the observer will
 result only in a horizontal change in the mapping of the image points, since
-dv/dz = 0. There will be no vertical movement of the mapped points. Thus,
+\(dv/dz = 0\). There will be no vertical movement of the mapped points. Thus,
 the correspondence of points between the two mapped images will become
-easier, since there is only a horizontal change in the points’ locations over
+easier, since there is only a horizontal change in the points' locations over
 time. Now, assuming that there is sufficient control of the camera to be
 able to determine the amount of its movement, both variables necessary to
 determine image depths are readily available. Thus, it is possible to recover
 depth, in principle, if the camera motion is along its optical axis.
-14.5. SEGMENTATION USING A MOVING CAMERA 44]
-
+-->
+</p><p>
+マシンビジョンの実際のアプリケーションでは、カメラの動きを光軸に沿って制限することが必ずしも可能ではありません。そのため、このアプローチを任意のカメラの動きに拡張する必要があります。カメラの任意の並進運動に対して深度を復元できることを確認するために、画像平面上の点 \((a, b)\) を基準に変換が行われると仮定します。
+<!--
 In real-life applications of machine vision it is not always possible to
 constrain the motion of the camera to be along the optical axis. Thus, the
 approach must be extended to arbitrary camera motion. To see that the
 depth can be recovered for an arbitrary translational motion of the camera,
 let us assume that the transform is taken with respect to the point (a, 6) in
 the image plane. Then
-
-r = /(2’—a)? 4 (y'! — 6)? (14.58)
-u = logr’ = log ,/(2’ — a)? + (y' — 6). (14.59)
+-->
+\[
+\begin{align}
+r^\prime &= \sqrt{(x^\prime-a)^2+(y^\prime-b)^2} \tag{14.58} \\
+\\
+u &= \log r^\prime=\log\sqrt{(x^\prime-a)^2+(y^\prime-b)^2} \tag{14.59}
+\end{align}
+\]
+ここで
+<!--
 Now
-wf yey pie 14.60
-dz dz a , (14.60)
-
-Let us substitute for x’ and y’ from Equations 14.50 and 14.51, and evaluate
-dr’ /dz.
-
-_ 2V% Az (14.61)
-
-dz dz
-_ 1
-2,/(4 — a)? + (# — 6)? |
-2(= } ‘BF 4a ( b) ee Y 14.62
-z 2 22 z z? (14.62)
-1
-
-If (a, 6) is an arbitrary point in the image, the above equations are compli-
+-->
+\[
+\frac{du}{dz}=\frac{d}{dz}\log r^\prime=\frac{1}{r^\prime}\frac{dr^\prime}{dz} \tag{14.60}
+\]
+式14.50と14.51の\(x^\prime\)と\(y^\prime\)を代入し、\(dr^\prime /dz\)を評価します。
+<!--
+Let us substitute for \(x^\prime\) and \(y^\prime\) from Equations 14.50 and 14.51, and evaluate \(dr^\prime /dz\).
+-->
+\[
+\begin{align}
+\frac{dr^\prime}{dz} &= \frac{d\sqrt{(\frac{x}{z}-a)^2+(\frac{y}{z}-b)^2}}{dz} \tag{14.61} \\
+\\
+&=\frac{1}{2\sqrt{(\frac{x}{z}-a)^2+(\frac{y}{z}-b)^2}}\\
+\\
+&　\cdot\left[2\left(\frac{x}{z}-a\right)\cdot\frac{z\frac{dx}{dz}-z}{z^2}+2\left(\frac{y}{z}-b\right)\cdot\frac{z\frac{dy}{dz}-y}{z^2}\right]  \tag{14.62} \\
+\\
+&=\frac{1}{\sqrt{\left(\frac{x}{z}-a\right)^2+\left(\frac{y}{z}-b\right)^2}} \\
+\\
+&　\cdot\frac{1}{z}\cdot\left[\left(\frac{x}{z}-a\right)\left(\frac{dx}{dz}-\frac{x}{z}\right)+\left(\frac{y}{z}-b\right)\left(\frac{dy}{dz}-\frac{y}{z}\right)\right] \tag{14.63}
+\end{align}
+\]
+従って
+<!--
+Hence
+-->
+\[
+\begin{align}
+\frac{du}{dz} =& \frac{1}{(\frac{x}{z}-a)^2+(\frac{y}{z}-b)^2}\cdot\frac{1}{z} \\
+\\
+&　\cdot\left[\left(\frac{x}{z}-a\right)\left(\frac{dx}{dz}-\frac{x}{z}\right)+\left(\frac{y}{z}-b\right)\left(\frac{dy}{dz}-\frac{y}{z}\right)\right] \tag{14.64}
+\end{align}
+\]
+</p><p>
+\((a, b)\) が画像内の任意の点である場合、上記の式は複雑になり、カメラとシーン内の物体との関係に関する詳細な知識が必要になります。しかし、\((a, b)\) を拡大の焦点とすると、式は大幅に簡素化されます。拡大の焦点 (FOE) は画像平面上の重要な点です。カメラがシーン内の物体に近づくと、物体は大きく見えます。画像平面における物体のこの拡大を表すベクトルが延長されると、それらはすべて一点、つまり FOE で交わります。カメラがシーンから離れると、物体は小さく見えます。この場合、延長されたベクトルが交わる点は縮小の焦点 (FOC) と呼ばれます。どちらの場合も、それは移動するカメラの軌跡が画像平面を貫くピクセルです。\((a, b)\) が FOE である場合、
+<!--
+If \((a, b)\) is an arbitrary point in the image, the above equations are compli-
 cated and require detailed knowledge of the relationship between the camera
-442 | CHAPTER 14. DYNAMIC VISION
-
-and the objects in the scene. However, if we let (a,b) be the focus of expan-
+and the objects in the scene. However, if we let \((a,b)\) be the focus of expan-
 sion, the equations become greatly simplified. The focus of expansion (FOE)
 is an important point on the image plane. If a camera moves toward the
 objects in the scene, the objects appear to get bigger. If the vectors that
 represent this expansion of the objects in the image plane are extended, they
 will all meet in a single point, the FOE. If the camera is moving away from |
 the scene, the objects will seem to get smaller. In this case the point at which
-the extended vectors meet: is called the focus of contraction, the FOC. For
-
+the extended vectors meet is called the focus of contraction, the FOC. For
 either case, it is the pixel where the path of the translating camera pierces
-the image plane. If (a,b) is the FOE, then
-
-a = — andb= —. | (14.65)
-
-Hs, | (14.67)
-
+the image plane. If \((a,b)\) is the FOE, then
+-->
+\[
+a = \frac{dx}{dz}　and　b=\frac{dy}{dz} \tag{14.65}
+\]
+\(dx/dz)\)と\(dy/dz\)を代入すると
+<!--
+Substituting for \(dx/dz)\) and \(dy/dz\)
+-->
+\[
+\begin{align}
+\frac{du}{dz} &=\frac{1}{(\frac{x}{z}-a)^2+(\frac{y}{z}-b)^2}\cdot\frac{1}{z}\cdot\left[-\left(\frac{x}{z}-a\right)^2-\left(\frac{y}{z}-b\right)^2\right] \tag{14.66} \\
+\\
+&=-\frac{1}{z} \tag{14.67}
+\end{align}
+\]
+ここで、v が FOE \((a, b)\) に関して計算されたときの dv/dz を調べてみましょう。
+<!--
 Now let us examine dv/dz, when v is calculated with respect to the FOE
-(a, b):
-
-‘— 5
-v = O= tan Y (14.68)
-x’ —a |
-d 1 d fy’'-—b ,
-es >? (4 ). (14.69)
-dz 1+ (4 v=b)" dz \z'—a
-Considering only the second factor of this equation, and substituting for 2’
-and y’,
-d {y'—b} d (2 —b) |
-— = 14.
-dz (e=*) dz (2 — a) | (14.70)
-_ @-a@#-yS-4-)Ge-a)s
-— (= —a)3 (14.71)
-( — a)(#~ ¥) ~ (¥-(# - 2)
-
-(14.72)
-14.6. TRACKING | oe | | 443
-
-Remembering that de/dz = a and dy/dz = 6,
-
-dfy—b\ _ (-a)(— #)—-(2—a)(b— 4)
-dz (! — *) a 2(2 — a)? (14.73)
-= 0, (14.74)
+\((a, b)\):
+-->
+\[
+\begin{align}
+v  &= \theta = \tan^{-1}\left(\frac{y^\prime-b}{x^\prime-a}\right) \tag{14.68} \\
+\\
+\frac{dv}{dz} &= \frac{1}{1+\left(\frac{y^\prime-b}{x^\prime-a}\right)^2}\cdot\frac{d}{dz}\left(\frac{y^\prime-b}{x^\prime-a}\right) \tag{14.69}
+\end{align}
+\]
+この式の2番目の因数のみを考慮し、\(x^\prime\)と\(y^\prime\)を代入すると、
+<!--
+Considering only the second factor of this equation, and substituting for \(x^\prime\) and \(y^\prime\),
+-->
+\[
+\begin{align}
+\frac{d}{dz}\left(\frac{y^\prime-b}{x^\prime-a}\right) &= \frac{d}{dz}\frac{(\frac{y}{z}-b)}{(\frac{x}{z}-a)} \tag{14.70} \\
+\\
+&=\frac{(\frac{x}{z}-a)(z\frac{dy}{dz}-y)\frac{1}{z^2}-(\frac{y}{z}-b)(z\frac{dx}{dz}-x)\frac{1}{z^2}}{(\frac{x}{z}-a)^2} \tag{14.71} \\
+\\
+&=\frac{(\frac{x}{z}-a)(\frac{dy}{dz}-\frac{y}{z})-(\frac{y}{z}-b)(\frac{dx}{dz}-\frac{x}{z})}{z(\frac{x}{z}-a)^2} \tag{14.72}
+\end{align}
+\]
+\(dx/dz = a\) と \(dy/dz = b\) を思い出してください。
+<!--
+Remembering that \(dx/dz = a\) and \(dy/dz = b\),
+-->
+\[
+\begin{align}
+\frac{d}{dz}\left(\frac{y^\prime-b}{x^\prime-a}\right) &= \frac{(\frac{x}{z}-a)(b-\frac{y}{z})-(\frac{x}{z}-a)(b-\frac{y}{z})}{z(\frac{x}{z}-a)^2} \tag{14.73} \\
+\\
+&=0 \tag{14.74}
+\end{align}
+\]
+従って
+<!--
 Therefore,
-dv
-= = 0. (14.75)
-
+-->
+\[
+\frac{dv}{dz} = 0 \tag{14.75}
+\]
+</p><p>
+FOE を基準としてマッピングを行う場合、U 方向の変位は点の Z 座標のみに依存することに注意してください。\((a,b)\) の他の値では、上記の性質は成り立ちません。したがって、FOE が既知であるか計算可能な場合、奥行き方向に何らかの動きがある限り、このアプローチは任意に移動するカメラに適用できます（dz は分母にあるため、ゼロにはならない）。この拡張は、カメラ自体の運動パラメータに基づいているため、エゴモーション複素対数マッピング（ECLM）と呼ばれます。
+<!--
 Note that when the mapping is done with respect to the FOE, then the
 displacement in the u direction depends only on the z coordinate of the
-point. For other values of (a,6) the above property will not be true. Thus,
+point. For other values of \((a,b)\) the above property will not be true. Thus,
 if the FOE is known or can be computed, the approach can be applied to an
 arbitrarily translating camera, as long as there is some movement in depth
 (dz is in the denominator and so cannot be zero). This extension is called
 the ego-motion complex logarithmic mapping (ECLM) since it is based on
 the motion parameters of the camera itself.
-
-14.6 ‘Tracking
-
+-->
+</p>
+<h2>14.6 トラッキング</h2>
+<!--
+<h2>14.6 Tracking</h2>
+-->
+<p>
+多くのアプリケーションでは、エンティティ、特徴、またはオブジェクトをフレームシーケンスにわたって追跡する必要があります。シーケンス内にエンティティが1つしかない場合、問題は簡単に解決できます。シーン内で独立して移動するエンティティが多数存在する場合、追跡には、オブジェクトの性質とその動きに基づいた制約を使用する必要があります。慣性のため、物理的なエンティティの動きは瞬時に変化できません。フレームシーケンスが、連続する2つのフレーム間で劇的な変化が生じないような速度で取得される場合、ほとんどの物理的なオブジェクトにおいて、動きの急激な変化は観察されません。滑らかな3次元軌道の投影は、2次元の画像平面でも滑らかです。これにより、画像における滑らかさの仮定が可能になります。この特性は、パスの一貫性を定式化するために使用されます。パスの一貫性とは、フレームシーケンス内のどの点においても、オブジェクトの動きが急激に変化しないことを意味します。
+<!--
 In many applications, an entity, a feature or an object, must be tracked over
 a sequence of frames. If there is only one entity in the sequence, the problem
 is easy to solve. In the presence of many entities moving independently
@@ -1434,114 +1946,186 @@ the two-dimensional image plane. This allows us to make the smoothness
 assumption in images. This property is used to formulate path coherence.
 Path coherence implies that the motion of an object at any point in a frame
 sequence will not change abruptly.
-
+-->
+</p><p>
+立体視と運動の対応問題の解決を組み合わせることができます。以下の3つの仮定は、対応問題を解くためのアプローチを定式化するのに役立ちます。
+<!--
 We can combine the solution of the correspondence problem for stere-
 opsis and motion. The following three assumptions help in formulating an
 approach to solve the correspondence problem:
-444 | CHAPTER 14. DYNAMIC VISION
+-->
+<div class="styleBullet">
+<ul>
+<li>
+● 与えられた点の位置は、あるフレームから次のフレームにかけて相対的に変化しません。
 
-e The location of the given point will be relatively unchanged from one
+</li><br><li>● 与えられた点のスカラー速度は、あるフレームから次のフレームにかけて相対的に変化しません。
+
+</li><br><li>● 与えられた点の運動方向は、あるフレームから次のフレームにかけて相対的に変化しません。
+<!--
+● The location of the given point will be relatively unchanged from one
 frame to the next frame.
 
-e The scalar velocity of a given point will be relatively unchanged from
+</li><br><li>● The scalar velocity of a given point will be relatively unchanged from
 one frame to the next. ,
 
-e The direction of motion of a given point will be relatively unchanged
+</li><br><li>● The direction of motion of a given point will be relatively unchanged
 from one frame to the next frame.
-
+-->
+</li></ul></div>
+</p><p>
+単眼画像シーケンスにおける画像の動きの滑らかさも利用できます。動きの滑らかさという概念を定式化するために、まず、物体の動きがどの瞬間においても急激に変化してはならないという、経路の一貫性という概念を定式化しましょう。
+<!--
 We can also use the smoothness of image motion in monocular image se-
 quences. To formalize the idea of the smoothness of motion, let us first for-
 malize the idea of path coherence which states that the motion of an object
 at any time instant cannot change abruptly.
-
-14.6.1 Deviation Function for Path Coherence
-
+-->
+</p>
+<h3>14.6.1 パスコヒーレンスの偏差関数</h3>
+<!--
+<h3>14.6.1 Deviation Function for Path Coherence</h3>
+-->
+<p>
+上記の特性をアルゴリズムで利用するために、上記の考え方を具体的に実装し、フレームシーケンス内の動きの特性を評価する関数を定式化します。パスコヒーレンス関数は、以下の4つの原則に従う必要があります。
+<!--
 To use the above properties in an algorithm, we formulate a function to
 implement the above ideas concretely and use it to evaluate motion properties
 in a frame sequence. The path coherence function should follow these four
-
 guiding principles:
+-->
+<div class="styleBullet">
+<ul>
+<li>
+1. 関数の値は常に正である。
+
+</li><br><li>2. 運動方向の符号に影響を受けずに、角度偏差の量を考慮する必要がある。
+
+</li><br><li>3. 関数は増分速度に等しく応答する必要がある。
+</li><br><li>4. 関数は0.0から1.0の範囲で正規化される必要がある。
+<!--
 1. The function value is always positive.
 
-2. It should consider the amount of angular deviation without any effect
+</li><br><li>2. It should consider the amount of angular deviation without any effect
 of the sign of the direction of motion.
 
-3. The function should respond equally to the incremental speed.
-4. The function should be normalized in the range 0.0 to 1.0.
+</li><br><li>3. The function should respond equally to the incremental speed.
+</li><br><li>4. The function should be normalized in the range 0.0 to 1.0.
+-->
+</li></ul></div>
 
+</p><p>
+2つの点トークンの軌跡を図14.18に示す。軌跡を次のように表すとする。
+<!--
 Trajectories of two point-tokens are shown in Figure 14.18. Let the tra-
 jectory be represented as
+-->
+\[
+T_i = \langle P_i^1,P_i^2,P_i^3,\cdots,P_i^n\rangle \tag{14.76}
+\]
+ここで、\(T_i\)は軌跡、\(P_i^k\)は\(k\)番目の画像内の点を表す。点の座標がフレーム内のベクトル\(X_i\)で与えられると、\(k\)番目のフレーム内の座標は\(X_{ik}\)と表すことができる。軌跡をベクトル形式で表すと、
+<!--
+where \(T_i\) is trajectory and \(P_i^k\) represents a point in the \(k\)-th image. If the coor-
+dinates of the point are given by the vector \(X_i\) in the frame, the coordinates
+in the \(k\)-th frame can be represented as \(X_{ik}\). Representing the trajectory in vector form,
+-->
+\[
+T_i=\langle X_{i1},X_{i2},X_{i3},\cdots,X_{in} \rangle \tag{14.77}
+\]
 
-T, = (P},P?, Pi,...,PP) (14.76)
-
-where T; is trajectory and P* represents a point in the kth image. If the coor-
-dinates of the point are given by the vector X; in the frame, the coordinates
-in the kth frame can be represented as X;,. Representing the trajectory in
-
-vector form, | ,
-T; — (Xi1, X72, X43, sae , Xin) : (14.77)
-14.6. TRACKING AAD
-
+</p>
+<center><img src="images/fig14_18.png"></center>
+<p class="margin-large">
+図14.18: 2点の軌跡。第1フレーム、第2フレーム、第3フレームの点にはそれぞれ□、△、◇のラベルが付けられています。
+<!--
 Figure 14.18: The trajectories of two points. The points in the first, second,
-and third frames are labeled 0, A, and ©, respectively.
-
-Now let us consider the deviation d;* in the path of the point in the kth
-_ frame. The deviation in the path is a measure of path coherence, given by
-
-di* = b(Xin1Xix, XikXik+1); (14.78)
-
-where ¢ is a path coherence function. The deviation for the complete trajec-
-tory is defined as
-
-n—l
-D; = S~ d;*. 7 (14.79)
-k=2
-
+and third frames are labeled □, △, and ◇, respectively.
+-->
+</p><p>
+ここで、\(k\)番目のフレームにおける点の軌跡の偏差\(d_i^k\)を考えてみましょう。軌跡の偏差は軌跡の一貫性を表す尺度であり、次のように表されます。
+<!--
+Now let us consider the deviation \(d_i^k\) in the path of the point in the \(k\)-th frame. The deviation in the path is a measure of path coherence, given by
+-->
+\[
+d_i^k = \phi\left(\overline{X_{ik-1}X_{ik}}, \overline{X_{ik}X_{ik+1}}\right) \tag{14.78}
+\]
+ここで\(\phi\)は経路コヒーレンス関数である。完全な軌道の偏差は次のように定義される。
+<!--
+where \(\phi\) is a path coherence function. The deviation for the complete trajectory is defined as
+-->
+\[
+D_i=\sum_{k=2}^{n-1} d_i^k \tag{14.79}
+\]
+nフレームのシーケンスにm点があり、m個の軌道が生成される場合、すべての軌道の偏差を考慮する必要があり、これは次のように表される。
+<!--
 It there are m points in a sequence of n frames resulting in m trajectories,
 the deviation of all trajectories should be considered, which is given by
-
-m n—l
-
-D(T,,T2,T3,...,Tm) = > S- dj*. | (14.80)
-w=k k=2 |
-
+-->
+\[
+D(T_1,T_2,T_3,\cdots,T_m)=\sum_{i=k}^m\sum_{k=2}^{n-1} d_i^k \tag{14.80}
+\]
+したがって、対応問題は動きの滑らかさを最大化することによって解決されます。つまり、正しい軌道の集合を見つけるために、総偏差 \(D\) を最小化します。
+<!--
 Thus, the correspondence problem is solved by maximizing the smoothness of
-motion; that is, the total deviation D is minimized to find the set of correct
-
+motion; that is, the total deviation \(D\) is minimized to find the set of correct
 trajectories.
-
-14.6.2. Path Coherence Function
-
+-->
+</p>
+<h3>14.6.2. パスコヒーレンス関数</h3>
+<!--
+<h3>14.6.2. Path Coherence Function</h3>
+-->
+<p>
+軌跡関数を理解した上で、経路の一貫性に対する制約関数を定義しましょう。カメラのサンプリングレートが十分に高い場合、連続する時間フレームにおける任意の移動点の方向と速度の変化は滑らかになります。
+<!--
 After understanding the trajectory function, let us define a constraint func-
 tion for path coherence. If the sampling rate of the camera is high enough,
 then change in the direction and velocity of any moving point in consecutive
 time frames is smooth.
-446 CHAPTER 14. DYNAMIC VISION
-
-Figure 14.19: Deviations in a trajectory.
-
+-->
+</p>
+<center><img src="images/fig14_19.png"></center>
+<p class="margin-large">
+<center>図 14.19: 軌道の偏差</center>
+<!--
+<center>Figure 14.19: Deviations in a trajectory.</center>
+-->
+</p><p>
+これは偏差関数によって記述されます。
+<!--
 This is described by the deviation function:
-
+-->
+\[
+\phi(P_i^{k-1},P_i^k.P_i^{k+1})=w_1(1-\cos\theta)+w_2\left(1-2\frac{\sqrt{d_1d_2}}{d_1+d_2}\right) \tag{14.81}
+\]
+ベクトル形式では次のように表される。
+<!--
 In the vector form it can represented as
-
-, Xin-1 Xin XipXikyr
-o(PF, P,P) =u, (2 - pk Xe za)
-
-| Xig—1X in| |] Xie Xn-41 ||
-
-| X jk—-1Ask|l || XGe AG
-tu (1-2 | = ell | XieXieta ll (14.82)
-| Xix—1Xizl| + |] Xie Xex+1 ||
-
-where w; and wz are weights that are selected to assign differing importance
+-->
+\[
+\begin{align}
+\phi(P_i^{k-1},P_i^k,P_i^{k+1})=& w_1\left(1-\frac{\overline{X_{ik-1}X_{ik}}\cdot\overline{X_{ik}X_{ik+1}}}{||\overline{X_{ik-1}X_{ik}}||\;||\overline{X_{ik}X_{ik+1}}||}\right) \\ 
+\\
+&+w_2\left(1-2\frac{\sqrt{||\overline{X_{ik-1}X_{ik}}||\;||\overline{X_{ik}X_{ik+1}}||}}{||\overline{X_{ik-1}X_{ik}}||+||\overline{X_{ik}X_{ik+1}}||}\right) \tag{14.82}
+\end{align}
+\]
+ここで、\(w_1\)と\(w_2\)は、方向と速度の変化に異なる重要性を割り当てるために選択された重みです（図14.19を参照）。
+<!--
+where \(w_1\) and \(w_2\) are weights that are selected to assign differing importance
 to direction and velocity changes (see Figure 14.19).
-
+-->
+</p><p>
+最初の項は変位ベクトルの内積であり、2番目の項は大きさの幾何平均と算術平均を考慮していることに注意してください。上記の式の最初の項は方向のコヒーレンス、2番目の項は速度のコヒーレンスと見なすことができます。重みは、それらの合計が1になるように0.00から1.00の範囲で選択できます。
+<!--
 Note that the first term is the dot product of displacement vectors and the
 second considers the geometric and arithmetic mean of the magnitude. The
 first term in the above expression can be considered as direction coherence,
 and the second term can be considered as speed coherence. The weight can
 be selected in the range 0.00 to 1.00 such that their sum is 1.
-
+-->
+</p><p>
+複数フレームの使用における主な困難の1つは、オクルージョンの問題です。大規模なフレームシーケンスを扱う場合、一部のオブジェクトが完全にまたは部分的に消えてしまう可能性があります。同様に、中間フレーム以降に新しいオブジェクトがフレームシーケンスに現れることもあります。さらに、フレームシーケンス中のモーションによるオブジェクトの形状の変化やシーンの照明の変化により、フレーム間でマッチングされる特徴点データに大きな変化が生じる可能性があります。特徴点データセットのこれらの変化はすべて、最小化を実行して大域的に滑らかな完全な軌跡の集合を抽出することで対応関係が得られた場合、誤った対応関係につながります。軌跡にいくつかの局所的な制約を満たすように強制し、必要に応じて不完全な軌跡を許容することで、オクルージョンが存在する状態での軌跡を得ることができます。
+<!--
 One of the main difficulties with the use of multiple frames is the problem
 of occlusion. When working with a large sequence of frames, it is possible
 that some objects may disappear totally or partially. Similarly, some new
@@ -1549,24 +2133,39 @@ objects may appear in the frame sequence from some intermediate frame on-
 ward. In addition, the changing geometry of objects due to motion and the
 changes in scene illumination over the frame sequence can cause significant
 changes in the feature point data that is to be matched over the frames.
-14.6. TRACKING | , 447
-
 All these changes in the feature point data set lead to incorrect correspon-
 dence, if such a correspondence is obtained by performing minimization to
 extract a globally smooth set of complete trajectories. By forcing the trajec-
 tories to satisfy some local constraints and allowing them to be incomplete,
 if necessary, trajectories in the presence of occlusion can be obtained.
-
-14.6.3. Path Coherence in the Presence of Occlusion
-
+-->
+</p>
+<h3>14.6.3. オクルージョンがある場合のパスの一貫性</h3>
+<!--
+<h3>14.6.3. Path Coherence in the Presence of Occlusion</h3>
+-->
+<p>
+パス コヒーレンス アルゴリズムには次の 2 つの制限があります。
+<!--
 Two limitations of the path coherence algorithm are:
+-->
+<div class="styleBullet">
+<ul>
+<li>
+● すべてのフレームで同じ数の特徴点が利用可能であると仮定します。
 
-e It assumes that the same number of feature points are available in every
+</li><br><li>● すべてのフレームで同じ特徴点セットが抽出されると仮定します。
+<!--
+● It assumes that the same number of feature points are available in every
 frame.
 
-e It assumes that the same set of feature points are being extracted in
-every frame. !
-
+</li><br><li>● It assumes that the same set of feature points are being extracted in
+every frame. 
+-->
+</li></ul></div>
+</p><p>
+実際には、特徴点の数はフレームごとに大きく変化する可能性があります。たとえすべてのフレームで特徴点の数が同じであっても、必ずしも以前のフレームで抽出された特徴点の集合と同じであるとは限りません。したがって、滑らかな軌跡の集合を探索する際には、遮蔽、新しい物体の出現、あるいは特徴検出の精度の悪さのために後続または以前のフレームに対応する特徴点が存在しないなど、不完全な軌跡が得られる可能性を考慮する必要があります。さらに、離れた特徴点が偶然にグループ化されて滑らかな経路を形成するのを回避するため、許容可能な軌跡には最大変位と最大局所的平滑度偏差という形で何らかの制約を課す必要があります。
+<!--
 In practice, the number of feature points can drastically change from
 frame to frame. Even when the feature point count is the same over all the
 frames, it may not necessarily be the same set of feature points that was
@@ -1578,19 +2177,30 @@ poor feature detection. Moreover, some constraints in the form of maximum
 possible displacement and maximum local smoothness deviation must be
 placed on the acceptable trajectories to avoid chance groupings of distant
 feature points that may happen to form a smooth path.
-
-Given a set P’ of m; feature points for each of the n frames, the algorithm
+-->
+</p><p>
+\(n\) フレームそれぞれについて m 個の特徴点の集合 \(P^j\) が与えられた場合、以下のアルゴリズムは、すべての軌跡の局所的平滑度偏差の合計を最小化する、完全または部分的に完全な軌跡の最大集合を求めます。この最大集合は、どの軌跡の局所的平滑度偏差も \(\phi_{max}\) を超えず、かつ任意の軌跡について任意の2つの連続するフレーム間の変位が常に \(d_{max}\) 未満であるという条件の下で得られます。上記の局所的制約は、特徴点の前の2つのフレームにおける位置に基づいて、次のフレームにおけるその許容位置を制限します。
+<!--
+Given a set \(P^j\) of m; feature points for each of the \(n\) frames, the algorithm
 below finds the maximal set of complete or partially complete trajectories
 that minimizes the sum of local smoothness deviations for all the trajectories
 obtained subject to the conditions that the local smoothness deviation for
-none of the trajectories exceeds ¢max and the displacement between any two
-successive frames for any trajectory is always less than dmax. The above local
+none of the trajectories exceeds \(\phi_{max}\) and the displacement between any two
+successive frames for any trajectory is always less than \(d_{max}\). The above local
 constraints limit the acceptable location of a feature point in the next frame
 given its location in two previous frames.
-448 CHAPTER 14. DYNAMIC VISION
-
-14.6.4 Modified Greedy Exchange Algorithm
-
+-->
+</p>
+<h3>14.6.4 修正貪欲交換アルゴリズム</h3>
+<!--
+<h3>14.6.4 Modified Greedy Exchange Algorithm</h3>
+-->
+<p>
+遮蔽による欠落点を考慮するために、ファントムポイントが使用されます。
+ファントム特徴点とは、与えられたフレームセット全体にわたってすべての軌跡を拡張するためのフィラーとして使用される仮想的な点です。これらの点は、後述するように、軌跡初期化フェーズで導入されます。
+ファントム特徴点の概念には2つの目的があります。局所的な制約を満たすことと、不完全な軌跡を処理する方法を提供することです。
+ファントム特徴点の概念を有効活用するには、いくつかのファントム特徴点が割り当てられた軌跡の変位値と局所的な滑らかさの偏差値を定義する必要があります。軌跡 \(T_i\) のフレーム間の変位を計算するために、変位関数 Disp(\(P_i^k,P_i^{k+1}\)) は次のように定義されます。
+<!--
 To account for missing points due to occlusion, phantom points are used.
 Phantom feature points are hypothetical points which are used as fillers to
 extend all trajectories over the given frame set. These points are introduced
@@ -1600,107 +2210,127 @@ constraints, and it provides a way to deal with incomplete trajectories. For
 the notion of phantom feature points to be useful, we must define the displace-
 ment and local smoothness deviation values for a trajectory that has some
 phantom feature points assigned to it. For computing the frame-to-frame
-displacement for a trajectory T;, a displacement function Disp(P;*, P;***) is
-defined as follows:
-
-Euclidean Disp(P;*, P;“*") if both points are true feature
-dmax points otherwise.
-
+displacement for a trajectory \(T_i\), a displacement function Disp(\(P_i^k,P_i^{k+1}\)) is defined as follows:
+-->
+\[
+距離(P_i^k,P_i^{k+1})=
+\begin{cases}
+ユークリッド距離(P_i^k,P_i^{k+1}) & \text{両点ともに真の特徴の場合} \\
+d_{max} & \text{そうではない点の場合}
+\end{cases}
+\]
+</p><p>
+軌跡のフレーム間変位のこの定義は、ファントム特徴点が常に一定量 \(d_{max}\) 移動することを意味します。\(k\)番目のフレーム関数における軌跡 \(T_i\) の局所的な平滑度偏差を計算するために、\(DEV(P_i^{k-1},P_i^k,P_i^{k+1})\) は以下のように定義されます。
+<!--
 This definition of frame-to-frame displacement for a trajectory implies
-that a phantom feature point always moves by a fixed amount dpax. For
+that a phantom feature point always moves by a fixed amount \(d_{max}\). For
 
-computing the local smoothness deviation for a trajectory T; in the kth frame
-function, DEV(P*~', PF, P**?) is defined as follows:
+computing the local smoothness deviation for a trajectory \(T_i\) in the \(k\)-th frame
+function, \(DEV(P_i^{k-1},P_i^k,P_i^{k+1})\) is defined as follows:
+-->
+\[
+DEV(P_i^{k-1},P_i^k,P_i^{k+1}=
+\begin{cases}
+0 & \text{\(P_i^{k-1}\)が仮想点の場合} \\
+\phi(P_i^{k-1},P_i^k,P_i^{k+1}) & \text{3点がすべて真の特徴点の場合} \\
+\phi_{max} & \text{上記以外の場合}
+\end{cases}
+\]
+上記の局所平滑度偏差関数の定義は、3つの特徴点すべてが真の特徴点である場合、パスコヒーレンス関数と同等です。後続フレームの \(T_i\) に真の特徴点がない場合、または現在のフレーム（\(k\) 番目のフレーム）に真の特徴点がない場合、\(\phi_{max}\) のペナルティが発生します。軌跡が現在のフレームから始まる場合はペナルティはありません。ただし、貪欲交換アルゴリズムは前方と後方に交互に適用されるため、後続フレームまたは以前のフレームにファントム特徴点を割り当てることは同様に推奨されません。上記の変位値と局所平滑度偏差値の計算定義に基づき、修正された貪欲交換アルゴリズムの手順は以下のとおりです。
+<!--
+The above definition of the local smoothness deviation function is equivalent to the path coherence function if all three feature points are true feature points. It introduces a penalty of \(\phi_{max}\) for not having a true feature for \(T_i\) in the subsequent frame or missing a true feature point in the current frame, the \(k\)-th frame. There is no penalty if a trajectory begins from the current frame under consideration. However, as the greedy exchange algorithm is applied alternately in the forward and backward directions, it is clear that the assignment of phantom feature points in the subsequent frames or earlier frames is equally discouraged. With the above definitions for computing the displacement and local smoothness deviation values, the steps of the modified greedy exchange algorithm are as follows:
+-->
+</p>
+<h4>初期化:</h4>
+<!--
+<h4>Initialization:</h4>
+-->
+<p>
+<div class="styleBullet">
+<ul>
+<li>
+1. P*,k = 1, 2)...n = 1 における m 個の真の特徴点のそれぞれについて、距離 dnnax 以内にある P**! 内の最近傍点を決定する。
+複数の選択がある場合は、任意の値を求める。
 
-0 if P*—} is a phantom point
-DEV(P*1, PF, P§**) = ¢(P;*-!, P.*, P,***) . if all three are true feature points
-Pmax otherwise.
+</li><br><li>2. 連続するフレームにおける最近傍点を連結して初期軌跡を形成する。すべての不完全な軌跡を、ファントム特徴点を用いて n フレームに拡張する。
 
-The above definition of the local smoothness deviation function is equivalent
-to the path coherence function if all three feature points are true feature
-points. It introduces a penalty of @max for not having a true feature for T;
-in the subsequent frame or missing a true feature point in the current frame,
-the kth frame. There is no penalty if a trajectory begins from the current
-frame under consideration. However, as the greedy exchange algorithm is
-applied alternately in the forward and backward directions, it is clear that
-the assignment of phantom feature points in the subsequent frames or earlier
-frames is equally discouraged. With the above definitions for computing the
-displacement and local smoothness deviation values, the steps of the modified
-greedy exchange algorithm are as follows:
-14.6. TRACKING , : 449
-
-Initialization:
-
+</li><br><li>3. 上記のステップ 2 のすべての軌跡について、ファントム特徴点のみで構成される追加の軌跡を形成する。
+<!--
 1. For each of the m, true feature points in P*¥,k =1,2)....n— 1, de-
 termine the nearest neighbor in P**! that is within the distance dnnax
 Resolve arbitrarily in case of multiple choices.
 
-2. Form initial trajectories by linking the nearest neighbors in the succes-
+</li><br><li>2. Form initial trajectories by linking the nearest neighbors in the succes-
 sive frames. Extend all incomplete trajectories using phantom feature
 points to span n frames.
 
-3. For every trajectory of step 2 above, form an additional trajectory
+</li><br><li>3. For every trajectory of step 2 above, form an additional trajectory
 consisting only of phantom feature points.
-
-Exchange Loop:
-
-forward-flag = on;
-backward-flag = on;
-For each frame index k = 2 ton —1:
-
-while (forward-flag == on or backward-flag = on)
-do 7
-
-if (forward-flag == on) then
-
-begin
-
-fori=1ltom-—l1
-forj =i+l1ltom
-if within constraints of dmax
-calculate:
-
-Gi’ = [O(P*?, Pi*, Pt?) + (PF, BF, PAY
-—[¢(P*, Pik, Pi) + (PF, BF, Pt). (14.83)
-
-Pick the 77 pair with maximum gain.
-
-if (gain is greater than 0)
-
-begin
-Exchange the point in (k + 1)th frame.
-Set backward-flag on.
-
-end (if)
-
-else
-
-Set forward-flag off.
-end (if)
-450 CHAPTER 14. DYNAMIC VISION
-
-else if (backward-flag == on) then
-begin
-fori =ltom-—1
-for 7 =i+tltom
-if within constraints of dmax
-calculate Gi;" from Equation 14.83.
-Pick the 77 pair with maximum gain.
-if (gain is greater than 0)
-begin
-Exchange the point in (k + 1)th frame.
-Set backward-flag on.
-end (if)
-else ,
-Set forward-flag off.
-end (if)
-end (while)
-end (for)
-
-Termination:
-
+-->
+</li></ul></div>
+</p>
+<h4>交換ループ:</h4>
+<!--
+<h4>Exchange Loop:</h4>
+-->
+<p>
+forward-flag = on;<br>
+backward-flag = on;<br>
+For each frame index k = 2 to n-1:<br>
+　while (forward-flag == on or backward-flag = on)<br>
+　do<br>
+　　if (forward-flag == on) then<br>
+　　begin<br>
+　　　for　i=1　to　m-1<br>
+　　　　for　j =i+l　to　m<br>
+　　　　　if within constraints of \(d_{max}\)<br>
+　　　　　　calculate:<br>
+\[
+\begin{align}
+G_{ij}^k =& [\phi(P_i^{k-1},P_i^k,P_i^{k+1})+\phi(P_j^{k-1},P_j^k,P_j^{k+1})] \\
+&-[\phi(P_i^{k-1},P_i^k,P_j^{k+1})+\phi(P_j^{k-1},P_j^k,P_i^{k+1})] \tag{14.83}
+\end{align}
+\]
+　　　Pick the \(ij\) pair with maximum gain.<br>
+　　　if (gain is greater than 0)<br>
+　　　begin<br>
+　　　　Exchange the point in \((k+1)\)-th frame.<br>
+　　　　Set backward-flag on.<br>
+　　　end (if)<br>
+　　　else<br>
+　　　　Set forward-flag off.<br>
+　　end (if)<br>
+　　else if (backward-flag == on) then<br>
+　　begin<br>
+　　　for　i=l　to　m-1<br>
+　　　　for j=i+1 to　m<br>
+　　　　　if within constraints of dmax<br>
+　　　　　　calculate \(G_{ij}^k\) from Equation 14.83.<br>
+　　　Pick the \(ij\) pair with maximum gain.<br>
+　　　if (gain is greater than 0)<br>
+　　　begin<br>
+　　　　Exchange the point in \((k+1)\)-th frame.<br>
+　　　　Set backward-flag on.<br>
+　　　end (if)<br>
+　　　else<br>
+　　　　Set forward-flag off.<br>
+　　end (if)<br>
+　end (while)<br>
+end (for)<br>
+<p>
+<h4>終了:</h4>
+<!--
+<h4>Termination:</h4>
+-->
+<p>
+フレームがなくなるまで交換ループを繰り返します。
+<!--
 Repeat the exchange loop until there are no more frames.
-
+-->
+</p><p>
+上記アルゴリズムの交換操作は、順方向と逆方向に交互に適用する必要があります。初期化のステップ 2 で形成される軌跡の数は、データの品質に依存します。
+理想的なケースでは、すべてのフレームに同じ m 個の特徴点セットが一貫して存在するため、m 個の軌跡のみが形成され、これらのいずれにもファントム点は含まれません。最悪のケースでは、あるフレームの特徴点が他のどのフレームの特徴点とも相関がない場合、形成される軌跡の数は、すべてのフレームの真の特徴点の総数と同じになる可能性があります。一般に、形成される軌跡の数は少なくとも \(m_{max}\) になります (\(m_{max} = \max(m_1,m_2,..., m_n)\))。また、異なる軌跡には異なる数のファントム特徴点が含まれます。
+<!--
 The exchange operation of the above algorithm must be applied alter-
 nately in the forward and backward directions. The number of trajectories
 formed during step 2 of the initialization depends on the quality of the data.
@@ -1710,24 +2340,30 @@ will have any phantom points. In the worst case, when the feature points of
 any one frame do not have any correlation with the feature points of any other
 frame, the number of trajectories formed can be as large as the total count of
 true feature points from all the frames. In general, the number of trajecto-
-ries formed will be at least mmax, Where Mmax = max(m1,m2,..., Mn), and
+ries formed will be at least \(m_{max}\), Where \(m_{max} = \max(m_1,m_2,..., m_n)\), and
 different trajectories will have different numbers of phantom feature points.
-
+-->
+</p><p>
+ファントム特徴点の導入には、これらの点の位置は必要ないことに留意すべきである。また、初期化フェーズのステップ3でファントム特徴点のみを含む軌跡を導入しても、局所平滑度偏差値の総和には影響しない。対応関係を決定するための基準は最小化される。これらの軌跡を導入することで、最終軌跡の局所平滑度偏差値がどのフレームにおいても¢maxを超えることがなくなる。交換ループにおける\(ij\)ペアのチェックにより、dma制約が破られないことが保証される。
+<!--
 It should be noted that the introduction of phantom feature points does
 not require the locations of these points. Also, the introduction of trajec-
 tories with only phantom feature points during step 3 of the initialization
 phase does not affect the overall sum of local smoothness deviation values,
-14.7. SHAPE FROM MOTION | 451
-
-the criterion being minimized to determine the correspondence. The intro-
-
+the criterion being minimized to determine the correspondence. The introduction
+of these trajectories that no final trajectory will have a local
 smoothness deviation value greater than ¢max in any frame. The checking of
-the 2 pairs in the exchange loop ensures that the dma, constraint will not be
-
+the \(ij\) pairs in the exchange loop ensures that the dma, constraint will not be
 violated.
-
-14.7 Shape from Motion
-
+-->
+</p>
+<h2>14.7 運動からの形状復元</h2>
+<!--
+<h2>14.7 Shape from Motion</h2>
+-->
+<p>
+動的シーン解析の主な目的の一つは、シーン内の物体の構造とその三次元運動特性に関する三次元情報を得ることです。物体の構造とは、物体上の点の相対的な位置関係を意味します。したがって、物体上の点の位置を基準点に対してスケール係数を用いて知れば、物体の構造が分かっていると言えます。しかし、この情報を得るには、物体に関する画像平面情報をシーン情報に変換する必要があります。ステレオの場合と同様に、物体の複数のビュー、あるいはカメラの複数の位置を用いることで、この情報を復元することができます。二次元変位を三次元運動の観点から解釈することは複雑です。
+<!--
 One of the major goals of dynamic scene analysis is to get three-dimensional
 information about the structure of objects in the scene and their three-
 dimensional motion characteristics. By the structure of an object, we mean
@@ -1739,7 +2375,10 @@ to scene information. As we saw in stereo, by using multiple views of an
 object, or by using multiple locations of a camera, this information may be
 recovered. The interpretation of two-dimensional displacements in terms of
 three-dimensional motion is complicated.
-
+-->
+</p><p>
+物体の剛性に関する仮定は、物体の構造を復元するのに役立ちます。剛性仮定とは、2次元変換を受ける要素の集合は、空間を移動する剛体として一意に解釈されなければならないというものです。この仮定は、点の相対的な位置を決定するために使用できる、シーン内で非常に必要な制約を提供します。運動から構造を求める定理とは、剛体配置における4つの非共面点の3つの異なる正射影が与えられた場合、3つの視点と互換性のある構造と運動は、像面に関する反射を除いて一意に決定されるというものです。
+<!--
 An assumption about the rigidity of objects is helpful in recovering the
 structure of objects. The rigidity assumption states that any set of ele-
 ments undergoing a two-dimensional transformation, which has a unique
@@ -1750,17 +2389,25 @@ _ motion theorem states that given three distinct orthographic projections of
 four noncoplanar points in a rigid configuration, the structure and motion
 compatible with the three views are uniquely determined up to a reflection
 about the image plane.
-
+-->
+</p><p>
+運動から構造を復元する定理は、制約条件と可能な解について明確な記述を提供します。物体の種類や投影の種類に関する制約条件を変え、異なる数学的アプローチを用いることで、上記の問題を様々な形で定式化することが可能になります。画像シーケンスから3次元構造を復元するアプローチは、以下の2つの一般的なクラスに分けられます。
+<!--
 The structure-from-motion theorem provides a precise statement about
 constraints and possible solutions. By changing constraints on the types
 of objects and types of projections, and by using different mathematical
 approaches, many different formulations of the above problem are possible.
 Approaches to recovering three-dimensional structures from image sequences
 may be divided into the following two general classes.
-452 CHAPTER 14. DYNAMIC VISION
-
-Token-Based Methods
-
+-->
+</p>
+<h4>トークンベースの方法</h4>
+<!--
+<h4>Token-Based Methods</h4>
+-->
+<p>
+ある物体の複数のビューがあり、それらが正投影であるとみなせると仮定します。このシーケンスの連続するフレームに関心演算子を適用し、コーナーなどの興味深い点またはトークンを抽出します。また、前述の方法を用いて、興味深い点間の対応問題が解決されていると仮定します。トークンの対応が確立されている場合、運動から構造を復元する定理によれば、4つの非共面点の3次元位置とそれらの運動を、それらの直交投影から復元することが可能です。これにより、物体の暗黙的な3次元構造が得られます。ここでは、この構造を復元する方法を検討します。
+<!--
 Suppose that we have several views of an object available and that these
 views can be considered orthographic. An interest operator is applied to
 - consecutive frames of this sequence and some interesting points or tokens,
@@ -1771,7 +2418,10 @@ motion theorem states that it is possible to recover the three-dimensional
 location of four noncoplanar points and their motion from their orthogonal
 projections. This gives an implicit three-dimensional structure for an object.
 Here we will consider an approach to recover this structure.
-
+-->
+</p><p>
+空間に4点があり、それらの正射影が3つのフレームで分かっているとします。点をPo、Pi、Po、Piとし、フレームは時刻t1、t2、t3に撮影されたものとします。点の3次元座標を(x,y,z,z)、2次元座標を(x,y,z,z)と表します。ここで、iとjはそれぞれ点番号、i = 0,1,2,3、フレーム番号、j = 1,2,3を表します。3次元点の変換は次のように表すことができます。
+<!--
 Suppose that we have four points in space and their orthographic pro-
 jections are known in three frames. Let the points be Po, Pi, Po, and P;
 and the frames be taken at time instants t,,t2, and t3;. We represent three-
@@ -1779,37 +2429,67 @@ dimensional coordinates of points as (x;;, yi;, Zi; ) and two-dimensional coordi
 nates as (xj,,yj;), where i and j represent the point number, i = 0,1, 2,3, and
 frame number, 7 = 1, 2,3, respectively. Now we can write the transformation
 of three-dimensional points as
-
-L4,2 Lid | |
-Yio | = fie] Yi | + Lie (14.84)
-24,2 4i,}
-
+-->
+\[
+\begin{bmatrix}
+x_{i,2} \\
+y_{i,2} \\
+z_{i,2} 
+\end{bmatrix}
+=R_{12}
+\begin{bmatrix}
+x_{i,1} \\
+y_{i,1} \\
+z_{i,1} 
+\end{bmatrix}
++T_{12} \tag{14.84}
+\]
 and
-Ly 3 wi,2 |
-yi3s | = Ros | yi2 | + Tos. (14.85)
-24,3 24.2 ,
-
-In the above, R,; and T;; are rotation matrices and translation vectors from
-time t; to time t;. We want to determine rotations matrices, translation vec-
+\[
+\begin{bmatrix}
+x_{i,3} \\
+y_{i,3} \\
+z_{i,3} 
+\end{bmatrix}
+=R_{23}
+\begin{bmatrix}
+x_{i,2} \\
+y_{i,2} \\
+z_{i,2} 
+\end{bmatrix}
++T_{23} \tag{14.85}
+\]
+上記において、\(R_{ij}\) と \(T_{ij}\) は、時刻 \(t_i\) から時刻 \(t_j\) への回転行列と並進ベクトルです。回転行列、並進ベクトル、そして点の3次元座標を求めて、動きと構造を決定したいと考えています。これらの量を解くには、3つのフレームにおける4点の画像平面座標が必要です。正射影を使用しているため、次の式が成り立ちます。
+<!--
+In the above, \(R_{ij}\) and \(T_{ij}\) are rotation matrices and translation vectors from
+time \(t_i\) to time \(t_j\). We want to determine rotations matrices, translation vec-
 tors, and three-dimensional coordinates of points to determine the motion
 and structure. ‘To solve for these quantities, we have image plane coordi-
 nates of four points in three frames. Now since we are using orthographic
-projections, we know that ,
-
-t= ej and y= yg (14.86)
+projections, we know that
+-->
+\[
+x_{ij}^\prime=x_{ij}　and　y_{ij}^\prime=y_{ij} \tag{14.86}
+\]
+この情報を上記の式に代入すると、制約が不十分な状況であることがわかります。必要な変数を決定するには式が少なすぎます。
+<!--
 Upon substituting this information in the above equations, we see that this
 is an underconstrained situation; we have too few equations to determine the
-
 required variables.
-FURTHER READING _ _ , 453
-
+-->
+</p><p>
+この制約不足問題を解くために、様々なアプローチが提案されてきました。これらの方法のほとんどは、未知数を決定するための既知の手法のいずれかを適用できるように問題を定式化することを可能にする仮定を導入しています。ここでは特定の手法については議論しません。興味のある読者は、「参考文献」セクションに記載されている参考文献を参照してください。
+<!--
 Many different approaches have been proposed to solve this undercon-
 strained problem. Most of these methods introduce an assumption that al-
 lows the formulation of the problem in such a way that one of the known
 techniques for determining the unknowns may be applied. We do not dis-
 cuss any specific method here. Interested readers may want to study the
 references given in the Further Readings section. ,
-
+-->
+</p><p>
+三次元構造の復元や動きパラメータの推定のための特徴ベース手法には、トークンまたは点の正確な位置の決定と、トークンまたは点間の対応付けという2つのステップが必要です。小さな近傍に基づいて関心演算子を適用すると、実画像で抽出されるトークンの数が非常に多くなり、対応付けが困難な問題となります。大きな近傍と高次のグレーレベル特性に基づく関心演算子を適用すると、対応付けを決定するためのトークンの数はより適切になりますが、トークンの位置は正確ではない可能性があります。
+<!--
 Feature-based methods for the recovery of three-dimensional structure or
 for the estimation of motion parameters require two steps: determination
 of the precise location of tokens or points, and the correspondence between
@@ -1818,10 +2498,16 @@ hoods, then the number of tokens extracted in a real image is very large, mak-
 ing correspondence a, difficult problem. Interest operators based on a large
 neighborhood and higher-order gray-level characteristics result in a more rea-
 sonable number of tokens for determining correspondences, but the location
-of tokens may not be precise. | |
-
-Trajectory-Based Methods
-
+of tokens may not be precise. 
+-->
+</p>
+<h4>軌道ベースの方法</h4>
+<!--
+<h4>Trajectory-Based Methods</h4>
+-->
+<p>
+上記の方法は、2つまたは3つのフレーム内の点の集合に依存します。トークンを複数フレームにわたって対応関係を解いて追跡すると、トークンの2次元軌跡が得られます。軌跡から3次元構造と動きを復元する方法は、新しいフレーム内の特徴集合に基づく方法よりも信頼性が高いです。軌跡は、曲線フィッティング技術を用いて補間することで、2次元経路の解像度を向上させることができます。さらに、対応関係の問題は、2つ以上のフレームを考慮し、緩和法をフレーム全体に拡張することで簡素化できます。
+<!--
 The above methods depend on a set of points in two or three frames. If
 a token is tracked over several frames by solving correspondences, a two-
 dimensional trajectory of the token is obtained. Methods for recovering
@@ -1831,18 +2517,27 @@ be interpolated to obtain better resolution of the two-dimensional path by
 using curve fitting techniques. Moreover, the correspondence problem may
 be simplified by considering more than two frames and extending relaxation
 across the frames. ,
-
-Further Reading
-
+-->
+</p>
+<h2>さらに学ぶために</h2>
+<!--
+<h2>Further Reading</h2>
+-->
+<p>
+Nagel [174] は動き検出に尤度比を用いることを提案した。
+ここで示した差分画像と累積差分画像に関する研究の多くは、Jain と他の研究者によって行われた [129, 130, 122, 125]。
+<!--
 Nagel [174] proposed the use of the likelihood ratio for motion detection.
 Much of the work presented here on difference and accumulative difference
 pictures was done by Jain with other researchers [129, 130, 122, 125].
+-->
+</p><p>
+FennemaとThompsonは、動きに基づくセグメンテーションに用いるオプティカルフローを計算するために勾配法を用いることを提案した[79]。HornとSchunck[114]はオプティカルフロー決定アルゴリズムを開発した。Schunck[212]はオプティカルフローを計算するための堅牢な手法を開発した。NagelとEnkelmann[176]は、オプティカルフローを計算するための有向平滑性制約を定式化し、評価した。オプティカルフローの決定は非常に活発な研究分野である。最近のいくつかの手法については、[4, 106, 169, 175, 9, 222]を参照されたい。Clocksin[58]とLonguet-HigginsとPrazdny[157]は、オプティカルフローの重要性と、表面の向きや構造に関する情報を抽出する際のその可能性について述べている。Subbarao[229]は、オプティカルフローから情報を回復するための厳密な手法を提示した。
+<!--
 Fennema and Thompson proposed use of the gradient method to com-
 pute optical flow for use in segmentation based on motion [79]. Horn and
 Schunck [114] developed the optical flow determination algorithm. Schunck
-454 | CHAPTER 14. DYNAMIC VISION
-
-{212} developed robust approaches to compute optical flow. Nagel and Enkel-
+[212] developed robust approaches to compute optical flow. Nagel and Enkel-
 mann [176] formulate and evaluate an oriented smoothness constraint for
 computing optical flow. Determination of optical flow has been a very active
 research area. For some recent approaches see [4, 106, 169, 175, 9, 222].
@@ -1850,7 +2545,10 @@ Clocksin [58] and Longuet-Higgins and Prazdny [157] describe the signifi-
 cance of optical flow and its potential in extracting information about surface
 orientation and structure. Subbarao [229] has presented a rigorous approach
 for recovering information from optical flow.
-
+-->
+</p><p>
+BarnardとThompson [21]は、画像間の幾何学的視差を推定するための特徴ベースマッチングアルゴリズムを導入した。物体の3次元運動パラメータと3次元構造の復元は、活発な研究分野となっている。Ullmanは、自然視覚の観点から対応問題について広範囲に議論した書籍を出版した[241]。彼は運動から構造を推定する問題を普及させた。その後、Huangは学生と共に、様々な条件下での物体の運動特性の復元に関する先駆的な研究を行った[237, 77, 76, 249]。JerianとJainは、様々なアプローチがノイズと初期推定値に敏感であることを示し、多項式システム解法を提供した[134, 133]。ChellappaとBroidaは、カルマンフィルタを用いてフレームシーケンス内の運動を推定する枠組みを開発した[47, 48]。
+<!--
 Barnard and Thompson [21] introduced a feature-based matching algo-
 rithm to estimate geometrical disparity between images. Recovery of three-
 dimensional motion parameters and the three-dimensional structure of ob-
@@ -1863,11 +2561,17 @@ and Jain showed the sensitivity of various approaches to noise and initial
 estimates and provided a polynomial systems solution [134, 133]. Chellappa
 and Broida developed a framework for estimating motion in a sequence of
 frames using Kalman filters [47, 48].
-
+-->
+</p><p>
+自我運動の複素対数マッピングはJain [124, 123, 127] によって開発された。Schwartz [214, 213, 215, 216] とCavanaugh [54, 55] は、このマッピングを生物の視覚システムの文脈で研究した。
+<!--
 Ego-motion complex logarithmic mapping was developed by Jain [124,
 123, 127]. Schwartz [214, 213, 215, 216] and Cavanaugh [54, 55] have studied
 this mapping in the context of biological vision systems.
-
+-->
+</p><p>
+Jenkin [132] は、立体視と動きの対応問題の解決法を組み合わせた新しいアプローチを提案した。Sethi と Jain [219] は、動きの滑らかさに基づく追跡アルゴリズムを開発した。遮蔽がある場合のパスの一貫性のためのアルゴリズムは、Salari と Sethi [209] によって開発された。短い間隔で多数の画像フレームを撮影すると、連続する画像の変化量が非常に小さいと予想されるため、対応問題を最小限に抑えるのに役立つ。この概念は、移動するカメラを用いて画像を取得する、いわゆるエピポーラ平面画像解析につながった。このような画像シーケンスの空間的および時間的構造の両方の明示的な表現は、時空間表面で捉えられる。これらの変化する表面上で局所的に動作して三次元シーンの再構成を得る追跡メカニズムは、Baker と Bolles によって [15] で説明されている。ここ数年、時空間像立体に基づく他のアプローチがいくつか登場しています。その一部は[106, 247, 156]です。
+<!--
 Jenkin [132] proposed a novel approach for combining the solution of the
 correspondence problem for stereopsis and motion. Sethi and Jain [219] de-
 veloped a tracking algorithm based on smoothness of motion. The algorithm
@@ -1882,14 +2586,19 @@ face. ‘Tracking mechanisms that operate locally on these evolving surfaces
 to obtain three-dimensional scene reconstruction are described by Baker and
 Bolles in [15]. In the last few years, there have been several other approaches
 based on the spatiotemporal image solid. Some of these are [106, 247, 156].
-EXERCISES 455
-
+-->
+</p><p>
+オプティカルフローの決定と対応問題の解決は、動体視覚における二つの難しい問題です。ここ数年、オプティカルフローと対応を回避して動きの特性を直接計算する手法がいくつか提案されています（126, 7, 6, 184）。これらのアプローチは有望であると考えられます。
+<!--
 Determination of optical flow and solving the correspondence problem
 have been two difficult problems in dynamic vision. In the last few years,
 several techniques have been proposed for direct computation of motion prop-
 erties, bypassing optical flow and correspondence (126, 7, 6, 184]. These
 approaches appear promising.
-
+-->
+</p><p>
+Zhang、Faugeras、Ayache [262] は、動きの決定の問題をステレオマッチングと動き推定の問題として捉えています。ステレオと動きは、Grosso、Sandini、Tistarelli も [94] で説明したシステムで利用しています。しかし、彼らのシステムでは、物体は静止しており、視線の方向を空間内の一点に固定したまま、カメラを物体の周囲に移動させることで複数のビューを取得します。Aggarwal と Nandhakumar [2] は、動的シーン解析のための多くの手法の概説を提供しています。Tsotos ら [238] は、画像シーケンスから動きの概念を抽象化するための枠組みを説明しています。これには、知識表現のためのセマンティックネットと、競合および協調フィードバックモードで動作する関連アルゴリズムが含まれています。
+<!--
 Zhang, Faugeras, and Ayache [262] approach the problem of motion de-
 termination as a stereo matching and motion estimation problem. Stereo
 and motion are also used by Grosso, Sandini, and Tistarelli in their system
@@ -1901,105 +2610,86 @@ and Nandhakumar [2]. A framework for the abstraction of motion concepts
 from image sequences is described by Tsotos et al. [238]. It includes semantic
 nets for knowledge representation and associated algorithms operating in a
 competing and cooperating feedback mode.
-
-Exercises
-
+-->
+</p>
+<h2>Exercises</h2>
+<p>
 14.1 What are the three phases in a dynamic-scene analysis system? Con-
 sider the task of a driver on a freeway. What are the operations
 performed in the three phases of dynamic-scene analysis for this task?
-
+</p><p>
 14.2 Define a difference picture. How would you select an appropriate
 threshold in a particular application of a difference picture?
-
+</p><p>
 14.3 How can you form a difference picture using a statistical approach to
 determine dissimilarity of intensity values in an image? How is this
 approach better than the one based on the straightforward difference
 picture approach?
-
+</p><p>
 14.4 What is an accumulative difference picture? What limitations of dif-
 ference pictures does it overcome? Does sign of difference help in
 motion analysis? How?
-
+</p><p>
 14.5 What is the difference between a time-varying edge and a moving
 edge? How will you detect moving edges in a dynamic scene? Can
-456
-
-14.6
-
-14.7
-14.8
-14.9
-
-14.10
-
-14.11
-14.12
-
-14.13
-
-14.14
-14.15
-
-14.16
-
-CHAPTER 14. DYNAMIC VISION
-
 you use three-dimensional edge detectors to detect motion in an image
 sequence?
-
-Define the correspondence problem in motion analysis. How can you
+</p><p>
+14.6 Define the correspondence problem in motion analysis. How can you
 solve this problem? List various approaches to solve this problem.
 What do you think is the problem that makes determination of cor-
 responding points so difficult?
-
-To obtain the feature point locations to subpixel resolution, compute
+</p><p>
+14.7 To obtain the feature point locations to subpixel resolution, compute
 the x and y moments from the intermediate image of the minimum
 variance obtained in step 2 of the Moravec interest operator.
-
-What is image flow? Where can it be used?
-
-Derive the motion constraint equation. How can you use this equation
+</p><p>
+14.8 What is image flow? Where can it be used?
+</p><p>
+14.9 Derive the motion constraint equation. How can you use this equation
 to segment a dynamic scene into moving and stationary objects?
-
-Define the aperture problem. What problems does it cause in com-
+</p><p>
+14.10 Define the aperture problem. What problems does it cause in com-
 puting image flow? How can you overcome the aperture problem?
 Suggest at least two different approaches.
-
-Define focus of expansion. Where and how it can be used? Is it
+</p><p>
+14.11 Define focus of expansion. Where and how it can be used? Is it
 related to vanishing points?
-
-What is complex logarithmic mapping? What properties of this map-
+</p><p>
+14.12 What is complex logarithmic mapping? What properties of this map-
 ping make it attractive in dynamic-scene analysis?
-
-When a camera is moving, all points in the environment are getting
+</p><p>
+14.13 When a camera is moving, all points in the environment are getting
 displaced in an image. How can you segment a dynamic scene to
 determine moving objects in case of a moving camera?
-
-What is path coherence? How can you use it for tracking objects in
+</p><p>
+14.14 What is path coherence? How can you use it for tracking objects in
 a scene? ,
-
-What is structure-from-motion? Under what conditions can you re-
+</p><p>
+14.15 What is structure-from-motion? Under what conditions can you re-
 alistically determine the structure of an object using three frames?
-
-The top left corner of a 6 x 8-pixel object is initially located at (0,0). It
+</p><p>
+14.16 The top left corner of a 6 x 8-pixel object is initially located at (0,0). It
 moves to the location (4, 8) after four frames of uniform velocity. Find
 the absolute, positive, and negative accumulative difference pictures.
-COMPUTER PROJECTS 457
-
+</p><p>
 14.17 Consider a point object located at world coordinates (10, 0,10) at time
 t= 0. A camera system with a focal length of 2 is located such that
 its lens center is at the origin of the world coordinate system and its
 optical axis is looking directly at the object at time t — 0. The object
 is moving with a uniform velocity of (5,0, 0).
-
-a. What are the coordinates of the point object in the image plane
+<div class="styleBullet">
+<ul>
+<li>a. What are the coordinates of the point object in the image plane
 at time t = 0?
 
-b. Find the image coordinates of the point at t = 1 if
-
-(i) The camera is stationary.
-(ii) The camera translates with a uniform velocity of (0, 0, 5).
-
+</li><br><li>b. Find the image coordinates of the point at t = 1 if</li><br>
+<ul>
+<li>(i) The camera is stationary.
+</li></br><li>(ii) The camera translates with a uniform velocity of (0, 0, 5).
+</li></ul>
+</ul></div>
+</p><p>
 14.18 A family decides to enjoy a nice Spring weekend outdoors along with
 
 bread crumbs. Immediately, Billy decides to chase Cilly. After four
@@ -2009,58 +2699,41 @@ destination only to find that the bird just took off in the direction
 in Figure P14.18. The camera height is 5 feet and the focal length of
 its lens is 0.25 feet. Assume that the animals are smal] enough so that
 they can be represented as points on the ground. Also, assume that
-Billy’s instantaneous direction of travel is always toward the current
+Billy's instantaneous direction of travel is always toward the current
 
 position of Cilly and that he also travels at constant speed. Find
 the image plane coordinates and the direction of optical flow for all
 animals at time instances t = 0+ (just after start), t = 2 (an estimate
-is enough for Billy’s position), and t = 4- (just before end) seconds.
+is enough for Billy's position), and t = 4- (just before end) seconds.
 Also mark the direction of optical flow for the bird after it starts its
 flight. Mark all distances in the image plane. Note that all distances
 are measured from the center of the lens for convenience.
-
-Computer Projects
-
+</p>
+<h2>Computer Projects</h2>
+<p>
 14.1 Design a system to count how Many people entered the coffee room
 and what percentage took coffee. Assume that you can use multiple
-458 CHAPTER 14. DYNAMIC VISION
 
 cameras if required and you are free to determine the location and
 orientation of cameras.
-
+</p><p>
 14.2 Implement an accumulative difference picture—based approach for mo-
 tion analysis. Use this approach to extract images of all people who
 came to your coffee room and took coffee.
-
+</p><p>
 14.3 Develop a program to establish correspondence. Use this to determine
 all corresponding points in a scene containing at least three objects
 moving in different directions.
-
+</p><p>
 14.4 Implement a tracking algorithm using path coherence. Test it using a
 basketball sequence to track the ball. Modify this algorithm to work
 with a mobile camera. Assume that you want to design a mobile robot
 that will track a particular moving object (pointed to it interactively).
 Apply your tracking algorithm to this problem.
 
-x'X
-R
-DISTANCES IN FEET
-
-6 Bird
-
-y’ and y axes are
-normal to the paper
-
--
-rd
-a
-
-z,z
-
-Image plane Billy ——Cilly
 
 Figure P14.18
--->
+
 </p>
     </body>
 </html>
