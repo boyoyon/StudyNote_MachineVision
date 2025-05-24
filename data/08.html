@@ -120,7 +120,7 @@ RP=\frac{1}{RL} lines/mm=\frac{1}{2\Delta} lines/mm \tag{8.2}
 人間の視覚システムでは、空間分解能は中心窩における錐体細胞の間隔によって決まる。典型的な間隔は30秒角、つまり1/120°である。これは、1分角、つまり1/60°、つまり\(0.3\times 10^{-3}\) ラジアンの分解能限界を示している。この視角は小さいため、目からの距離にラジアン単位の分解能限界を掛け合わせることで、人間の視覚の分解能限界に対応する特徴間の間隔を計算できる。例えば、腕の長さは約40cmである。この距離における分解能限界は
 <!-- In the human vision system, the spatial resolution is determined by the spacing between cones in the fovea. A typical spacing is 30 seconds of arc or 1/120°. This provides a resolution limit of one minute of arc, or 1/60°, or \(0.3 x 10^{-3}\) radians. Since this visual angle is small, the distance from the eye can be multiplied by the resolution limit in radians to calculate the spacing  between features that corresponds to the resolution limit of human vision.  For example, the length of your arm is around 40 cm. At this distance the  resolution limit is -->
 \[
-0.3\times 10^{-3}\times40,cm=120\,\mu m \tag{8.3}
+0.3\times 10^{-3}\times40\,cm=120\,\mu m \tag{8.3}
 \]
 レーザープリンタでページ上に印刷されるドットの間隔は、1インチあたり300ドット、つまり85μmでである。人間の視覚システムは、特徴の位置をサブピクセル解像度に補間することで、解像度の限界以下の分離を認識することができる。そのため、腕を伸ばしてページを読んだ場合、印刷されたテキストや線画のギザギザはほとんど目立たない。
 <!-- The spacing between dots placed on a page by a laser printer is 300 dots per inch or \(85 \mu m\). The human vision system can perceive seperations below the resolution limit by interpolating feature locations to subpixel resolution, so the jaggedness of printed text and line drawings is just barely noticeable when reading a page held at arm’s length.-->
@@ -145,75 +145,91 @@ to obtain an expression that relates the amount of blur to distances in the scen
 b=\frac{d\,f\,(z-z_1)}{z\,(f+z_1)} \tag{8.5}
 \]
 
+\(b\) を、許容できる焦点ずれのぼかし円の最大直径とする。式 8.5 を\(z\) について解くと、視野体積を囲む近距離面までの距離を表す式が得られる。
+<!--
 Suppose that b is the maximum diameter of the blur circle for acceptable
 defocusing. Solve Equation 8.5 for z; to obtain an expression for the distance
 to the near plane that bounds the view volume:
+-->
+\[
+z_1=\frac{f\,z\,(d-b)}{d\,f+b\,z} \tag{8.6}
+\]
 
-_ fz(d—>)
-A= “df-tbz” (8.6)
-
-b (8.5)
 </p><p>
+視野体積を囲む遠方平面までの距離 \(z_p\) を計算するには、
+<!--
 To calculate the distance zp to the far plane that bounds the view volume,
-
-let
-_ d= 2)
-
-2
-
-b , (8.7)
-8.4. VIEW VOLUME 253
-
-where z% is the setting of the image plane distance (beyond the correct setting
-z') that corresponds to the maximum amount of blur. Solve the lens equation
-for z' and zj and substitute into the equation for the blur diameter:
-
-d f (22-2)
-
-b= —_—_.. 8.8
-
-“f+ a) “
+let -->
+\[
+b=\frac{d(z_2^\prime-z^\prime)}{z^\prime} \tag{8.7}
+\]
+ここで、\(z_2^\prime\) は、像面距離（正しい設定 \(z^\prime\) を超えた値）であり、最大ぼかし量に対応する。レンズ方程式を \(z^\prime\) と \(z_2^\prime\) について解き、ぼかし直径の式に代入する。
+<!--
+where \(z_2^\prime\) is the setting of the image plane distance (beyond the correct setting \(z^\prime\)) that corresponds to the maximum amount of blur. Solve the lens equation for \(z^\prime\) and \(z_2^\prime\) and substitute into the equation for the blur diameter:
+-->
+\[
+b=\frac{d\,f\,(z_2-z)}{z(f+z_2)} \tag{8.8}
+\]
+遠方平面の距離について次の方程式を解く。
+<!--
 Solve this equation for the far plane distance:
-_ fz(d+d)
+-->
+\[
+z_2=\frac{f\,z\,(d+b)}{d\,f-b\,z} \tag{8.9}
+\]
 
-2 = df ba" (8.9)
 </p><p>
+これらの式は、公称焦点面 \(z\)、絞り径 \(d\)、焦点距離 \(f\)、最大許容ぼかし径 \(b\) の特定の設定における近距離面と遠距離面の位置を与える。遠距離面距離と被写界深度が無限大になる距離 \(z = df/b\) は過焦点距離と呼ばれる。
+<!--
 These equations provide the positions of the near and far planes for a
 particular setting of the nominal plane of focus z and the aperture diameter
-d, focal length f, and maximum acceptable blur diameter b. There is a
-distance z = df/b, called the hyperfocal distance, at which the far plane
+d, focal length \(f\), and maximum acceptable blur diameter \(b\). There is a
+distance \(z = df/b\), called the hyperfocal distance, at which the far plane
 distance and the depth of field become infinite.
+-->
 </p><p>
-The depth of field D is the difference between the near and far plane
-distances, z2 — 21, given by
+被写界深度\(D\)は、近距離面と遠距離面の差\(z_2 - z_1\)であり、次式で与えられる。
+<!--
+The depth of field \(D\) is the difference between the near and far plane
+distances, \(z_2 - z_1\), given by
+-->
+\[
+D=\frac{2\,b\,d\,f\,z\,(f+z)}{d^2\,f^2-b^2\,z^2} \tag{8.10}
+\]
 
-2bd
 </p>
 <h2>8.4. 視野体積</h2>
 <p>
+第 1 章で紹介した、像形成の透視モデルを考えます。このモデルでは、像平面が投影中心の前にあります。投影中心は点 \((x_0, y_0, z_0)\) にあり、投影中心から像平面の原点 (主点) への視線ベクトルは \((v_x, v_y, v_z)\) とします。像平面は視線ベクトルに垂直であると仮定します。視線ベクトルは、カメラの向いている方向と、投影中心から像平面までの距離 (カメラ定数) の両方を定義することに注意してください。視線ベクトルは、光軸の周りのねじれを除く、空間におけるカメラの向きを定義します。像平面の原点からのベクトル \((u_x, u_y, u_z)\) が、上に対応する方向を定義します。単位長さに正規化された上方向ベクトルを画像平面に投影したものが、画像平面における \(y^\prime\) 軸を定義します。\(x^\prime\) 軸は、\(y^\prime\) と視線ベクトルに垂直な単位ベクトルです。
+<!--
 Consider the perspective model for image formation, introduced in Chapter 1,
 with the image plane in front of the center of projection. Let the center
-of projection be located at point (xo, yo, 20) and the view vector from the
+of projection be located at point \((x_0, y_0, z_0)\) and the view vector from the
 center of projection to the origin of the image plane (the principal point) be
-(Vz, Uy, vz). Assume that the image plane is perpendicular to the view vector.
+\((v_x, v_y, v_z)\). Assume that the image plane is perpendicular to the view vector.
 Note that the view vector defines both the direction in which the camera is
 pointed and the distance from the center of projection to the image plane (the
 camera constant). The view vector defines the orientation of the camera in
-space, except for the twist about the optical axis. Let the vector (uz, Uy, uz)
+space, except for the twist about the optical axis. Let the vector \((u_x, u_y, u_z)\)
 from the origin in the image plane define the direction that corresponds to
 up. The projection of the up vector onto the image plane, normalized to unit
-length, defines the y’ axis in the image plane. The z’ axis is the unit vector
-perpendicular to y’ and the view vector.
-
+length, defines the \(y^\prime\) axis in the image plane. The \(x^\prime\) axis is the unit vector
+perpendicular to \(y^\prime\) and the view vector.
+-->
 </p><p>
+像面上の表示領域は、主点を中心とした高さ \(h\)、幅 \(w\) の長方形であると仮定します。長方形の角と投影中心の位置によって、ビューボリュームを囲む4つの平面（上、下、左、右）が定義されます。近距離平面と遠距離平面は、被写界深度によって決まる距離で像面に対して垂直です。慣例により、平面の法線はビューボリュームの外側を指します。
+<!--
 Assume that the viewable area on the image plane is a rectangle with
-height A and width w centered about the principal point. The corners of
+height \(h\) and width \(w\) centered about the principal point. The corners of
 the rectangle and the location of the center of projection define four planes
 (top, bottom, left, and right) that bound the view volume. The near and far
 planes are perpendicular to the image plane at distances determined by the
 depth of field. By convention, the plane normals point to the outside of the
 view volume.
+-->
 </p><p>
+6つの境界面は、カメラの位置と向き、撮像素子の寸法、およびレンズ光学系から計算できます。平面座標は、カメラの位置と向きを定義するために使用される座標系と同じ座標系（通常はシーンの絶対座標系）です。境界面は、カメラの視野内にあるべきすべてのシーンポイントが視野ボリューム内にあるかどうかを判断するために使用できます。カメラの位置と向き、公称焦点、絞り径、および焦点距離を調整して、視野ボリュームを変更し、表示可能なすべてのシーンポイントが視野ボリューム内に入るようにすることができます。最小絞り径は、周囲光と、モーションブラーを最小限に抑えるために必要なシャッタースピードによって制限されます。
+<!--
 The six bounding planes can be calculated from the position and orien-
 tation of the camera, the dimensions of the imaging element, and the lens
 optics. The plane coordinates are in the same coordinate system used to
@@ -226,53 +242,140 @@ the view volume until all scene points that should be viewable are within
 the view volume. The minumum aperture diameter is constrained by the
 ambient illumination and the shutter speed necessary to minimize motion
 blur.
+-->
 </p>
 <h2>8.5 露出</h2>
 <p>
+カメラが集める光の量は、像面に当たる光の強さ（像放射照度）と露出時間（シャッタースピード）によって決まります。
+<!--
 The amount of light collected by the camera depends on the intensity of
 light falling on the image plane (the image irradiance) and the duration of
-
 the exposure (shutter speed):
-&= Et. (8.11)
-
+-->
+\[
+\mathcal{E} = Et  \tag{8.11}
+\]
+露光量は1平方メートルあたりのジュール（エネルギー）単位で表されますが、画像放射照度は1平方メートルあたりのワット（電力）単位で表されます。電力と時間を掛け合わせるとエネルギーが得られるので、単位は正しく計算されます。
+<!--
 Exposure is in units of joules (energy) per square meter while image irradi-
 ance is in units of watts (power) per square meter. Multiplying power by
 time gives energy, so the units work out correctly.
+-->
 </p><p>
+F値またはF値は、焦点距離fと絞りの直径dの比に比例します。
+<!--
 The F-number or F-stop is proportional to the ratio of the focal length f
 to the diameter d of the aperture:
-
-F-number = 4. (8.12)
-
+-->
+\[
+F値 = \frac{f}{d}  \tag{8.12}
+\]
+カメラのレンズ絞りはF値で表されます。これは、同じF値であれば、レンズが異なっていても画像の強度（シャッタースピード一定の場合のフィルム露出）は同じであるためです。
+<!--
 The lens aperture on cameras is designated in units of F-number because
 image intensity (or film exposure for constant shutter speed) is the same for
-EXERCISES 255
-
 different lenses at the same F-stop:
-
-1
-F- v= 8.13
-number E (8.13)
-
-1
-~ = for constant shutter speed t. (8.14)
-
+-->
+\[
+\begin{align}
+F値 &\sim \frac{1}{E} \tag{8.13} \\
+\\
+&\sim \frac{1}{\mathcal{E}} \text{　一定のシャッタースピード t に対して} \tag{8.14}
+\end{align}
+\]
+言い換えれば、F値とは、焦点距離の異なるレンズの集光能力の違いを考慮した単位系で表された絞り径です。
+<!--
 In other words, the F-stop is the aperture diameter provided in a system of
 units that factors out the different light gathering capabilities of lenses with
 different focal lengths.
-
+-->
+</p><p>
+カメラレンズのF値は\(\sqrt{2}\)の倍数で表記されています。これは、絞り面積を2倍にすることは、絞り径を\(\sqrt{2}\)だけ大きくすることと同等だからです。
+<!--
 The F-number on camera lenses is marked with numbers that are multi-
-ples of /2 because doubling the aperture area is equivalent to increasing the
-aperture diameter by V2,
-
-2 x aperture area ~ V2d & 1.4d. (8.15)
-
+ples of \(\sqrt{2}\) because doubling the aperture area is equivalent to increasing the
+aperture diameter by \(\sqrt{2}\),
+-->
+\[
+2 \times \text{開口部面積} \sim \sqrt{2}d \approx 1.4d  \tag{8.15}
+\]
+F値は 2.8、4、5.6、8、11 のように番号が付けられており、F値が1つ上がるごとに絞り径が 1.4 倍になり、像面上の光の量が2倍になります。
+<!--
 The F-stops are numbered 2.8, 4, 5.6, 8, 11, and so on, so each F-stop changes
 the aperture diameter by a factor of 1.4 and increases the amount of light on
 the image plane by a factor of 2.
-
-
-
+-->
+</p>
+<h2>さらに学ぶために</h2>
+<!--
+<h2>Further Reading</h2>
+-->
+<p>
+光学に関する良書は数多くありますが、そのほとんどは放射測定法について簡潔にしか触れていません。放射測定法と眼の光学についてある程度触れている光学に関する優れた教科書として、Young著のペーパーバック[259J]があります。Horn著の視覚に関する教科書[109J]には、放射測定法とイメージングに関する優れた解説が含まれています。Hornは、マシンビジョンにおける光学と放射測定法の応用における先駆者です。BeynonとLamb著の教科書[31J]には、CCDイメージセンサーに関する章があります。
+<!--
+There are several good books on optics, but most texts give short coverage to radiometry. An excellent text on optics which includes some coverage of radiometry and the optics of the eye is a paperback book by Young [259J. The vision text by Horn [109J contains a good discussion of radiometry and imaging. Horn was the pioneer in the use of optics and radiometry in machine vision. The text by Beynon and Lamb [31J contains a chapter on CCD image sensors.
+-->
+</p>
+<h2>演習</h2>
+<!--
+<h2>Exercises</h2>
+-->
+<p>
+<div class="styleBullet">
+<ul><li>
+8.1 視野体積の幾何学的形状は第8.4節で定式化されました。カメラの位置と向きはカメラ座標で与えられ、位置は (0,0,0)、視線ベクトルは(0,0,1)、上ベクトルは (0,1,0) と仮定します。
+<br><br>
+<ul><li>
+a.
+カメラの位置と向き、および撮像素子の高さと幅を用いて、画像平面上の視野矩形の角の位置を計算します。
+</li><br><li>b.
+カメラの位置と向き、および撮像素子の高さと幅を用いて、上面、下面、左面、および右面の境界面の係数の式を計算します。
+</li><br><li>c.
+焦点距離、絞り径、およびシーン点までの公称距離を用いて、近距離面と遠距離面の係数の式を計算します。
+</li><br><li>d.
+これらの式を絶対座標におけるカメラの位置と向きに一般化してください。
+</li><br><li>e.
+視野内に存在するべきシーンポイントのリストに対応するために、カメラの位置と向き、公称焦点、絞り径、焦点距離を調整するための反復アルゴリズムの概要を説明してください。
+</li></ul>
+</li><br><li>8.2 カメラ座標系における位置  \((p_x, p_y, p_z)\)  と速度ベクトル \((v_x, v_y, v_z)\) を持つ移動物体を考えます。動きによるブレが許容レベルまで低減されるようにシャッター速度を調整することが望ましいとします。この演習では、ブレは撮像素子間の最小距離と定義されます。
+<br><br>
+<ul><li>
+a.
+透視投影とカメラ定数 f を仮定して、画像平面への投影速度ベクトルを計算してください。
+</li><br><li>b.
+許容可能な最小シャッター速度を計算してください。
+</li><br><li>c.
+シーン内に移動物体は存在しないが、カメラが速度ベクトル \((v_x, v_y, v_z)\) で移動すると仮定します。最小シャッター速度の計算を繰り返します。結果はシーン内の点までの距離によって異なります。
+</li><br><li>d.
+カメラの動きが振動によるもので、ベクトルの大きさが \(v\) である均一分布方向への動きとしてモデル化されていると仮定します。振動による速度ベクトルの最大値を用いて、最小シャッター速度の計算を繰り返します。
+</li></ul>
+<!--
+8.1 The geometry of the view volume was formulated in Section 8.4. Assume that the camera position and orientation are given in camera coordinates, so that the position is (0,0,0), the view vector is (0,0,1), and the up vector is (0, 1,0).
+<ul><li>
+a.
+Calculate the position of the corners of the view rectangle on the image plane in terms of the position and orientation of the camera and the height and width of the imaging element.
+</li><br><li>b.
+Calculate the formulas for the coefficients of the top bottom left, and right bounding planes in terms of the camera position and orientation and the height and width of the imaging element.
+</li><br><li>c.
+Calculate the formulas for the coefficients of the near and far planes in terms of the focal length, aperture diameter, and nominal distance to a scene point.
+</li><br><li>d.
+Generalize these formulas to the camera position and orientation in absolute coordinates.
+</li><br><li>e.
+Outline an iterative algorithm for adjusting the camera position and orientation, nominal focus, aperture diameter, and focal length to accommodate a given list of scene points that should be in the view volume.
+</li></ul>
+</li><br><li>8.2 Consider a moving object with position (Px,Py,Pz) and velocity vector (vx, vy, vz ) in camera coordinates. It is desirable to adjust the shutter speed so that the blur due to motion is reduced to an acceptable level, defined for this exercise to be the minimum distance between imaging elements.
+<ul><li>
+a.
+Calculate the projected velocity vector on the image plane assuming perspective projection and camera constant f.
+</li><br><li>b.
+Calculate the minimum acceptable shutter speed.
+</li><br><li>c.
+Suppose that there are no moving objects in the scene, but the camera moves with velocity vector (vx, vy, vz ). Repeat the calculation for the minimum shutter speed. The result will depend on the distance to points in the scene.
+</li><br><li>d.
+Suppose that the camera motion is due to vibration, modeled as movement in a uniformly distributed direction with vector magnitude v. Repeat the calculation for minimum shutter speed in terms of the maximum magnitude of the velocity vector due to vibration.
+-->
+</li></ul>
+</li></ul></div>
 </p>
     </body>
 </html>

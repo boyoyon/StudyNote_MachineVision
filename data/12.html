@@ -75,10 +75,11 @@
     </style>
     </head>
     <body>
-        <h1><center>12章 較正(準備中)</center></h1>
+        <h1><center>12章 較正</center></h1>
 <p>
 両眼ステレオカメラやレンジカメラなどの計測システムにおいて、マシンビジョンアルゴリズムは重要な役割を果たす。前章で開発したマシンビジョンアルゴリズムは、画像平面内の計測値の抽出を伴う。エッジの位置や領域の重心などの計測は、画像配列の座標系で行われた。画像平面における投影中心軸の位置（主点）が画像の中心にあるという前提に基づき、画像平面座標は画像の位置から簡単な式で決定できると仮定した。また、投影中心から画像平面までの距離（カメラ定数）は既知であると仮定した。本章では、これらの仮定に関連する較正の問題について解説する。前章で想定した単純な画像幾何学に基づく計測値は、12.9節で説明する内部標定問題の解を用いて真の画像平面座標に補正できる。シーン内のカメラの位置と向きは、12.8節で説明する外部標定問題を解くことによって決定できる。内部標定問題と外部標定問題の解は、画像配列内のピクセルの位置とシーン内の点を関連付けるカメラ較正問題の全体的な解を提供する。カメラ較正については12.10節で説明する。両眼ステレオ撮影において2台のカメラ間の関係を較正するための相対標定問題については12.4節で、両眼ステレオ撮影時の視差から奥行き測定値を計算する方法については12.6節で、観察者中心座標での奥行き測定値をシーンの絶対座標系に変換するための絶対標定問題については12.3節で説明する。カメラ較正で用いられる様々な座標系については12.1節で説明し、剛体変換の数学については12.2節で説明する。
-<!-- This chapter will present methods for calibrating cameras and depth mea-
+<!-- 
+This chapter will present methods for calibrating cameras and depth mea-
 surement systems such as binocular stereo and range cameras. The machine
 vision algorithms developed in previous chapters involved the extraction of
 measurements within the image plane. Measurements, such as the location
@@ -106,54 +107,86 @@ coordinate system for the scene is covered in Section 12.3. Several different
 coordinate systems encountered in camera calibration are described in Sec-
 tion 12.1, and the mathematics of rigid body transformations is covered in
 Section 12.2.
+-->
 </p><p>
+カメラと距離センサーのキャリブレーション問題に対する解決策を支える数学は、写真測量の分野で発展してきました。写真測量は、シーン内におけるカメラと距離センサーの位置と向きを決定し、カメラの位置と距離測定値をシーン座標に関連付けるための一連の手法を提供します。写真測量には、以下の4つのキャリブレーション問題があります。
+<!--
 The mathematics behind solutions to the problems of calibrating cam-
 eras and range sensors has been developed in the field of photogrammetry.
 Photogrammetry provides a collection of methods for determining the posi-
 tion and orientation of cameras and range sensors in the scene and relating
 camera positions and range measurements to scene coordinates. There are
 four calibration problems in photogrammetry:
+-->
+<div class="styleBullet">
+<ul>
+<li>
+<strong>絶対標定</strong>は、2つの座標系間の変換、またはキャリブレーションポイントの座標から絶対座標系における距離センサーの位置と向きを決定します。
 
-Absolute orientation determines the transformation between two coordi-
+</li><br><li><strong>相対標定</strong>は、シーン内のキャリブレーションポイントの投影から、2台のカメラ間の相対的な位置と向きを決定します。
+
+</li><br><li><strong>外部標定</strong>は、シーン内のキャリブレーションポイントの投影から、絶対座標系におけるカメラの位置と向きを決定します。
+
+</li><br><li><strong>内部標定</strong>は、カメラ定数、主点の位置、レンズ歪みの補正など、カメラの内部形状を決定します。
+<!--
+<strong>Absolute orientation</strong> determines the transformation between two coordi-
 nate systems or the position and orientation of a range sensor in an
 absolute coordinate system from the coordinates of calibration points.
 
-Relative orientation determines the relative position and orientation be-
+</li><br><li><strong>Relative orientation</strong> determines the relative position and orientation be-
 tween two cameras from projections of calibration points in the scene.
 
-Exterior orientation determines the position and orientation of a camera
+</li><br><li><strong>Exterior orientation</strong> determines the position and orientation of a camera
 in an absolute coordinate system from the projections of calibration
 points in the scene.
 
-Interior orientation determines the internal geometry of a camera, includ-
+</li><br><li><strong>Interior orientation</strong> determines the internal geometry of a camera, includ-
 ing the camera constant, the location of the principal point, and cor-
 rections for lens distortions.
-
+-->
+</li>
+</ul>
+</div>
+</p>
+<p>
+これらのキャリブレーション問題は写真測量における古典的な問題であり、航空写真から地形図を作成する技術に端を発しています。4つの基本的なキャリブレーション問題に加えて、写真測量は、両眼立体視差からシーン内の点の位置を決定する問題も扱い、エピポーラ線が画像の行に対応するようにステレオ画像を再サンプリングする手法を提供します。
+<!--
 These calibration problems are the classic problems in photogrammetry and
 originated with the techniques used to create topographic maps from aerial
 images. In addition to the four basic calibration problems, photogrammetry
 also deals with the problem of determining the position of points in the scene
 from binocular stereo disparities and provides methods for resampling stereo
 images so that the epipolar lines correspond to image rows.
-
+-->
+</p><p>
+座標系間の変換を決定する写真測量問題はすべて、共役な点の組が利用可能であることを前提としています。
+共役な点の組は、ビュー間の特徴点を対応付けることによって得られます。
+写真測量の従来の手法では最小二乗基準が用いられ、特徴の不一致による外れ値の影響を非常に受けやすいため、これらの対応は正確でなければなりません。実際、キャリブレーションアルゴリズムは条件が悪くなる場合があり、正規分布する誤差に外れ値を追加することで運命を試すべきではありません。12.13節では、不一致な特徴点の処理にロバスト回帰を用いる方法について説明しています。一部の用途では、共役な点の組ではない2つの点の組を対応付けたり、離散的な特徴を持たない2つの曲線または面を対応付けたりする必要があります。これは、13.9節で説明する位置合わせ問題です。
+<!--
 All of the photogrammetric problems for determining the transformation
 between coordinate systems assum that a set of conjugate pairs is available.
 The conjugate pairs are obtained by matching feature points between views.
 These matches must be correct since the classic methods of photogrammetry
 use least-squares criteria and are very sensitive to outliers due to mismatched
-
 features. In fact, calibration algorithms can be ill conditioned, and one should
-12.1. COORDINATE SYSTEMS 311
-
 not tempt fate by adding outliers to the normally distributed errors. Sec-
 tion 12.13 includes some discussion on using robust regression for handling
 mismatched feature points. In some applications, if is necessary to match
 two sets of points that are not conjugate pairs or to match two curves or
 surfaces that do not have discrete features. This is the registration problem,
 discussed in Section 13.9.
-
-12.1 Coordinate Systems
-
+-->
+</p>
+<h2>12.1 座標系</h2>
+<!--
+<h2>12.1 Coordinate Systems</h2>
+-->
+<p>
+マシンビジョンにおける画像処理は通常、画像配列の座標系で行われ、原点は左上ピクセルです。
+行と列はピクセルグリッドの整数座標に対応します。
+サブピクセル測定は、画像配列（ピクセル）座標系に小数部を追加し、ピクセル座標は浮動小数点数として表されます。ただし、サブピクセル解像度によって画像配列座標系の幾何学的形状は変化しません。カメラの幾何学的形状に関するいくつかの仮定を用いて、ピクセル座標から画像平面座標に変換することができます。
+12.9節では、レンズ歪みの影響を考慮し、画像配列（ピクセル）座標から画像平面座標へのマッピングにカメラの実際の幾何学的形状が使用されるように、カメラパラメータをキャリブレーションする方法を示します。
+<!--
 The image processing opcrations in machine vision are usually done in the
 coordinate system of the image array, with the origin at the upper left pixel.
 The rows and columns correspond to integer coordinates for the pixel grid.
@@ -166,45 +199,59 @@ In Section 12.9, we will show how the camera parameters can be calibrated
 so that the mapping from image array (pixel) coordinates to image plane
 coordinates uses the actual geometry of the camera, including accounting for
 the effects of lens distortions.
-
+-->
+</p><p>
+ピクセル座標から画像座標への近似変換では、主軸が画像配列の中心で画像平面と交差することを仮定しています。画像配列が \(n\) 行 \(m\) 列の場合、画像配列の中心は
+<!--
 The approximate transformation from pixel coordinates to image coordi-
 nates assumes that the principal axis intersects the image plane in the center
-of the image array. If the image array has n rows and m columns, then the
+of the image array. If the image array has \(n\) rows and \(m\) columns, then the
 centcr of the image array is
-
-. m—1
-= > (12.1)
-
--1
-& = ‘S (12.2)
-
+-->
+\[
+\begin{align}
+\hat{c}_x &=\frac{m-1}{2} \tag{12.1} \\
+\\
+\hat{c}_y &=\frac{n-1}{2} \tag{12.2}
+\end{align}
+\]
+これらが主点の位置の推定値であることを強調するために、ハット記法を用いています。\(x\) 軸は列インデックスの増加方向ですが、行インデックスの増加方向と \(y\) 軸は反対方向を指します。ピクセル座標 \([i, j]\) から画像座標 \((x^\prime, y^\prime)\) への変換は、
+<!--
 We use the hat notation to stress that these are estimates for the location
-of the principal point. The x axis is in the direction of increasing column
-index, but the direction of increasing row index and the y axis point in
-opposite directions. The transformation from pixel coordinates [é, j] to image
-coordinates (2’, y’) is
-
-a = ;-"> (12.3)
-312 CHAPTER 12, CALIBRATION
-
-y = -(i-"S). (12.4)
-
+of the principal point. The \(x\) axis is in the direction of increasing column
+index, but the direction of increasing row index and the \(y\) axis point in
+opposite directions. The transformation from pixel coordinates \([i, j]\) to image
+coordinates \((x^\prime, y^\prime)\) is
+-->
+\[
+\begin{align}
+x^\prime &= j - \frac{m-1}{2} \tag{12.3} \\
+\\
+y^\prime &= -\left(i-\frac{n-1}{2}\right) \tag{12.4}
+\end{align}
+\]
+この変換では、画像配列の行と列の間隔が同じであり、画像平面座標がこの単位系で表されることを前提としています。列の間隔を \(s_x\)、行の間隔を \(s_y\) とします。ピクセル座標から画像座標への変換には、以下の変換係数を加えることができます。
+<!--
 This transformation assumes that the spacing between rows and columns
 in the image array is the same and that image plane coordinates should be
-expressed in this system of units. Let the spacing between columns be s,,
-and the spacing between rows be s,. We can add these conversion factors to
+expressed in this system of units. Let the spacing between columns be \(s_x\) and the spacing between rows be \(s_y\). We can add these conversion factors to
 the transformation from pixel to image coordinates:
-
-wv = Sy G-">) (12.5)
-
--1
-yo = ~8 ("5 ). (12.6)
-
+-->
+\[
+\begin{align}
+x^\prime &= s_x\left(j-\frac{m-1}{2}\right) \tag{12.5} \\
+\\
+y^\prime &= -s_y\left(i-\frac{n-1}{2}\right) \tag{12.6}
+\end{align}
+\]
+イメージセンサーが正方形のピクセルを持つ場合、変換係数は同一であり、省略できます。これにより、画像処理アルゴリズムが簡素化されます。
+画像測定値（距離など）は、必要に応じて後で実単位に変換できます。イメージセンサーが非正方形のピクセルを持つ場合、\(s_x\neq s_y\) となり、測定を実行する前に、上記の式を使用してピクセル座標を画像座標に変換する必要がある場合があります。ただし、一部の測定値は非正方形ピクセルの影響を受けません。たとえば、重心はピクセル座標を使用して計算し、後で画像平面座標に変換できますが、距離と角度は不等なスケール係数に対して不変ではなく、画像座標内の点の位置から計算する必要があります。
+たとえば、2つの領域の重心は、重心間の距離を計算する前に画像平面座標に変換する必要があります。これらの問題のため、マシンビジョンアプリケーションでは、正方形ピクセルのカメラが求められることが非常に一般的です。アプリケーションで非正方形ピクセルのカメラを使用する場合は、非正方形ピクセルが測定にどのような影響を与えるかを慎重に検討する必要があります。不明な場合は、測定を行う前に画像平面座標に変換してください。
+<!--
 If the image sensor has square pixels, then the conversion factors are iden-
 tical and can be omitted. This simplifies the image processing algorithms.
 The image measurements (such as distances) can be converted to real units
-later, if necessary. If the image sensor has nonsquare pixels, then s, # sy
-and it may be necessary to convert pixel coordinates to image coordinates,
+later, if necessary. If the image sensor has nonsquare pixels, then \(s_x\neq s_y\) and it may be necessary to convert pixel coordinates to image coordinates,
 using the formulas above, before performing measurements. However, some
 measurements are not affected by nonsquare pixels. For example, the cen-
 troid can be computed using pixel coordinates and converted to image planc
@@ -217,65 +264,105 @@ in machine vision applications. If an application uses a camera with non-
 square pixels, then you must carefully consider how the measurements will
 be affected by nonsquare pixels. When in doubt, convert to image plane
 coordinates before making any measurements.
-
-The image plane coordinate system is part of the camera coordinate sys-
-tem, a viewer-centered coordinate system located at the center of projection
-with z and y axes parallel to the 2’ and y’ axes in the image plane and a z axis
+-->
+</p><p>
+像面座標系はカメラ座標系の一部であり、投影の中心に位置する視聴者中心の座標系です。\(x\) 軸と \(y\) 軸は像面の \(x^\prime\) 軸と \(y^\prime\) 軸に平行で、\(z\) 軸は奥行きを表します。カメラ座標系はシーンの座標系を基準として位置と方向が決定され、この関係は12.10節で説明するカメラキャリブレーションによって決定されます。
+<!--
+The image plane coordinate system is part of the camera coordinate system, a viewer-centered coordinate system located at the center of projection
+with \(x\) and \(y\) axes parallel to the \(x^\prime\) and \(y^\prime\) axes in the image plane and a \(z\) axis
 for depth. The camera coordinate system is positioned and oriented relative
-to the coordinate system for the scene, and this relationship is determined
-
-LOU CMC CAUCLS,NCe T L2T
-12.2. RIGID BODY TRANSFORMATIONS 313
-
+to the coordinate system for the scene, and this relationship is determined through camera calibration discussed in section 12.10.
+-->
+</p><p>
+要約すると、カメラのキャリブレーションにはいくつかの座標系があります。
+<!--
 In summary, there are several coordinate systems in camera calibration:
-Scene coordinates for points in the scene
-Camera coordinates for the viewer-centered representation of scene points
-Image coordinates for scene points projected onto the image plane
-Pixel coordinates for the grid of image samples in the image array
-
+-->
+<div class="styleBullet">
+<ul><li>
+シーン内の点のための <strong>シーン座標</strong>
+</li><br><li>シーンの点を視聴者中心に表示する <strong>カメラ座標</strong>
+</li><br><li>画像平面に投影されたシーンの点のための <strong>画像座標</strong>
+</li><br><li>画像配列内の画像サンプルの格子である <strong>画像座標</strong>
+<!--
+<li><strong>Scene coordinates</strong> for points in the scene
+</li><br><li><strong>Camera coordinates</strong> for the viewer-centered representation of scene points
+</li><br><li><strong>Image coordinates</strong> for scene points projected onto the image plane
+</li><br><li><strong>Pixel coordinates</strong> for the grid of image samples in the image array
+-->
+</li>
+</ul>
+</div>
+<p><p>
+画像座標は、レンズの歪みなどのカメラの誤差が補正された実際の画像座標、または補正されていない画像座標のいずれかです。ピクセル座標は、画像配列座標またはグリッド座標とも呼ばれます。
+<!--
 Image coordinates can be true image coordinates, corrected for camera errors
 such as lens distortions, or uncorrected image coordinates. Pixel coordinates
 are also called image array coordinates or grid coordinates.
-
+-->
+</p><p>
+シーン内には複数のカメラがあり、それぞれが独自の座標系を持つ場合があります。例えば、両眼ステレオでは、左カメラ座標系、右カメラ座標系、そしてステレオ深度計測を表現するステレオ座標系が存在します。これらの座標系間の関係を決定することが、本章で解説する様々なキャリブレーション問題の目的です。
+<!--
 There may be multiple cameras in the scene, each with its own coordinate
 system. For example, in binocular stereo there is the left camera coordinate
 system, the right camera coordinate system, and the stereo coordinate sys-
 tem in which stereo depth measurcments are represented. Determining the
 relationships between these coordinate systems is the purpose behind the
 various calibration problems discussed in this chapter.
-
-12.2 Rigid Body Transformations
-
+-->
+</p>
+<h2>12.2 剛体変換</h2>
+<!--
+<h2>12.2 Rigid Body Transformations</h2>
+-->
+<p>
+物体の位置や向きの変化は剛体変換です。物体は移動（位置や向きの変化）しますが、大きさや形状は変化しません。点 \(\mathbf p\) が2つの視点から見えるとします。最初の視点の座標系における点 \(\mathbf p\) の位置は、
+<!--
 Any change in the position or orientation of an object is a rigid body transfor-
 mation, since the object moves (changes position or orientation) but does not
-change size or shape. Suppose that a point p is visible from two viewpoints.
-The position of point p in the coordinate system of the first viewpoint is
-
-Py = (#1, 41521)" (12.7)
-
-and the position of point p in the coordinate system of the second viewpoint.
-is
-
-Po = (2, ¥2, zo)". (12.8)
-
+change size or shape. Suppose that a point \(\mathbf p\) is visible from two viewpoints.
+The position of point \(\mathbf p\) in the coordinate system of the first viewpoint is
+-->
+\[
+\mathbf p_1 = (x_1, y_1, z_1)^T \tag{12.7}
+\]
+そして、第2の視点の座標系における点\(\mathbf p\)の位置は
+<!--
+and the position of point \(\mathbf p\) in the coordinate system of the second viewpoint is
+-->
+\[
+\mathbf p_2 = (x_2, y_2, z_2)^T \tag{12.8}
+\]
+2つのカメラ位置間の変換は剛体運動であるため、最初のビューの位置 \(\mathbf p_1\) にある各点は、回転と並進によって2番目のビューの座標に変換されます。
+<!--
 The transformation between the two camera positions is rigid body motion,
-so each point at position p, in the first view is transformed to its coordinates
+so each point at position \(\mathbf p_1\) in the first view is transformed to its coordinates
 in the second view by rotation and translation:
-
-P2 = RP, + Po: (12.9)
-314 CHAPTER 12. CALIBRATION
-
-where matrix R is a 3 x 3 orthonormal matrix for rotation,
-
-Tee Vey Taz
-R=| tye Ty Tyz |; (12.10)
-
-Pea Vay Vax
-
-and vector py is the vector for the amount and direction of translation. Point
-Po is the position of the origin of coordinate system one in coordinate system
+-->
+\[
+\mathbf p_2 = R\mathbf p_1+\mathbf p_0 \tag{12.9}
+\]
+ここで行列 \(R\) は回転のための 3 x 3 直交行列であり、
+<!--
+where matrix \(R\) is a 3 x 3 orthonormal matrix for rotation,
+-->
+\[
+R=
+\begin{bmatrix}
+r_{xx} & r_{xy} & r_{xz} \\
+r_{yx} & r_{yy} & r_{yz} \\
+r_{zx} & r_{zy} & r_{zz} 
+\end{bmatrix}
+\tag{12.10}
+\]
+ベクトル\(\mathbf p_0\)は並進量と方向を表すベクトルです。点\(\mathbf p_0\)は座標系1の原点の座標系2における位置です。
+<!--
+and vector \(\mathbf p_0\) is the vector for the amount and direction of translation. Point \(\mathbf p_0\) is the position of the origin of coordinate system one in coordinate system
 two,
-
+-->
+</p><p>
+式 12.9 は、回転および平行移動された点の新しい座標を計算する式、または異なる座標系における空間内の同じ点の座標を計算する式として見ることができます。最初の解釈は剛体力学で使用されます。つまり、物体上の点の新しい座標は、物体を新しい位置と方向に移動した後に計算する必要があります。2 番目の解釈はキャリブレーション問題で使用されます。つまり、同じ点が異なる視点と方向から見ると異なる座標を持ちます。座標の変化は 2 つの視点間の剛体変換によって決定され、キャリブレーション問題は、一連のキャリブレーション点 (共役ペア) から変換を決定することです。たとえば、空間内の異なる位置と方向にある 2 台の同一の距離カメラで同じ点を見るとします。視点が異なるため、座標は同じ点を表していても、座標は異なります。最初のレンジカメラが回転して、2番目のレンジカメラと同じ向きになったとします。この場合、レンジカメラの座標系は同じ向きになりますが、空間内での位置は異なります。次に、最初のレンジカメラが2番目のレンジカメラと同じ空間位置に移動されたとします。この場合、点は両方のカメラで同じ座標になります。2台のカメラの座標系を揃えて、同一の点が同じ座標を持つようにするこのプロセスは、式12.9の剛体変換によってモデル化されます。この式は、最初のカメラの視聴者中心座標系にある点 \(\mathbf p_1\) を最初に回転させ、次に移動させて、その座標を2番目のカメラの点 \(\mathbf p_2\) に変更することを示しています。このプロセスを図12.1に示します。実際には、距離カメラや、双眼ステレオなどの深度測定システムがそれぞれ独自のカメラ中心座標系で点座標を生成する場合があり、これらの測定値は、シーンに対して事前に定義された共通座標系に変換する必要があります。この共通座標系は、ワールド座標系または絶対座標系と呼ばれ、シーン座標と呼ばれることもあります。本書では、特定のカメラや深度測定システムのビューア中心座標系ではなく、シーン内の点のグローバル座標系について話していることを示すために「絶対座標」という用語を使用しています。ビューア中心座標とカメラ中心座標は同義語です。カメラ座標とは、カメラの3次元座標系、つまり特定の視点の座標系を指します。 1.4.1節で説明したように、一般的には左手座標系を用います。この座標系では、\(z\)軸と \(y\)軸は通常通り画像平面上の座標に対応し、\(z\)軸はシーンの外側を指します。カメラ中心座標系における座標 \((x, y, z)\) を持つシーン内の点は、透視投影によって画像平面上の点 \((x^\prime, y^\prime)\) に投影されます。
+<!--
 Equation 12.9 can be viewed as a formula for computing the new coor-
 dinates of a point that has been rotated and translated or as a formula for
 computing the coordinates of the same point in space in different coordinate
@@ -290,31 +377,14 @@ calibration points (conjugate pairs). For example, consider the same point
 seen by two identical range cameras at. different positions and oricntations
 in space. Since the viewpoints are different, the coordinates are different
 even though the coordinates represent the same point. Imagine that the first
-range camera is rotated so that. it has the same orientation as the second
+range camera is rotated so that, it has the same orientation as the second
 range camera. Now the coordinate systems of the range cameras have the
 same orientation but different positions in space. Now imagine that the first
 rauge camera is translated to the same position in space as the second range
 camera. Now the point has the same coordinates in both cameras. This pro-
 cess of aligning the coordinate systems of the two cameras so that identical
 points have the same coordinates is modeled by the rigid body transforma-
-tion in Equation 12.9, which says that a point p, in the viewer-centered
-coordinate system of the first camera is first rotated and then translated
-to change its coordinates to point py in the second camera. This process
-is illustrated in Figure 12.1. In practice, there may be one or more range
-cameras, or depth measuring systems such as binocular stereo, that gencrate
-
-DLO CTC AT GN CUE i
-12.2. RIGID BODY TRANSFORMATIONS 315
-
-Figure 12.1: Point P is visible from both viewpoints but has different. coordi-
-nates in each system. The drawing illustrates the rigid body transformation:
-the coordinate system on the left is first rotated and then translated until it
-is aligned with the coordinate system on the right.
-
-measurements must be transformed into a common coordinate system that
-has been predefined for the scene. This common coordinate system is called
-the world or absolute coordinate system, sometimes called scene coordinates.
-The term absolute coordinates is used in this book to make it clear that we
+tion in Equation 12.9, which says that a point \(\mathbf p_1\) in the viewer-centered coordinate system of the first camera is first rotated and then translated to change its coordinates to point \(\mathbf p_2\) in the second camera. This process is illustrated in Figure 12.1. In practice, there may be one or more range cameras, or depth measuring systems such as binocular stereo, that gencrate point coordinates in their own camera-centered coordinate system, and these measurements must be transformed into a common coordinate system that has been predefined for the scene. This common coordinate system is called the world or absolute coordinate system, sometimes called scene coordinates. The term absolute coordinates is used in this book to make it clear that we
 are talking about a global coordinate system for points in the scene, rather
 than the viewer-centered coordinate system for a particular camera or depth
 measuring system. The terms viewer-centered and camera-centered coordi-
@@ -324,23 +394,33 @@ the coordinate system for a particular viewpoint. As explained in Section
 1.4.1, we generally use a left-handed coordinate system with the z and y
 axes corresponding to coordinates in the image plane in the usual way and
 the z axis pointing out into the scene. A point in the scene with coordinates
-316 CHAPTER 12. CALIBRATION
-
-(x,y, z) in a camcra-centered coordinate system is projected to a point (z’, y’)
-in the image plane through perspective projection:
-
-1 _ of
-c= (12.11)
-, _ ob
-y= a. (12.12)
-
-The coordinates (z’, y’) of the projected point are called image plane coor-
-dinates, or just image coordinates, for short. ‘The origin of the image plane
+\((x, y, z)\) in a camcra-centered coordinate system is projected to a point \((x^\prime, y^\prime)\) in the image plane through perspective projection:
+-->
+\[
+\begin{align}
+x^\prime &= \frac{xf}{z} \tag{12.11} \\
+\\
+y^\prime &= \frac{yf}{z} \tag{12.12}
+\end{align}
+\]
+投影点の座標 \((x^\prime, y^\prime)\) は、像面座標、または単に像座標と呼ばれます。像面座標系の原点は、像面とカメラ座標系の \(z\) 軸の交点にあります。\(z\) 軸はカメラシステムの主軸または光軸と呼ばれ、像面座標系の原点は主点と呼ばれます。
+<!--
+The coordinates \((x^\prime, y^\prime)\) of the projected point are called image plane coordinates, or just image coordinates, for short. The origin of the image plane
 coordinate system is located at the intersection of the image plane and the
-z axis of the camera coordinate system. The z axis is called the principal
+\(z\) axis of the camera coordinate system. The \(z\) axis is called the principal
 axis or optical axis for the camera system, and the origin of the image plane
 coordinate system is called the principal point.
-
+-->
+</p>
+<center><img src="images/fig12_1.png"></center>
+<p class="margin-large">
+図12.1: 点Pは両方の視点から見えますが、それぞれの座標系で座標が異なります。この図は剛体変換を示しています。左側の座標系はまず回転され、次に右側の座標系と一致するまで移動されます。
+<!--
+Figure 12.1: Point P is visible from both viewpoints but has different. coordinates in each system. The drawing illustrates the rigid body transformation: the coordinate system on the left is first rotated and then translated until it is aligned with the coordinate system on the right.
+-->
+</p><p>
+アフィン変換は、任意の線形変換に平行移動を加えたものです。言い換えれば、点座標のベクトルに任意の行列を掛け合わせ、その結果に平行移動ベクトルを加算します。アフィン変換には、位置と方向の変更（剛体変換）が特殊なケースとして含まれるほか、スケーリング（オブジェクトのサイズを変更する）などの他の変換も含まれます。オブジェクトの形状を何らかの一般的な方法で変更する変換は非線形変換であり、ワーピング、モーフィング、または変形とも呼ばれます。回転を表現する方法はいくつかあり、オイラー角やクォータニオンなどについては、以降のセクションで説明します。
+<!--
 An affine transformation is au arbitrary linear transformation plus a
 translation. In other words, the vector of poiut coordinates is multiplicd
 by an arbitrary matrix and a translation vector is added to the result. Affine
@@ -351,75 +431,92 @@ the shape of an object in some general way is a nonlinear transformation,
 also called warping, morphing, or deformation. There are several ways to
 represent rotation, including Euler angles and quaternions, covered in the
 following sections.
-
-12.2.1 Rotation Matrices
-
-Angular orientation can be specified by three angles: rotation w about the
-« axis, rotation ¢ about the new y axis, and rotation « about the new z axis.
-Angle w is the pitch (vertical angle) of the optical axis, angle @ is the yaw
-(horizontal angle) of the optical axis, and angle x is the roll or twist about
+-->
+</p>
+<h3>12.2.1 回転行列</h3>
+<!--
+<h3>12.2.1 Rotation Matrices</h3>
+-->
+<p>
+角度の向きは、3つの角度で指定できます。\(x\)軸を中心とした回転\(\omega\)、新しい\(y\)軸を中心とした回転\(\phi\)、そして新しい\(z\)軸を中心とした回転\(\kappa\)です。角度\(\omega\)は光軸のピッチ（垂直角）、角度\(\phi\)は光軸のヨー（水平角）、角度\(\kappa\)は光軸を中心としたロールまたはツイストです。これらの角度はオイラー角と呼ばれます。回転がない（3つの角度すべてがゼロ値）ということは、2つの座標系が完全に揃っていることを意味します。正の \(\omega\) は光軸を \(x-z\) 平面より正の \(y\) 方向に上げ、正の \(\phi\) は光軸を \(y-z\) 平面より左の \(x\) 方向に回転させ、正の \(\kappa\) は座標系を原点から見て光軸を中心に時計回りに回転させる。式 12.10 で定義される回転行列 R の各要素は、これらの角度に関して以下の通りである。
+<!--
+Angular orientation can be specified by three angles: rotation \(\omega\) about the
+\(x\) axis, rotation \(\phi\) about the new \(y\) axis, and rotation \(\kappa\) about the new \(z\) axis. Angle \(\omega\) is the pitch (vertical angle) of the optical axis, angle \(\phi\) is the yaw
+(horizontal angle) of the optical axis, and angle \(\kappa\) is the roll or twist about
 the optical axis. These angles are called the Euler angles. No rotation (zero
 values for all three angles) means that two coordinate systems are perfectly
-aligned. Posilive w raises the optical axis above the x—z plane in the direction
-of positive y, positive @ turns the optical axis to the left of the y z plane
-in the direction of negative z, and positive « twists the coordinate system
-
-dlocksnse shoul the optieal axis ag seatt bot the ry t Kt Algae Al tht
-12.2. RIGID BODY TRANSFORMATIONS 317
-
+aligned. Posilive \(\omega\) raises the optical axis above the \(x-z\) plane in the direction
+of positive \(y\), positive \(\phi\) turns the optical axis to the left of the \(y-z\) plane
+in the direction of negative \(x\) and positive \(\kappa\) twists the coordinate system
+clockwise about the optical axis as seen from the origin. The entries of the 
 rotation matrix R defined in Equation 12.10 in terms of these angles are
-
-Toe = cos@cosK
-
-Toy = SinwsingcosK + cosw sink
-
-Teor = —coswsind@cosé +sinw sink
-
-ly, = —cos@snk
-
-fy = —sinwsin dsin kK + cosw cos Kk (12.13)
-Pyz = coswsin dsin kK + silw cos «
-
-Trc = Sing
-
-Poy = —sinwcos¢d
-
-Tr, = coswcosd¢.
-
+-->
+\[
+\begin{align}
+r_{xx} &= \cos\phi\cos\kappa \\
+r_{xy} &= \sin\omega\sin\phi\cos\kappa+\cos\omega\sin\kappa \\
+r_{xz} &= -\cos\omega\sin\phi\cos\kappa+\sin\omega\sin\kappa \\
+r_{yx} &= -\cos\phi\sin\kappa \\
+r_{yy} &= -\sin\omega\sin\phi\sin\kappa+\cos\omega\cos\kappa \\
+r_{yz} &= \cos\omega\sin\phi\sin\kappa+\sin\omega\cos\kappa \\
+r_{zx} &= \sin\phi\\
+r_{zy} &= -\sin\omega\cos\phi \\
+r_{zz} &= \cos\omega\cos\phi
+\end{align}
+\]
+これは回転の一般的な表現ですが、オイラー角を解くことで回転を決定すると、オイラー角の小さな変化が回転の大きな変化に対応する可能性があるため、数値的に良好な条件を満たさないアルゴリズムになります。キャリブレーションアルゴリズムでは、回転行列の要素を解くか、四元数などの回転角度の他の表現を使用します。
+<!--
 Although this is a common representation for rotation, determining the rota-
 tion by solving for the Euler angles leads to algorithms that are not numeri-
 cally well conditioned since small changes in the Euler angles may correspond
 to large changes in rotation. Calibration algorithms either solve for the en-
 tries of the rotation matrix or usc other representations for the rotation angles
 such as quaternions.
-
+-->
+</p><p>
+回転行列は直交行列であり、
+<!--
 The rotation matrix is an orthonormal matrix,
-
-RTR=I, (12.14)
-
-where J is the identity matrix. This means that the matrix inverse is just
+-->
+\[
+R^TR=I  \tag{12.14}
+\]
+ここで、\(I\)は単位行列です。つまり、逆行列は回転行列の転置行列に等しいということです。キャリブレーションアルゴリズムは、座標系間の一方向の剛体変換を生成します。例えば、座標系1から座標系2へは、
+<!--
+where \(I\) is the identity matrix. This means that the matrix inverse is just
 the transpose of the rotation matrix. A calibration algorithm will produce a
 rigid body transformation between coordinate systems in one direction; for
 example, from coordinate system 1 to coordinate system 2,
-
-Pz = RP, + Pa o- (12.15)
-
+-->
+\[
+\mathbf p_2 = R\mathbf p_1+\mathbf p_{2,0} \tag{12.15}
+\]
+座標系2の座標を座標系1の座標に変換する逆剛体変換は
+<!--
 The inverse rigid body transform that converts coordinates in system 2 to
 coordinates in system 1 is
-
-p, = RT(p, - Poo) = Rp, + Pio (12.16)
-
-where the notation p;y means the point in coordinate system 7 that is the
+-->
+\[
+\mathbf p_1 = R^T(\mathbf p_2 - \mathbf p_{2,0}) = R^T\mathbf p_2 + \mathbf p_{1,0} \tag{12.16}
+\]
+ここで、\(\mathbf p_{i,0}\) という表記は、座標系 \(i\) における点、つまり他の座標系の原点を意味します。逆変換は単に \(-\mathbf p_{2,0}\) ではなく、逆回転行列を乗じる必要があることに注意してください。これは、変換 \(\mathbf p_{2,0}\) が座標系 2 にあり、逆変換は座標系 1 と同じ方向で表現する必要があるためです。
+<!--
+where the notation \(\mathbf p_{i,0}\) means the point in coordinate system \(i\) that is the
 origin of the other coordinate system. Note that the inverse translation is not
-Just —py, but must be multiplied by the inverse rotation matrix, because the
-translation Ppyq is in coordinate system 2 and the inverse translation must
+Just \(-\mathbf p_{2,0}\) but must be multiplied by the inverse rotation matrix, because the
+translation \(\mathbf p_{2,0}\) is in coordinate system 2 and the inverse translation must
 be expressed in the same orientation as coordinate system 1.
-318 CHAPTER 12. CALIBRATION
-
-12.2.2. Axis of Rotation
-
+-->
+</p>
+<h3>12.2.2. 回転軸</h3>
+<!--
+<h3>12.2.2. Axis of Rotation</h3>
+-->
+<p>
+回転は、単位ベクトル \((\omega_x, \omega_y, \omega_z)\) で指定された軸を中心とした反時計回り（右手）の回転として指定することもできます。これは回転を非常に直感的に捉える方法ですが、数値アルゴリズムにおいてはオイラー角と同じ問題を抱えています。角度と軸の表現は、剛体変換の式（式 12.9）で使用するために回転行列に変換できますが、角度と軸の表現を直接操作して優れた数値アルゴリズムを生成する方法があれば便利です。これは、次のセクションで説明する回転の四元数表現の理由の一部です。
+<!--
 Rotation can also be specified as a couuterclockwise (right-handed) rotation
-about the axis specified by the unit vector (wz, wy,w,). This is a very intu-
+about the axis specified by the unit vector \((\omega_x, \omega_y, \omega_z)\). This is a very intu-
 itive way of viewing rotation, but it has the same problems as Euler angles
 in numerical algorithms. The angle and axis representation can be converted
 into a rotation matrix for use in the formula for rigid body transformation
@@ -427,143 +524,220 @@ into a rotation matrix for use in the formula for rigid body transformation
 with the angle and axis representation that produced good numerical algo-
 tithms. This is part of the motivation for the quaternion representation for
 rotation, discussed in the next. section.
-
-12.2.3 Unit Quaternions
-
+-->
+</p>
+<h3>12.2.3 単位四元数</h3>
+<!--
+<h3>12.2.3 Unit Quaternions</h3>
+-->
+<p>
+四元数は回転を表現する表現であり、経験的に、方向付け問題に対して条件付きの数値解を与えることが示されています。四元数は4つの要素を持つベクトルです。
+<!--
 The quaternion is a representation for rotation that has been shown through
 experience to yield well-conditioned numerical solutions to orientation prob-
 lems. A quaternion is a four-clement, vector,
-
-a = (40, 1, 92, 93). (12.17)
-
+-->
+\[
+\mathbf q = (q_0, q_1, q_2, q_3) \tag{12.17}
+\]
+四元数がどのように回転を符号化するかを理解するために、\(x-y\)平面上の単位円と次の陰関数方程式を考えてみましょう。
+<!--
 To understand how quaternions encode rotation, consider the unit circle in
-the 2-y plane with the implicit equation
-
-eP+y=at. (12.18)
-
+the \(x-y\) plane with the implicit equation
+-->
+\[
+x^2+y^2=1 \tag{12.18}
+\]
+単位円上の位置は回転角に対応する。3次元では、単位球面は次の式で定義される。
+<!--
 Positions on the unit circle correspond to rotation angles. In three dimen-
 sions, the unit sphere is defined by the cquation
-
-ePtyYtee=l. (12.19)
-
+-->
+\[
+x^2+y^2+z^2=1 \tag{12.19}
+\]
+3次元の単位球面上の位置は、\(x\)軸と\(y\)軸を中心とした\(\omega\)と\(\phi\)の回転角を表すが、\(z\)軸を中心とした\(\kappa\)のねじれを表すことはできない。3つの回転角すべてを表すには、さらに1つの自由度が必要である。4次元の単位球面は、次の暗黙の方程式で定義される。
+<!--
 Positions on the unit sphere in three dimensions encode the rotation angles
-of w and ¢ about the x and y axes but cannot represent the twist « about
-the z axis. One more degree of freedom is required to represent all three
+of \(\omega\) and \(\phi\) about the \(x\) and \(y\) axes but cannot represent the twist \(\kappa\) about the \(z\) axis. One more degree of freedom is required to represent all three
 rotation angles. The unit sphere in four dimensions is defined by the implicit
-
 equation
-ePtyp+2twel. (12.20)
-
-{| ln ule dwell UL TE
-
-points on the unit sphere in four dimensions.
-12.2. RIGID BODY TRANSFORMATIONS 319
-
+-->
+\[
+x^2+y^2+z^2+w^2=1 \tag{12.20}
+\]
+3次元空間における3つの回転角度はすべて、4次元の単位球上の点で表すことができます。
+<!--
+All three rotation angles in three-dimensional space can be represented by 
+points on the unit shpere in four dimensions.
+-->
+</p><p>
+回転は単位四元数で表され、
+<!--
 Rotation is represented by unit quaternions with
-G+G+e+gGg=l1. (12.21)
-
-Each unit quaternion and its antipole —q = (—qo, —91, —g2, —g3) represent a
+-->
+\[
+q_0^2+q_1^2+q_2^2+q_3^2=1 \tag{12.21}
+\]
+各単位四元数とその反極\(-\mathbf q=(-q_0, -q_1,-q_2,-q_3)\)は3次元における回転を表します。
+<!--
+Each unit quaternion and its antipole \(-\mathbf q=(-q_0, -q_1,-q_2,-q_3)\) represent a
 rotation in three dimensions.
-
+-->
+</p><p>
+剛体変換の回転行列は、単位四元数の要素から得られます。
+<!--
 The rotation matrix for rigid body transformation can be obtained from
 the elements of the unit quaternion:
-
-wta— a — 43 Agar —qogs) —-2(q9s + gog2)
-
-Riq)= | 2(a19¢2 +9093) ah +93 —G7 — 4 2(g293 — Gum)
-2(4193 ~ 9092) Aegt+on) e+a-aG—-é
-(12.22)
-
+-->
+\[
+R(\mathbf q)=
+\begin{bmatrix}
+q_0^2+q_1^2-q_2^2-q_3^2 & 2(q_1q_2-q_0q_3) & 2(q_1q_3+q_0q_2) \\
+2(q_1q_2+q_0q_3) & q_0^2+q_2^2-q_1^2-q_3^2 & 2(q_2q_3-q_0q_1) \\
+2(q_1q_3-q_0q_2) & 2(q_2q_3+q_0q_1) & q_0^2+q_3^2-q_1^2-q_2^2
+\end{bmatrix}
+\tag{12.22}
+\]
+単位四元数が計算された後、式12.22を使用して回転行列を計算し、行列の乗算を使用して各点に回転を適用することができます。
+<!--
 After the unit quaternion is computed, Equation 12.22 can be used to com-
 pute the rotation matrix so that the rotation can be applied to each point
 using matrix multiplication.
-
+-->
+</p><p>
+単位四元数は、12.2.2節で説明した回転の角度と軸の表現と密接に関連しています。回転は、回転量を表すスカラー\(\theta\)と、回転軸を表すベクトル\((\omega_x, \omega_y, \omega_z)\)で表すことができます。四元数は、回転量を表すスカラー部分と、回転軸を表すベクトル部分から構成されます。
+<!--
 The unit. quaternion is closely related to the angle and axis representation
 for rotation, described in Section 12.2.2. A rotation can be represented as a
-scalar 6 for the amount of rotation and a vector (w,,wy,w,) for the axis of
+scalar \(\theta\) for the amount of rotation and a vector \((\omega_x, \omega_y, \omega_z)\) for the axis of
 rotation. A quaternion has a scalar part, which is related to the amount of
 rotation, and a vector part, which is the axis of rotation.
-
-Let the axis of rotation be represented by the unit vector (w,, wy, w,) and
-use i, j, and k to represent the coordinate axes so that the unit vector for
+-->
+</p><p>
+回転軸を単位ベクトル \((\omega_x, \omega_y, \omega_z)\) で表し、\(\mathbf i, \mathbf j\)、\(\mathbf k\) を使って座標軸を表すと、回転軸の単位ベクトルは次のように表すことができます。
+<!--
+Let the axis of rotation be represented by the unit vector \((\omega_x, \omega_y, \omega_z)\)  and
+use \(\mathbf i, \mathbf j\), and \(\mathbf k\) to represent the coordinate axes so that the unit vector for
 the rotation axis can be represented as
-
-Wel + wyj + wk, (12.23)
-
-The unit quatcrnion for a counterclockwise rotation by @ about this axis is
-
-e 6g
-q = cos 5 + sin 2 (wri + wyj + wk) (12.24)
-= got dit Git ak. (12.25)
-
+-->
+\[
+\omega_x\mathbf i+\omega_y\mathbf j+\omega_z\mathbf k \tag{12.23}
+\]
+この軸を中心に反時計回りに\(\theta\)回転する単位四分角は
+<!--
+The unit quatcrnion for a counterclockwise rotation by \(\theta\) about this axis is
+-->
+\[
+\begin{align}
+\mathbf q &= \cos\frac{\theta}{2}+\sin\frac{\theta}{2}(\omega_x\mathbf i+\omega_y\mathbf j+\omega_z\mathbf k) \tag{12.24} \\
+\\
+&= q_0+q_x\mathbf i+q_y\mathbf j+q_z\mathbf k \tag{12.25}
+\end{align}
+\]
+最初の項は四元数のスカラー（実数）部と呼ばれ、その他の項はベクトル（虚数）部と呼ばれます。空間上の点 \(\mathbf p = (x,y,z)\) は、四元数表現 r を持ちます。これは純虚数四元数であり、ベクトル部は \(\mathbf p\) に等しくなります。
+<!--
 The first term is called the scalar (real) part of the quaternion, and the other
-terms are called the vector (imaginary) part. A point p = (x,y,z) in space
+terms are called the vector (imaginary) part. A point \(\mathbf p = (x,y,z)\) in space
 has a quaternion representation r which is the purely imaginary quaternion
-with vector part equal to p,
+with vector part equal to \(\mathbf p\),
+-->
+\[
+\mathbf r=x \mathbf i+y \mathbf j+ z \mathbf k  \tag{12.26}
+\]
 
-r=zi+yj+ zk. (12.26)
-320 CHAPTER 12. CALIBRATION
-
-Let p’ be point p rotated by matrix R(q),
-p’ = R(aq)p. (12.27)
-
-If r is the quaternion representation for point p, then the quaternion repre-
-sentation r’ for the rotated point can be computed directly from the elements
-
-of quaternion q,
-
-r’ = qrq*, (12.28)
-where q* = (go, —4z, —dy, —@z) is the conjugate of quaternion q and quater-
+</p><p>
+\(\mathbf p^\prime\)を点\(\mathbf p\)を行列\(R(\mathbf q)\)で回転したものとすると、
+<!--
+Let \(\mathbf p^\prime\) be point \(\mathbf p\) rotated by matrix \(R(\mathbf q)\),
+-->
+\[
+\mathbf p^\prime = R(\mathbf q)\mathbf p \tag{12.27}
+\]
+\(\mathbf r\) が点 \(\mathbf p\) の四元数表現である場合、回転した点の四元数表現 \(\mathbf r^\prime\) は四元数 \(\mathbf q\) の要素から直接計算できます。
+<!--
+If \(\mathbf r\) is the quaternion representation for point \(\mathbf p\), then the quaternion repre-
+sentation \(\mathbf r^\prime\) for the rotated point can be computed directly from the elements
+of quaternion \(\mathbf q\),
+-->
+\[
+\mathbf r^\prime = \mathbf q\mathbf r\mathbf q^*  \tag{12.28}
+\]
+ここで\(\mathbf q^* = (q_0, -q_x, -q_y, -q_z)\)は四元数\(\mathbf q\)の共役であり、四元数の乗算は次のように定義される。
+<!--
+where \(\mathbf q^* = (q_0, -q_x, -q_y, -q_z)\) is the conjugate of quaternion \(\mathbf q\) and quater-
 nion multiplication is defined as
+-->
+\[
+\begin{align}
+\mathbf r\mathbf q =& (r_0q_0-r_xq_x-r_yq_y-r_zq_z, \tag{12.29} \\
+& r_0q_x+r_xq_0+r_yq_z-r_zq_y, \\
+& r_0q_y-r_xq_z+r_yq_0+r_zq_x, \\
+& r_0q_z+r_xq_y-r_yq_x+r_zq_0)
+\end{align}
+\]
 
-rq= (rogo — ede — Tydy — Pees (12.29)
-Pode + Ga + Pryde — Pedys
-Ody — Fede + TyGo + Pde
-O92 + Pedy — Pde + Peo).
-
+</p><p>
+剛体変換は、7要素ベクトル\((q_0,q_1,q_2,q_3,q_4,q_5,q_6)\)を用いて簡便に表現することができる。ここで、最初の4要素は単位四元数、最後の3要素は並進行列である。この表現において、単位四元数に対応する回転行列を\(R(\mathbf q)\)とすると、剛体変換は次のように表される。
+<!--
 Rigid body transformations can be conveniently represented using a seven-
-element vector, (go, ¢1, 92; 93) 94) 95, Ye), in which the first four elements are a
+element vector, \((q_0,q_1,q_2,q_3,q_4,q_5,q_6)\), in which the first four elements are a
 unit quaternion and the last three elements are the translation. If we let
-R(q) denote the rotation matrix corresponding to the unit quaternion in this
+\(R(\mathbf q)\) denote the rotation matrix corresponding to the unit quaternion in this
 representation, then the rigid body transformation is
-
-Po = R(q) py + (94,95, 98)" - (12.30)
-
+-->
+\[
+\mathbf p_2 = R(\mathbf q)\mathbf p_1+ (q_4,q_5,q_6)^T \tag{12.30}
+\]
+次のセクションでは、クォータニオンを使用して絶対評定問題を解くアルゴリズムを紹介します。
+<!--
 We will use quaternions in the next section to present an algorithm for solving
 the absolute orientation problem.
-
-12.3. Absolute Orientation
-
+-->
+</p>
+<h2>12.3. 絶対評定</h2>
+<!--
+<h2>12.3. Absolute Orientation</h2>
+-->
+<p>
+絶対標定問題は、2つの座標系間の剛体変換の復元です。絶対標定問題の応用例の一つは、距離カメラや双眼ステレオシステムなどの奥行き測定装置と、シーンに対して定義された絶対座標系との関係を決定し、すべての測定点を共通の座標系で表現できるようにすることです。\(\mathbf p_c = (x_c, y_c,z_c)\) をカメラ座標系における点の座標、\(\mathbf p_a = |x_a,y_a,z_a)\) を絶対座標系における点の座標とします。絶対評定問題への入力は共役対の集合\(\{(\mathbf p_{c,1}, \mathbf p_{a,1}),(\mathbf p_{c,2}, \mathbf p_{a,2}),\cdots, (\mathbf p_{c,n},\mathbf p_{a,n})\}\)です。
+<!--
 The absolute orientation problem is the recovery of the rigid body transfor-
 mation between two coordinate systems. One application for the absolute ori-
 entation problem is to determine the relationship between a depth measuring
 device, such as a range camera or binocular stereo system, and the absolute
 coordinate system defined for a scene so that all measurement points may
-be expressed in a common coordinate system. Let p, = (xg, ye, Z-) denote
-
-the coordinates of a point in camera coordates and P, = lew Yas a denoke
-the coordinates of a point in absolute coordinates. The input to the absolute
-12.3. ABSOLUTE ORIENTATION 321
-
-orientation problem is a set of conjugate pairs: {(P.1, Pai), (Pea Pag)s
-
-(Pens Pan) }-
+be expressed in a common coordinate system. Let \(\mathbf p_c = (x_c, y_c,z_c)\) denote
+the coordinates of a point in camera coordates and \(\mathbf p_a = |x_a,y_a,z_a)\) denote the coordinates of a point in absolute coordinates. The input to the absolute
+orientation problem is a set of conjugate pairs: \(\{(\mathbf p_{c,1}, \mathbf p_{a,1}),(\mathbf p_{c,2}, \mathbf p_{a,2}),\cdots, (\mathbf p_{c,n},\mathbf p_{a,n})\}\).
+-->
+</p><p>
+絶対評定問題の解を得るには、カメラ座標系の点 \(\mathbf p_c\) から絶対座標系の点 \(\mathbf p_a\) への剛体変換方程式を展開し、回転行列の成分を明らかにします。
+<!--
 To develop a solution to the absolute orientation problem, expand the
-
-equation for the rigid body transformation from a point p, in camera coor-
-dinates to a point p, in absolute coordinates to expose the components of
+equation for the rigid body transformation from a point \(\mathbf p_c\) in camera coor-
+dinates to a point \(\mathbf p_a\) in absolute coordinates to expose the components of
 the rotation matrix:
-
-Ly = Peele + Taye + Prz%e + Px
-Ya = Tyee + Pyyto + Pyzt%e + Py (12.31)
-2g = Prato t Prye +P rzZe + Pee
-
+-->
+\[
+\begin{align}
+x_a  &= r_{xx}x_c + r_{xy}y_c + r_{xz}z_c + p_x \\
+y_a  &= r_{yx}x_c + r_{yy}y_c + r_{yz}z_c + p_y \\
+z_a  &= r_{zx}x_c + r_{zy}y_c + r_{zz}z_c + p_z
+\end{align}
+\tag{12.31}
+\]
+未知数は、変換の12個のパラメータ、すなわち回転行列の9個の要素と並進行列の3個の成分です。各共役対は3つの方程式を生成します。12個の未知数に対して12個の方程式を得るには、少なくとも4つの共役対が必要です。実際には、結果の精度を向上させるために、はるかに多くの較正点が使用されます。
+<!--
 The unknowns are the 12 parameters of the transformation: the 9 elements
 of the rotation matrix and the 3 components of translation. Each conjugate
 pair yields three equations. At least four conjugate pairs are needed to get
 12 equations for the 12 unknowns; in practice, a much larger number of
 calibration points is used to improve the accuracy of the result.
-
+-->
+</p><p>
+回転行列 R が正規直交行列であることを制約せずに線形方程式系を解くと、結果は有効な回転行列にならない可能性があります。回転行列として非正規直交行列を使用すると、予期しない結果が生じる可能性があります。行列転置は必ずしも行列の逆行列とは限らず、共役行列の測定誤差が解に影響し、最良の剛体近似が得られない場合があります。一部のアプローチでは、各反復後に回転行列を直交化しますが、直交化された行列が回転の最良の近似になるという保証はありません。セクション 12.7 では、解行列が回転行列になることを保証する絶対評定問題を解く方法を示します。別のアプローチは、回転行列のエントリではなく回転角度を解くことですが、ヒューラー角を使用すると、数値計算が困難な非線形アルゴリズムになります。写真測量では、非線形方程式を線形化して解き、公称値の補正値を得る[103]が、このアプローチでは良好な初期推定値が利用可能であることを前提としている。
+<!--
 If the system of lincar equations is solved without constraining the ro-
 tation matrix R to be orthonormal, the result may not be a valid rotation
 tmatrix. Using a nonorthonormal matrix as a rotation matrix can produce
@@ -580,50 +754,67 @@ to nonlinear algorithms with numerical difficulties. In photogrammetry, the
 nonlinear equations are linearized and solved to get corrections to the nom-
 inal values [103], but this approach assumes that good initial estimates are
 available.
-
+-->
+</p><p>
+回転を表現する表現は他にも多くあり、それらには優れた数値計算手法が期待できます。例えば単位四元数\(\mathbf q\) に対応する回転行列を\(R(\mathbf q)\)とします。カメラ座標系における各点の座標を絶対座標に変換する剛体変換は、
+<!--
 There are many other representations for rotation that may yield good
-numerical methods, such as unit quatcrnions. Let R(q) be the rotation
-matrix corresponding to a unit quaternion q. The rigid body transformation
+numerical methods, such as unit quatcrnions. Let \(R(\mathbf q)\) be the rotation
+matrix corresponding to a unit quaternion \(\mathbf q\). The rigid body transformation
 that converts the coordinates of each point in camera coordinates to absolute
 coordinates is
-
-Pai = RUG) Poi + Pes (12.32)
-322 CHAPTER 12. CALIBRATION
-
-where p, is the location of the origin of the camera in the absolute coordinate
+-->
+\[
+\mathbf p_{a,i} = R(\mathbf q)\mathbf p_{c,i} + \mathbf p_c  \tag{12.32}
+\]
+ここで、\(\mathbf p_c\) は絶対座標系におけるカメラの原点の位置です。回帰問題には7つのパラメータがあります。回転を表す単位四元数の4つの要素と、並進ベクトルの3つの要素です。
+<!--
+where \(\mathbf p_c\) is the location of the origin of the camera in the absolute coordinate
 system. Now the regression problem has seven parameters: the four elements
 im the unit quaternion for rotation plus the three clements in the translation
 vector.
-
+-->
+</p><p>
+前述のように、絶対評定問題への入力は共役ペアの集合です: {\((\mathbf{p}_{c,1}, \mathbf{p}_{a,1}), (\mathbf{p}_{c,s}, \mathbf{p}_{a,2}),...,(\mathbf{p}_{c,n},\mathbf{p}_{a,n})\)}。カメラ座標における点の集合と絶対座標における点の集合を、2つの点の集合\(P_a = \{\mathbf{p}_{a,1}, \mathbf{p}_{a,2},...,\mathbf{p}_{a,n}\}\)と\(P_c = {\mathbf{p}_{c,1}, \mathbf{p}_{c,2},...,\mathbf{p}_{c,n}\}\)として考えます。絶対標定問題は、これら2つの点群を空間内で位置合わせすることです。各点群の重心を計算します。
+<!--
 As stated earlier, the input to the absolute orientation problem is a set of
-conjugate pairs: {(Po4;Pa1): (Pe2a>Pag))-- (Pen: Pan) }- Consider the set of
+conjugate pairs: {\((\mathbf{p}_{c,1}, \mathbf{p}_{a,1}), (\mathbf{p}_{c,s}, \mathbf{p}_{a,2}),...,(\mathbf{p}_{c,n},\mathbf{p}_{a,n})\)}. Consider the set of
 pomnts in camera coordinates and the set of points in absolute coordinates as
-two sets of points: P, = {Pa1,Pa2s-++>Pan} and P. = {Pe1+Pe2s--+s Pen}:
-The absolute orientation problem is to align these two clouds of points in
+two sets of points: \(P_a = \{\mathbf{p}_{a,1}, \mathbf{p}_{a,2},...,\mathbf{p}_{a,n}\}\) and \(P_c = {\mathbf{p}_{c,1}, \mathbf{p}_{c,2},...,\mathbf{p}_{c,n}\}\). The absolute orientation problem is to align these two clouds of points in
 space. Compute the centroid of each point cloud,
-
-4
-
-PB, = —> “Pay (12.33)
-Mie
-7
-
-Be = = Peis (12.34)
-na
-
+-->
+\[
+\begin{align}
+\overline{\mathbf{p}}_a &= \frac{1}{n}\sum_{i=1}^n \mathbf{p}_{a,i} \tag{12.33} \\
+\\
+\overline{\mathbf{p}}_c &= \frac{1}{n}\sum_{i=1}^n \mathbf{p}_{c,i} \tag{12.34}
+\end{align}
+\]
+各点から重心を減算します。
+<!--
 and subtract the centroid from each point:
-
-Tui = Pai — Pa (12.35)
-Tei = Pei ~ Per (12.36)
-
+-->
+\[
+\begin{align}
+\mathbf{r}_{a,i} &= \mathbf{p}_{a,i} - \overline{\mathbf{p}}_a \tag{12.35} \\
+\\
+\mathbf{r}_{c,i} &= \mathbf{p}_{c,i} - \overline{\mathbf{p}}_c \tag{13.36}
+\end{align}
+\]
+回転が決定された後、平行移動は次のように与えられる。
+<!--
 After the rotation has been dctermined, the translation is given by
-
-Pe = P, — R(q) py. (12.37)
-
+-->
+\[
+\mathbf{p}_c = \overline{\mathbf{p}}_a - R(\mathbf{q})\overline{\mathbf{p}}_c  \tag{12.37}
+\]
+ここで、2つの光線束を一直線に並べる回転を決定するという問題が残ります。
+<!--
 Now we are left with the problem of determining the rotation that will align
 the two bundles of rays.
-
-Tn the rest of this derivation of the rotation, the points will be expressed as
+-->
+</p><p>
+In the rest of this derivation of the rotation, the points will be expressed as
 rays about the centroids and all coordinates will be ray coordinates. Since the
 bundles of rays were derived from the set of conjugate pairs, we know which
 ray in the camera bundle corresponds to each ray in the bundle for absolute
@@ -631,106 +822,127 @@ coordinates. When the two bundles of rays are aligned, cach corresponding
 pair of rays will be coincident, as illustrated in Figure 12.2. In other words,
 cach pair of rays will lie along the same line and point in the same direction.
 Neglecting the effects of measurement errors, the angle between each pair of
-
-FAN WL DE (AN TNE COMING OF UNH AEG AL DL CAIN ceca
-
+rays will be 0 and the cosine of this angle will be 1. Measurement errors
 will prevent the bundles from being perfectly aligned, but we can achieve
-12.3. ABSOLUTE ORIENTATION 323
-
-Camera Pei Pei
-ae]
-2
-=
-z
-5 |
-SA ONE ONY
-\\/ \vi Sd t
-Absolute # Pai BB Pai Bw Pai
-1 2 3
-
-Figure 12.2: After the two bundles of rays (vectors of points about the cen-
-troids) are aligned and scaled, the centroid of one bundle can be translated
-to bring the two coordinate systems into alignment.
-
 the best alignment in a least-squares sense by finding the rotation R(q) that
 maximizes the scalar product of each ray pair:
 
-7 = rai: Rla)ees. (12.38)
+</p>
+<center><img src="images/fig12_2.png"></center>
+<p class="margin-large">
+図12.2: 2つの光線束（重心の周りの点のベクトル）を位置合わせして拡大縮小した後、一方の光線束の重心を移動して2つの座標系を一致させることができます。
+<!--
+Figure 12.2: After the two bundles of rays (vectors of points about the cen-
+troids) are aligned and scaled, the centroid of one bundle can be translated
+to bring the two coordinate systems into alignment.
+-->
+</p><p>
 
+
+\[
+\chi^2 = \sum_{i=1}^n \mathbf{r}_{a,i} \cdot R(\mathbf{q})\mathbf{r}_{c.i}  \tag{12.38}
+\]
+四元数表記では、この合計は
+<!--
 In quaternion notation, this sum is
-
-n
-
-Si ras ateea® = So (ares) - (ara): (12.39)
-
-a=] i=l
-
+-->
+\[
+\sum_{i=1}^n \mathbf{r}_{a,i} \cdot \mathbf{q}\mathbf{r}_{c,i}\mathbf{q}^*=\sum_{i=1}^n (\mathbf{qr}_{c,i})\cdot(\mathbf{qr}_{a,i})  \tag{12.39}
+\]
+この和は、二次形式の表記に順次変換することができる。
+<!--
 The sum can be successively changed into the notation of a quadratic form,
-
-n nr
-
-S (ares) . (taiq) = So (Need)? (Nai) (12.40)
-
-i=1 i=l
-
-= = Lavan ai (12.41)
-324 CHAPTER 12. CALIBRATION
-
-=q' (x: NEN) q (12.42)
-i=l
-
-=q" (S4) | (12.43)
-i=1
-
-= q'Nq, (12.44)
-
-assuming that q corresponds to a column vector. The unit quaternion that
+-->
+\[
+\begin{align}
+\sum_{i=1}^n (\mathbf{qr}_{c,i})\cdot(\mathbf{r}_{a.i}\mathbf{q}) 
+&= \sum_{i=1}^n (N_{c,i}\mathbf{q})^T(N_{a.i}\mathbf{q}) \tag{12.40} \\
+\\
+&=\sum_{i=1}^n \mathbf{q}^TN_{c,i}^TN_{a,i}\mathbf{q}  \tag{12.41} \\
+\\
+&=\mathbf{q}^T\left(\sum_{i=1}^n N_{c,i}^TN_{a,i}\right)\mathbf{q}  \tag{12.42} \\
+\\
+&=\mathbf{q}^T\left(\sum_{i=1}^n N_i\right)\mathbf{q}  \tag{12.43} \\
+\\
+&=\mathbf{q}^TN\mathbf{q}  \tag{12.44}
+\end{align}
+\]
+\(\mathbf{q}\) が列ベクトルに対応すると仮定する。この二次形式を最大化する単位四元数は、最も正の固有値に対応する固有ベクトルである。固有値は、Horn [110] によって発表された公式を用いて4次多項式を解くことによって決定することができる。あるいは、固有値と固有ベクトルは標準的な数値計算法 [197] を用いて計算することができる。
+<!--
+assuming that \(\mathbf{q}\) corresponds to a column vector. The unit quaternion that
 maximizes this quadratic form is the eigenvector corresponding to the most
 positive eigenvalue. The eigenvalues can be determined by solving a fourth-
 order polynomial using the formulas published by Horn [110], or the eigen-
 values and eigenvectors can be calculated using standard numerical meth-
 ods [197].
+-->
+</p><p>
+行列 \(N_{c.i}\) と \(N_{a,i}\) は、各光線の要素から形成されます。\(\mathbf{r}_{c.i} = (x_{c,i}, y_{c,i}, z_{c.i})\) および \(\mathbf{r}_{a,i} = (x_{a,i}, y_{a,i}, z_{a,i})\); とすると、
+<!--
+The matrices \(N_{c.i}\) and \(N_{a,i}\) are formed from the elements of each ray. Let
+\(\mathbf{r}_{c.i} = (x_{c,i}, y_{c,i}, z_{c.i})\) and \(\mathbf{r}_{a,i} = (x_{a,i}, y_{a,i}, z_{a,i})\); then
+-->
+\[
+\begin{align}
+N_{c,i} &=
+\begin{bmatrix}
+0 & -x_{c,i} & -y_{c,i} & -z_{c,i} \\
+x_{c,i} & 0 & z_{c,i} & -y_{c,i} \\
+y_{c,i} & -z_{c,i} & 0 & x_{c,i} \\
+z_{c,i} & y_{c,i} & -x_{c,i} & 0
+\end{bmatrix}  \tag{12.45} \\
+\\
+N_{a,i} &=
+\begin{bmatrix}
+0 & -x_{a,i} & -y_{a,i} & -z_{a,i} \\
+x_{a,i} & 0 & -z_{a,i} & y_{a,i} \\
+y_{a,i} & z_{a,i} & 0 & -x_{a,i} \\
+z_{a,i} & -y_{a,i} & x_{a,i} & 0
+\end{bmatrix} \tag{12.46}
+\end{align}
+\]
 
-The matrices N,,; and N,, are formed from the elements of each ray. Let
-Toi = (ois You's Zoi) and Tai = (ats Ya,is Zai)s then
-
-[ 0 ~2ei Yet —Zei
-New = | te 9 et Ue (12.45)
-: Yet = Fe 0 Logi
-L 2cé¢ Ye, Lei 0
-[ 0 -®ai Yai Za,
-A (12.46)
-Yai 2a 0 Lai
-L “ai Yai Fas 0
-and the matrix N is
-(Sat Syy+Sez) Sy2—Say Bsn Sez Say —Syx
-Syz— Say (S2s—Syy— S22) SrytSye SretSez
-N= Sen — Suz Sey t Sys (-Snet+Syy—Sez) Sye+Sey ,
-Say —Syz S22+So2 SystSey (—S22—SyytSe2)
-(12.47)
-
+そして行列\(N\)は
+<!--
+and the matrix \(N\) is
+-->
+\[
+N=
+\begin{bmatrix}
+(S_{xx}+S_{yy}+S_{zz}) & S_{yz}-S_{zy} & S_{zx}-S_{xz} & S_{xy}-S_{yx} \\
+S_{yz}-S_{zy} & (S_{xx}-S_{yy}-S_{zz}) & S_{xy}+S_{yx} & S_{zx}+S_{xz} \\
+S_{zx}-S_{xz} & S_{xy}+S_{yx} & (-S_{xx}+S_{yy}-S_{zz}) & S_{yz}+S_{zy} \\
+S_{xy}-S_{yx} & S_{zx}+S_{xz} & S_{yz}+S_{zy} & (-S_{xx}-S_{yy}+S_{zz})
+\end{bmatrix} \tag{12.47}
+\]
+ここで、合計はカメラ座標系と絶対座標系における光線座標の要素について行われます。
+<!--
 where the sums are taken over the clements of the ray coordinates in the
 camera and absolute coordinate systems:
+-->
+\[
+\begin{align}
+S_{xx} =& \sum_{i=1}^n x_{c,i} x_{a,i}  \tag{12.48} \\
+\\
+S_{xy} =& \sum_{i=1}^n x_{c,i} y_{a,i}  \tag{12.49} \\
+\\
+S_{xz} =& \sum_{i=1}^n x_{c,i} z_{a,i}  \tag{12.50} \\
+\\
+\vdots &
+\end{align}
+\]
+一般に、\(S_{kl}\) は、カメラ点の座標 \(k\) と絶対点の座標 / の積のすべての共役対の和です。
+<!--
+In general, \(S_{kl}\) is the sum over all conjugate pairs of the product of coordinate
+\(k\) in the camera point and coordinate / in the absolute point:
+-->
+\[
+S_{kl} = \sum_{i=1}^n k_{c.i} l_{a,i}  \tag{12.51}
+\]
 
-See = SS tesitas (12.48)
-
-nm
-i=l
-12.4. RELATIVE ORIENTATION 325
-
-Sey = S we itla,i (12.49)
-i=1
-
-See = Voteizaa (12.50)
-4=1
-
-In general, 5,; is the sum over all conjugate pairs of the product of coordinate
-k in the camera point and coordinate / in the absolute point:
-
-n
-Su = >- keslai. (12.51)
-i=1
-
+</p><p>
+これらの計算の結果は、光線束を整列させる回転を表す単位四元数です。回転行列は式12.22を用いて四元数から得ることができ、剛体変換の並進部分は式12.37を用いて得ることができます。剛体変換は、距離カメラ、双眼ステレオ、またはその他の方式による深度測定システムによって生成された任意の点測定に適用でき、点を絶対座標系に変換します。
+<!--
 The result of these calculations is the unit quatcrnion that represents the
 rotation that aligns the ray bundles. A rotation matrix can be obtained from
 the quaternion using Equation 12.22, and the translation part of the rigid
@@ -739,9 +951,15 @@ transformation can be applied to any point measurements generated by the
 depth measurement system, whether from a range camera, binocular stereo,
 or any other scheme, to transform the points into the absolute coordinate
 system.
-
-12.4 Relative Orientation
-
+-->
+</p>
+<h2>12.4 相対的な評定</h2>
+<!--
+<h2>12.4 Relative Orientation</h2>
+-->
+<p>
+相対的標定の問題は、2台のカメラにおける対応点の投影から、2台のカメラ座標系間の関係を決定することです。相対的標定の問題は、両眼ステレオで使用するために2台のカメラをキャリブレーションする最初のステップです。エピポーラ線に沿って特徴をマッチングさせる両眼ステレオアルゴリズムについては、11.2節で説明しました。説明を簡略化するために、左右の画像平面における対応するエピポーラ線は、左右の画像配列の同じ行に対応すると仮定しました。この節では、相対的標定の問題の解決法を説明し、2つの画像平面におけるエピポーラ線の位置を決定する方法を示します。12.5節では、11.2節で示したアルゴリズムで仮定されているように、エピポーラ線が画像の行に対応するように左右の画像を再サンプリングする方法を示します。ステレオマッチングによって検出された視差は、実際には共役なペアです。 12.6節では、これらの共役対をステレオ装置の座標系における点の測定値に変換する方法を説明します。相対的な向きの問題は図12.3に示されています。
+<!--
 The problem of relative orientation is to determine the relationship between
 two camera coordinate systems from the projections of corresponding points
 in the two cameras. The relative orientation problem is the first step in
@@ -754,55 +972,70 @@ orientation problem and show how the location of the epipolar lines in the two
 image planes can be determined. Scction 12.5 will show how the left and right
 images can be resampled so that the epipolar lines correspond to the image
 rows, as assumed by the algorithms presented in Section 11.2. The disparities
-326 CHAPTER 12. CALIBRATION
-
-Figure 12.3: Illustration of the relative orientation problem for calibrating
-stereo cameras using the corresponding projections of scene points.
-
 found by stereo matching are actually conjugate pairs. Section 12.6 will show
 how these conjugate pairs can be converted to point measurements in the
 coordinate system of the stereo device. The relative orientation problem is
 illustrated in Figure 12.3.
-
-Suppose that a point p in the scene is within the view volume of two
-cameras, designated as the left and right cameras. Point p is denoted p, in
-the coordinate system of the left camera and p, in the coordinate system
-of the right camera. The projection of point p onto the image plane of the
-left camera is p} = (xj, yy) and the projection of the point onto the image
-plane of the right camera is p/, = (x/., y,). From the equations for perspective
+-->
+</p>
+<center><img src="images/fig12_3.png"></center>
+<p class="margin-large">
+図12.3: シーンポイントの対応する投影を使用してステレオカメラをキャリブレーションするための相対評定問題の図解。
+<!--
+Figure 12.3: Illustration of the relative orientation problem for calibrating
+stereo cameras using the corresponding projections of scene points.
+-->
+</p><p>
+シーン内の点 \(\mathbf{p}\) が、左右のカメラとして指定された2台のカメラの視野内にあるとします。点 \(\mathbf{p}\) は、左カメラの座標系では \(\mathbf{p}_l\)、右カメラの座標系では \(\mathbf{p}_r\) と表記されます。点 \(\mathbf{p}\) の左カメラの画像平面への投影は \(\mathbf{p}_l^\prime = (x_l^\prime, y_l^\prime)\) であり、点の右カメラの画像平面への投影は \(\mathbf{p}_r^\prime = (x_r^\prime, y_r^\prime)\) です。透視投影の式から、
+<!--
+Suppose that a point \(\mathbf{p}\) in the scene is within the view volume of two
+cameras, designated as the left and right cameras. Point \(\mathbf{p}\) is denoted \(\mathbf{p}_l\), in
+the coordinate system of the left camera and \(\mathbf{p}_r\) in the coordinate system
+of the right camera. The projection of point \(\mathbf{p}\) onto the image plane of the
+left camera is \(\mathbf{p}_l^\prime = (x_l^\prime, y_l^\prime)\) and the projection of the point onto the image
+plane of the right camera is \(\mathbf{p}_r^\prime = (x_r^\prime, y_r^\prime)\). From the equations for perspective
 projection:
+-->
+\[
+\begin{align}
+\frac{x_l^\prime}{f_l}=\frac{x_l}{z_l}　　　\frac{y_l^\prime}{f_l}=\frac{y_l}{z_l} \tag{12.52} \\
+\\
+\frac{x_r^\prime}{f_r}=\frac{x_r}{z_r}　　　\frac{y_r^\prime}{f_r}=\frac{y_r}{z_r}  \tag{12.53}
+\end{align}
+\]
 
-a ky yo Mt
-
-= = 12.52
-fr 2% fio 4 ( )
-xi, , ye Yr «
-f = z f = = (12.53)
-r i r r
-
+</p><p>
+左カメラシステムの座標を右カメラシステムの座標に変換する剛体変換は、
+<!--
 The rigid body transformation that transforms coordinates in the left camera
 system to coordinates in the right camera system is
-
-rE
-
-Ua = Font TT Ty ‘it
-
-Zp = Pept) + Pay Yt +224 + Pz. (12.56)
-12.4, RELATIVE ORIENTATION 327
-
-Solve the cquations for perspective projection for x;, yz, z,, aud y, and plug
+-->
+\[
+\begin{align}
+x_r &= r_{xx}x_l + r_{xy}y_l + r_{xz}z_l+p_x \tag{12.54} \\
+\\
+y_r &= r_{yx}x_l + r_{yy}y_l + r_{yz}z_l+p_y \tag{12.55} \\
+\\
+z_r &= r_{zx}x_l + r_{zy}y_l + r_{zz}z_l+p_z \tag{12.56} 
+\end{align}
+\]
+透視投影の方程式 \(x_l, y_l, x_r,\) と \(y_r\) を解き、剛体変換の方程式に代入して、共役ペアの投影間の関係を表す方程式のセクションを取得します。
+<!--
+Solve the cquations for perspective projection for \(x_l, y_l, x_r,\) and \(y_r\) and plug
 into the equations for a rigid body transformation to obtain a sect of equations
 for the relationship between the projections of the conjugate pairs:
-
-fi ar fi :
-cot) trey trefitpet = et | 12.57
-Powty + Tay + Pach + Po MR (12.57)
-t , Ly Fr fi ye 5
-Pyek + yyy + Tyzht + Pus = roe (12.58)
-1 2p fi ,
-Taattt + Payyt + tefi + Pe = a (12.59)
-,
-
+-->
+\[
+\begin{align}
+r_{xx}x_l^\prime+r_{xy}y_l^\prime+r_{xz}f_l+p_x\frac{f_l}{z_l}=x_r^\prime\frac{z_r}{z_l}\frac{f_l}{f_r} \tag{12.57} \\
+\\
+r_{yx}x_l^\prime+r_{yy}y_l^\prime+r_{yz}f_l+p_y\frac{f_l}{z_l}=x_r^\prime(?)\frac{z_r}{z_l}\frac{f_l}{f_r} \tag{12.58} \\
+\\
+r_{zx}x_l^\prime+r_{zy}y_l^\prime+r_{zz}f_l+p_z\frac{f_l}{z_l}=x_r^\prime(?)\frac{z_r}{z_l}\frac{f_l}{f_r} \tag{12.59} 
+\end{align}
+\]
+回転変換は、左カメラの向きを右カメラの向きと一致するように変更します。移動は、2台のカメラ間のベースラインです。移動と深度の変数は式の中では縦軸として表されるため、ベースラインと深度の長さは任意に設定できます。例えば、遠近法の幾何学形状を変えずに、カメラ間の距離を2倍に広げ、シーン内の点を2倍の距離に移動することができます。
+<!--
 The rotation part of the transformation changes the oricntation of the left
 camera so that it coincides with the orientation of the right camera. The
 translation is the bascline between the two cameras. The variables for trans-
@@ -810,8 +1043,11 @@ lation and depth appear as tatios in the equations, which means that the
 length of the baseline and depth can be sealed arbitrarily. For example, you
 can separate the camcras by twice as much and move the points in the scene
 twice as far away without changing the perspective geometry.
-
-Ti is not possible to determine the bascline distance from the projections
+-->
+</p><p>
+キャリブレーションポイントの投影からベースライン距離を決定することはできません。スケール係数は後で他の方法で決定できるため、これは深刻な問題ではありません。ここでは、カメラ間の移動は単位ベクトルであると仮定します。相対標定問題を解くことで、回転の3つのパラメータと、ベースラインの方向を表す単位ベクトルの2つのパラメータが得られます。両眼ステレオの奥行き測定値はベースライン距離に応じてスケールされます。単位ベースライン距離を仮定することは、両眼ステレオの測定値が任意の単位系になることを意味します。単位ベースライン距離の仮定の下で得られた測定値は、未知のスケール係数を除いて正確です。点間の相対距離は正確です。これらの任意の単位は、ベースライン距離が得られた後、それを乗じることで実単位に変換できます。12.7節では、絶対標定問題の解の一部としてベースライン距離を決定する方法を示します。この拡張絶対評定問題から得られる変換を適用することにより、ステレオ測定値を任意単位から実単位へ変換するとともに、点座標を観察者中心座標から絶対座標へ変換する処理を同時に行うことができます。
+<!--
+It is not possible to determine the bascline distance from the projections
 of the calibration points. This is not a scrious problem, as the scale factor can
 be determined later by other means. For now, assume that the translation
 between cameras is a unit vector. Solving the relative orientation problem
@@ -829,241 +1065,417 @@ of stereo measurements from arbitrary units to real units and the transfor-
 mation of point coordinates from viewer-centcred coordinates to absolute
 coordinates can be done simultaneously by applying the transformation ob-
 tained from this augmented absolute oricntation problem.
-
+-->
+</p><p>
+回転行列は直交行列であり、単位基線距離という人為的な制約に加えて、6つの追加制約が課せられます。\(n\)個のキャリブレーション点が与えられた場合、\(12+2n\)個の未知数と\(7+3n\)個の制約が存在します。解を得るには少なくとも5つの共役対が必要ですが、実際には、より高い精度を得るために、より多くのキャリブレーション点が使用されるでしょう。
+<!--
 The rotation matrix is orthonormal, and this provides six additional con-
 straints in addition to the artificial constraint of unit baseline distance. Given
-328 CHAPTER 12. CALIBRATION
-
-n calibration points, there are 12+ 2n unknowns and 7+ 3n constraints. At
+\(n\) calibration points, there are \(12+ 2n\) unknowns and \(7+ 3n\) constraints. At
 least five conjugate pairs are uecded for a solution, but in practice many
 more calibration points would be used to provide more accuracy.
-
-‘The relative orientation problem starts with a sct of calibration points
+-->
+</p><p>
+相対評定の問題は、一連のキャリブレーションポイントから始まり、これらのキャリブレーションポイントを左右の画像平面に投影することで、左右のカメラ間の剛体変換を決定します。シーン内の各キャリブレーションポイント \(\mathbf{p}\) は、左カメラでは点 \(\mathbf{p}_l^\prime\) に、右カメラでは点 \(\mathbf{p}_r^\prime\) に投影されます。投影された各点は、そのカメラの投影中心から投影点を通り、シーンに入る光線に対応します。\(\mathbf{p}_l^\prime\) と \(\mathbf{p}_r^\prime\) に対応する光線は、シーン内の点 \(\mathbf{p}\) で交差するはずですが、画像平面への投影位置の測定誤差により交差しない場合もあります。単位基線距離の制約のもとで、空間における2台のカメラの相対的な位置と向きを求め、画像平面における光線の位置の誤差が最小となるようにしたい。
+<!--
+ The relative orientation problem starts with a sct of calibration points
 and determines the rigid body transformation between the left and right
 cameras using the projections of these calibration points in the left and right
-image planes. Each calibration point p in the scene projects to point p}
-in the left camera and point p/ in the right camera. Each projected. point
+image planes. Each calibration point \(\mathbf{p}\) in the scene projects to point \(\mathbf{p}_l^\prime\) in the left camera and point \(\mathbf{p}_r^\prime\) in the right camera. Each projected. point
 corresponds to a ray from the center of projection of its camera, through the
-projected point, and into the scene. The rays corresponding to p; and pj},
-should intersect at point p in the scene, but may not intersect due to errors
+projected point, and into the scene. The rays corresponding to \(\mathbf{p}_l^\prime\) and \(\mathbf{p}_r^\prime\) should intersect at point \(\mathbf{p}\) in the scene, but may not intersect due to errors
 in measuring the projected locations in the image planes. We want to find
 the relative position and oricntation of the two cameras in space, subject. to
 the constraint of unit bascline distance, so that the errors in the locations
 of the rays in the image planes are minimized.
-
-Let r; be the ray (vector) from the center of projection of the left camera
-through point pj in the left image planc, let r, be the ray from the center
-of projection of the right camera through point p/ in the right image plane,
-and let b be the vector from the center of projection of the left camera to
+-->
+</p><p>
+左カメラの投影中心から左画像平面の点 \(\mathbf{p}_l^\prime\) を通る光線（ベクトル）を \(\mathbf{r}_r\) とし、右カメラの投影中心から右画像平面の点 \(\mathbf{p}_r^\prime\) を通る光線を \(\mathbf{r}_r\) とし、左カメラの投影中心から右カメラの投影中心へのベクトルを \(\mathbf{b}\) とします。各光線を同じ座標系で扱う必要があるため、\(\mathbf{r}_l\) を光線 \(\mathbf{r}_r\) と同じ座標系になるように回転させ、この回転した光線を \(\mathbf{r}_l^\prime\) で表します。2 つの光線が交差する場合、それらは \(\mathbf{r}_l^\prime \times \mathbf{r}_r\) に垂直な平面上にあります。基線もこの同じ平面上にあるため、基線は \(\mathbf{r}_l^\prime \times \mathbf{r}_r\) に垂直です。この関係は、基線と平面の法線との内積がゼロであるという数学的な表現で表されます。
+<!--
+Let \(\mathbf{r}_l\) be the ray (vector) from the center of projection of the left camera
+through point \(\mathbf{p}_l^\prime\) in the left image planc, let \(\mathbf{r}_r\) be the ray from the center
+of projection of the right camera through point \(\mathbf{p}_r^\prime\) in the right image plane,
+and let \(\mathbf{b}\) be the vector from the center of projection of the left camera to
 the center of projection of the right camera. We need to work with each
-ray in the same coordinate system, so rotate r; so that it is in the same
-coordinate system as ray r, and let rj denote this rotated ray. If the two
-tays intersect, then they lic in the plane normal to r; x r,. The baseline lies
-in this same plane, so the baseline is normal to rj x r,. This relationship
+ray in the same coordinate system, so rotate \(\mathbf{r}_l\) so that it is in the same
+coordinate system as ray \(\mathbf{r}_r\) and let \(\mathbf{r}_l^\prime\) denote this rotated ray. If the two
+tays intersect, then they lic in the plane normal to \(\mathbf{r}_l^\prime \times \mathbf{r}_r\). The baseline lies
+in this same plane, so the baseline is normal to \(\mathbf{r}_l^\prime \times \mathbf{r}_r\). This relationship
 is expressed mathematically by saying that the dot product of the baseline
-with the normal to the plane is zcro:
-
-b-(r) x r,) =0. (12.60)
-
-‘This relationship is called the coplanarity condition.
-
-Duc to measurement errors, the rays will not intersect and the coplanarity
+with the normal to the plane is zero:
+-->
+\[
+\mathbf{b}\cdot(\mathbf{r}_l^\prime \times \mathbf{r}_r) =0  \tag{12.60}
+\]
+この関係は共平面性条件と呼ばれます。
+<!--
+This relationship is called the coplanarity condition.
+-->
+</p><p>
+測定誤差により、光線は交差せず、共平面性条件は破られます。共平面性条件を表す三重積からの偏差の二乗誤差の和を最小化することで、相対的配向問題の最小二乗解を定式化できます。
+<!--
+Due to measurement errors, the rays will not intersect and the coplanarity
 condition will be violated. We can formulate a least-squares solution to the
 relative oricntation problem by minimizing the sum of the squared errors of
 deviations from the triple products that represent the coplanarity condition:
-
-nm
-
-| | aa
-y= sn-itonlh Loot
-
-is
-12.4. RELATIVE ORIENTATION 329
-
-where the weight counteracts the cffect that when the triple product is near
+-->
+\[
+\chi^2 = \sum_{i=1}^n w_i(\mathbf{b}\cdot(\mathbf{r}_{l,i}\times\mathbf{r}_{r,i})^2)  \tag{12.61}
+\]
+ここで、重みは、トリプルプロダクトがゼロに近い場合、ベースラインと回転の変化がトリプルプロダクトに大きな変化をもたらすという効果を打ち消します。回帰問題では、パラメータとデータ値の関係をスケーリングし、パラメータ空間の小さな変化がデータ空間の小さな変化に対応するようにすることが推奨されます。各トリプルプロダクトの重みは、
+<!--
+where the weight counteracts the effect that when the triple product is near
 zero, changes in the baseline and rotation make a large change in the triple
 product. It is good practice in any regression problem to scale the relation-
 ship between the parameters and the data values so that small changes in the
 parameter space correspond to small changes in the data space. The weight
-on each triple product. is
+on each triple product is
+-->
+\[
+w_i=\frac{||\mathbf{r}_{l,i}^\prime \times \mathbf{r}_{r,i}||^2\sigma_0^2}
+{[(\mathbf{b}\times\mathbf{r}_{r,i})\cdot(\mathbf{r}_{l,i}^\prime\times\mathbf{r}_{r,i})]^2||\mathbf{r}_{l,i}^\prime||^2\sigma_l^2+[(\mathbf{b}\times\mathbf{r}_{l,i}^\prime)\cdot(\mathbf{r}_{l,i}^\prime\times\mathbf{r}_{r,i})]^2||\mathbf{r}_{r,i}^\prime||^2\sigma_r^2} \tag{12.62}
+\]
 
-2 2 .
-[(b x ric) (rhs tna] Urtall2o? + [bat Cha xtna)] [ehalPo?
-(12.62)
-
+行列表記に切り替える必要があるので、すべてのベクトルは列ベクトルであると仮定します。最小化すべき誤差は
+<!--
 We need to switch to matrix notation, so assume that all vectors are column
 vectors. The error to be minimized is
-
-Uy; =
-
-x = Sui(b- 4)? (12.63)
-i=l
-= b? (> wet} b (12.64)
-i=1
-= b’Cb (12.65)
-
-subject to the constraint that b”b = 1. The term ¢;c7 is an outer product,
+-->
+\[
+\begin{align}
+\chi^2 &= \sum_{i=1}^n w_i(\mathbf{b}\cdot\mathbf{c}_i)^2 \tag{12.63} \\
+\\
+&=\mathbf{b}^T\left(\sum_{i=1}^n w_i\mathbf{c}_i\mathbf{c}_i^T\right)\mathbf{b} \tag{12.64} \\
+\\
+&= \mathbf{b}^TC\mathbf{b} \tag{12.65}
+\end{align}
+\]
+\(\mathbf{b}^T\mathbf{b} = 1\)という制約のもとに、\(\mathbf{c}\mathbf{c}^T\)という項は外積であり、3×1行列とl×3行列を掛け合わせた3×3行列であり、実対称行列である。制約付き最小化問題は、
+<!--
+subject to the constraint that \(\mathbf{b}^T\mathbf{b} = 1\). The term \(\mathbf{c}\mathbf{c}^T\) is an outer product,
 a 3x 3 matrix formed by multiplying a 3 x 1 matrix with a l x 3 matrix,
 and is a real, symmetric matrix. The constrained minimization problem is
-
-x7 =b™ Cb + A(1— b*b), (12.68)
-where A is the Lagrange multiplicr. Differentiating with respect to vector b,
-Cb = Ab. (12.67)
-
+-->
+\[
+\chi^2=\mathbf{b}^TC\mathbf{b}+\lambda(1-\mathbf{b}^T\mathbf{b}) \tag{12.66}
+\]
+ここで\(\lambda\)はラグランジュ乗数である。ベクトル\(\mathbf{b}\)について微分すると、
+<!--
+where \(\lambda\) is the Lagrange multiplicr. Differentiating with respect to vector \(\mathbf{b}\),
+-->
+\[
+C\mathbf{b} = \lambda\mathbf{b}  \tag{12.67}
+\]
+ベースラインの解は、C行列の最小の固有値に対応する単位固有ベクトルです。
+<!--
 The solution for the baseline is the unit eigenvector corresponding to the
-smallest eigenvaluc of the C’ matrix. :
-
+smallest eigenvaluc of the C matrix. :
+-->
+</p><p>
+上記の結果は、2台のカメラ間の回転の初期推定値が与えられれば、ベースラインの単位ベクトルを決定できることを示しています。
+回転を決定するための閉形式の解は存在しませんが、回転とベースラインの推定値は、様々な手法を用いて精緻化することができます。
+ベースラインと回転の増分的な改善を計算するための線形方程式系を開発します。
+<!--
 The results above say that given an initial estimate for the rotation be-
 tween the two cameras, we can determine the unit vector for the baseline.
 There is no closed-form solution for determining the rotation, but the esti-
 mates for the rotation and baseline can be refined using itcrative methods.
 We will develop a system of linear equations for computing incremental im-
 provements for the baseline and rotation.
-330 CHAPTER 12, CALIBRATION
-
-The improvement 6b to the baseline must. be perpendicular to the base-
+-->
+</p><p>
+ベースラインに対する改善\(\delta\mathbf{b}\)は、ベースラインを表す単位ベクトルの長さを変えることができないため、ベースラインに垂直でなければならない。
+<!--
+The improvement \(\delta\mathbf{b}\) to the baseline must. be perpendicular to the base-
 line, since the unit vector representing the baseline cannot change length,
-
-b-6b=0, (12.68)
-
+-->
+\[
+\mathbf{b}\cdot\delta\mathbf{b}=0  \tag{12.68}
+\]
+左光線を右座標系に回転させる際の改善は、微小回転ベクトル \(\delta\boldsymbol{\omega}\) です。基線と回転の補正により、各光線の三重積は \(t_i = \mathbf{b}\cdot(\mathbf{r}_{l,i}^\prime \times \mathbf{r}_{r,i})\) から \(t_i+\delta t_i\) に変化し、三重積の増分は次のようになります。
+<!--
 and the improvement to the rotation of the left ray into the right coordinate
-system is the infinitesimal rotation vector 6w. The corrections to the bascline
-and rotation will change each triple product for cach ray from t; = b- (r),; x
-T,,) to t; + 6¢;, with the increment in the triple product given by
-
-c; 6b + d; - 6a, (12.69)
+system is the infinitesimal rotation vector \(\delta\boldsymbol{\omega}\). The corrections to the bascline
+and rotation will change each triple product for cach ray from \(t_i = \mathbf{b}\cdot(\mathbf{r}_{l,i}^\prime \times \mathbf{r}_{r,i})\) to \(t_i+\delta t_i\), with the increment in the triple product given by
+-->
+\[
+\mathbf{c}_i\cdot\delta\mathbf{b}+\mathbf{d}_i\cdot\delta\boldsymbol{\omega} \tag{12.69}
+\]
+ここで
+<!--
 where
-Cp = Thy X Ina (12.70)
+-->
+\[
+\begin{align}
+\mathbf{c}_i &= \mathbf{r}_{l,i}^\prime \times \mathbf{r}_{r,i} \tag{12.70} \\
+\\
+\mathbf{d}_i &= \mathbf{r}_{l,i}^\prime \times (\mathbf{r}_{r,i} \times \mathbf{b}) \tag{12.71}
+\end{align}
+\]
 
+補正は、以下を最小化することで得られる。
+<!--
 The corrections are obtained by minimizing
-C= So wi(ti tc; db +d; - dw)”, (12.72)
-i=k
+-->
+\[
+\chi^2=\sum_{i=1}^n w_i(t_i+\mathbf{c}_i\cdot\delta\mathbf{b}+\mathbf{d}_i\cdot\delta\boldsymbol{\omega})^2 \tag{12.72}
+\]
 
+\(\delta\mathbf{b}\cdot\mathbf{b}=0\) という制約条件を前提とします。この制約条件は、ラグランジュ乗数 \(\lambda\) を用いて最小化問題に追加することができ、ベースライン増分と回転増分、およびラグランジュ乗数に関する連立一次方程式を得ることができます。
+<!--
 subject to the constraint that éb-b = 0. The constraint can be added onto
 the minimization problem using the Lagrange multiplier A to get a system of
 linear equations for the baseline and rotation increments and the Lagrange
 multiplier:
+-->
+\[
+\begin{bmatrix}
+C & F & \mathbf{b} \\
+F^T & D & 0 \\
+\mathbf{b}^T & 0 & 0
+\end{bmatrix}
+\begin{bmatrix}
+\delta\mathbf{b} \\
+\delta\boldsymbol{\omega} \\
+\lambda
+\end{bmatrix}
+=-
+\begin{bmatrix}
+\overline{\mathbf{c}} \\
+\overline{\mathbf{d}} \\
+0
+\end{bmatrix}
+\tag{12.73}
+\]
 
-C F bif éb é
-FT D 0 és |=-|d}, (12.73)
-b7 0 6 d 0
+ここで
+<!--
 where
-C = weep (12.74)
-i=]
-F = Swed; (12.75)
-i=l
-D = So wd,d? (12.76)
-i=1
-é = So witie? (12.77)
-i=1
-= te e
-d = >> witidf. (12.78)
-12.5. RECTIFICATION 331
+-->
+\[
+\begin{align}
+C &= \sum_{i=1}^n w_i\mathbf{c}_i\mathbf{c}_i^T \tag{12.74} \\
+\\
+F &= \sum_{i=1}^n w_i \mathbf{c}_i\mathbf{d}_i^T \tag{12.75} \\
+\\
+D &= \sum_{i=1}^n w_i \mathbf{d}_i\mathbf{d}_i^T \tag{12.76} \\
+\\
+\overline{c} &= \sum_{i=1}^n w_it_i\mathbf{c}_i^T \tag{12.77} \\
+\\
+\overline{d} &= \sum_{i=1}^n w_i t_i \mathbf{d}_i^T \tag{12.78}
+\end{align}
+\]
 
+</p><p>
+ベースラインと回転の補正が完了したら、ベースラインが単位ベクトルであり、回転が正しく表現されるという制約を維持しながら補正を適用する必要があります。例えば、回転が正規直交行列として表現される場合、補正された行列も正規直交でなければなりません。正規直交性を破ることなく回転行列を更新することは難しいため、回転は単位四元数として表現されます。
+<!--
 Once we have the corrections to the baseline and rotation, we have to
 apply the corrections in a way that preserves the constraints that the baseline
 is a unit vector and the rotation is represented correctly. For example, if
 rotation is represented as an orthonormal matrix, the corrected matrix must
 be orthonormal. It is difficult to update a rotation matrix without violating
 orthonormality, so the rotation will be represented as a unit quaternion.
-
+-->
+</p><p>
+ベースラインは次の式で更新されます。
+<!--
 The baseline is updated using the formula
-
-b"*! — b" + 6b”. (12.79)
-
+-->
+\[
+\mathbf{b}^{n+1} = \mathbf{b}^n+\delta\mathbf{b}^n  \tag{12.79}
+\]
+数値誤差が単位ベクトル制約に違反しないことを保証するために、更新されたベースラインは明示的に正規化される必要があります。
+<!--
 The updated baseline should be explicitly normalized to guarantee that nu-
 merical errors do not lead to violation of the unit vector constraint.
+-->
+</p><p>
+微小回転は単位四元数で表すことができる。
+<!--
 The infinitesimal rotation can be represented by the unit quatcrnion
-
-1 1
-6q=4f/1— qllell? + 5 e- (12.80)
-
+-->
+\[
+\delta\mathbf{q}=\sqrt{1-\frac{1}{4}||\delta\boldsymbol{\omega}||^2}+\frac{1}{2}\delta\boldsymbol{\omega} \tag{12.80}
+\]
+この式は、回転が大きくても四元数が単位四元数になることを保証します。rが回転を表す四元数だとすると、更新された回転は次式で与えられる四元数r’になります。
+<!--
 This formula guarantecs that the quaternion will be a unit quaternion even
 if the rotation is large. If r is the quatcrnion representing the rotation, then
 the updated rotation is the quaternion r’ given by
-
-r= qrq", (12.81)
-
+-->
+\[
+\mathbf{r}^\prime = \mathbf{qrq}^*  \tag{12.81}
+\]
+ここで、乗算は四元数の乗算規則（セクション12.2.3）に従って実行され、\(\mathbf{q}^*\)は四元数\(\mathbf{q}\)の共役です。
+<!--
 where multiplication is performed according to the rules for multiplying
-quaternions (Section 12.2.3), and q* is the conjugate of quaternion q.
-
-12.5 Rectification
-
+quaternions (Section 12.2.3), and \(\mathbf{q}^*\) is the conjugate of quaternion \(\mathbf{q}\).
+-->
+</p>
+<h2>12.5 平行化</h2>
+<!--
+<h2>12.5 Rectification</h2>
+-->
+<p>
+平行化とは、ステレオ画像を再サンプリングし、エピポーラ線が画像の行に対応するようにする処理です。基本的な考え方は単純です。左右の画像平面が同一平面上にあり、水平軸が同一線上にある（光軸を中心に回転していない）場合、画像の行はエピポーラ線となり、対応する行に沿って一致するものを探すことでステレオ対応を見つけることができます。
+<!--
 Rectification is the process of resampling stereo images so that the epipolar
 lines correspond to image rows. The basic idea is simple: if the left and right
 image planes are coplanar and the horizontal axes are colinear (no rotation
 about the optical axes), then the image rows are epipolar lines and sterco
 correspondences can be found by searching for matches along corresponding
 rows.
-
+-->
+</p><p>
+実際には、この条件を達成するのは困難であり、ある程度の輻輳（垂直カメラ軸を中心とした内向きの回転）が望ましい場合もありますが、左右の画像のピクセルを共通平面に投影すれば、理想的なエピポーラ幾何学が実現されます。左（右）カメラの各ピクセルは、左（右）カメラ座標系の光線に対応します。\(T_l\)
+と\(T_r\)を、それぞれ左カメラと右カメラからの光線を共通平面の座標系に導く剛体変換とします。各画像の角の共通平面における位置を決定し、新しい左画像と右画像のグリッドを作成し、各グリッド点を元の画像に戻します。13.6.2節で説明した双線形補間を使用して、ピクセル値を補間し、共通平面における新しい左画像と右画像のピクセル値を決定することができます。
+<!--
 In practice, this condition can be difficult to achicve and some vergence
 (inward rotation about the vertical camera axes) may be desirable, but if the
 pixels in the left and right images are projected onto a common plane, then
-332 CHAPTER 12. CALIBRATION
-
 the ideal epipolar geometry is achicved. Each pixel in the left (right) camera
-corresponds to a ray in the left (right) camera coordinate system. Let T;
-and T,. be the rigid body transformations that bring rays from the left and
+corresponds to a ray in the left (right) camera coordinate system. Let \(T_l\)
+and \(T_r\) be the rigid body transformations that bring rays from the left and
 right cameras, respectively, into the coordinate system of the common plane.
 Determine the locations in the common plane of the corners of each image,
 create new left and right image grids, and transform each grid point back
 into its original image. Bilinear interpolation, discussed in Section 13.6.2,
 can be used to interpolate pixel values to determine the pixel values for the
 new left and right images in the common plane.
-
-12.6 Depth from Binocular Stereo
-
+-->
+</p>
+<h2>12.6 両眼立体視による奥行き</h2>
+<!--
+<h2>12.6 Depth from Binocular Stereo</h2>
+-->
+<p>
+両眼ステレオでは、左右の画像の特徴点をマッチングさせて共役ペアの集合 {(\(\mathbf{p}_{l,i}, \mathbf{p}_{r,i}\))},\(i= 1,...,n\) を作成します。各共役ペアは、シーンの点で空間的に（理想的には）交差する2本の光線を定義します。空間交差問題は、交差点の3次元座標を見つけることです。画像平面座標の測定誤差やカメラの誤差により、光線は交差しません。そのため、ステレオペアから奥行きを計算する問題は、両方の光線に最も近いシーンの点の座標を見つけることです。
+<!--
 Binocular stereo matches feature points in the left and right images to cre-
-ate a set of conjugate pairs, {(p,;,P,,)},¢ = 1,...,n. Each conjugate pair
+ate a set of conjugate pairs, {(\(\mathbf{p}_{l,i}, \mathbf{p}_{r,i}\))},\(i= 1,...,n\). Each conjugate pair
 defines two rays that (ideally) intersect in space at a scene point. The space
 intersection problem is to find the three-dimensional coordinates of the point
 of intersection. Due to crrors in measuring the image plane coordinates and
 errors in the cameras, the rays will not intersect, so the problem of comput-
 ing depth from stereo pairs is to find the coordinates of the scene point that
 is closest to both rays.
-
+-->
+</p><p>
+ステレオ計測は、どちらのカメラの座標系とも異なる座標系で行われるものと仮定します。例えば、ステレオ座標系は、2台のカメラを保持するフレームに付属する場合があります。2つの剛体変換があります。1つは左カメラをステレオ座標に合わせ、もう1つは右カメラをステレオ座標に合わせます。左の変換には回転行列\(R_l\)と移動\(\mathbf{p}_l = (x_l, y_l, z_l)\)が含まれ、右の変換には回転行列\(R_r\)と移動\(\mathbf{p}_r = (x_r, y_r, z_r)\)が含まれます。右（左）カメラの座標系で点の測定値を表すには、相対評定問題（またはその逆）を解いて得られた剛体変換を左カメラの変換に使用し、右（左）カメラには恒等変換を使用します。
+<!--
 We will assume that stereo measurements will be made in a coordinate
 system that is different from the coordinate systems of either camera. For
 example, the stereo coordinate system might be attached to the frame that
 holds the two cameras. There will be two rigid body transformations: one
 aligns the left camera with stereo coordinates and the other aligns the right
 camera with stereo coordinates. The left transformation has rotation matrix
-FR, and translation p, = (x;, yr, 2:), and the right transformation has rotation
-matrix R, and translation p, = (-,y,,Z-). To represent point measure-
+\(R_l\) and translation \(\mathbf{p}_l = (x_l, y_l, z_l)\), and the right transformation has rotation
+matrix \(R_r\) and translation \(\mathbf{p}_r = (x_r, y_r, z_r)\). To represent point measure-
 ments in the coordinate system of the right (left) camera, use the rigid body
 transformation obtained from solving the relative orientation problem (or its
 inverse) for the left camera transformation and use the identity transforma-
 tion for the right (left) camera.
-
-The coordinates of the conjugate pair in three dimensions are (2/,,y1,, fi)
-and (#!.,,¥.a fr). Rotate and translate the left camera coordinates into stereo
-12.6. DEPTH FROM BINOCULAR STEREO 333
-
-coordinates,
-£ Fa Zhi
-y l=lu freak we ], (12.82)
-z 21 fi
-
+-->
+</p><p>
+3次元における共役対の座標は\((x_{l,i}^\prime, y_{l,i}^\prime, f_l)\)と\((x_{r,i}^\prime, y_{r,i}^\prime, f_r)\)である。左カメラ座標を回転してステレオ座標に変換すると、
+<!--
+The coordinates of the conjugate pair in three dimensions are \((x_{l,i}^\prime, y_{l,i}^\prime, f_l)\) and \((x_{r,i}^\prime, y_{r,i}^\prime, f_r)\). Rotate and translate the left camera coordinates into stereo coordinates,
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+=
+\begin{pmatrix}
+x_l \\
+y_l \\
+z_l
+\end{pmatrix}
++t_lR_l
+\begin{pmatrix}
+x_{l,i}^\prime \\
+y_{l,i}^\prime \\
+f_l
+\end{pmatrix}
+\tag{12.82}
+\]
+右カメラの座標を回転してステレオ座標に変換し、
+<!--
 and rotate and translate the right camera coordinates into stereo coordinates,
-y |=] yw | +tF, Ue . (12.83)
-z Zp te
-
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+=
+\begin{pmatrix}
+x_r \\
+y_r \\
+z_r
+\end{pmatrix}
++t_rR_r
+\begin{pmatrix}
+x_{r,i}^\prime \\
+y_{r,i}^\prime \\
+f_r
+\end{pmatrix}
+\tag{12.83}
+\]
+両方の光線に近い点を見つけるには、ノルムを最小化することで光線間の最小距離に対応する\(t_l\)と\(t_r\)の値を見つけます。
+<!--
 In order to find the point that is close to both rays, find the values for
-t; and ¢, that correspond to the minimum distance between the rays by
+\(t_l\) and \(t_r\) that correspond to the minimum distance between the rays by
 minimizing the norm
-
-x= |) ow fate) ue || we | -tR | me (12.84)
-cai fi Sp tr
-= [b+ te; —t,r,]°, (12.85)
-
-where b is the baseline in sterco coordinates, and r; and r, are the left
+-->
+\[
+\begin{align}
+\chi^2 &= \left[
+\begin{pmatrix}
+x_l \\
+y_l \\
+z_l
+\end{pmatrix}
++t_lR_l
+\begin{pmatrix}
+x_{l,i}^\prime \\
+y_{l,i}^\prime \\
+f_l
+\end{pmatrix}
+-
+\begin{pmatrix}
+x_r \\
+y_r \\
+z_r
+\end{pmatrix}
+-t_rR_r
+\begin{pmatrix}
+x_{r,i}^\prime \\
+y_{r,i}^\prime \\
+f_r
+\end{pmatrix}
+\right]^2
+\tag{12.84} \\
+\\
+&=[\mathbf{b}+t_l\mathbf{r}_l-t_r\mathbf{r}_r]^2 \tag{12.85}
+\end{align}
+\]
+ここで、\(\mathbf{b}\) はステレオ座標のベースライン、\(\mathbf{r}_l\) と \(\mathbf{r}_r\) はステレオ座標に回転された左光線と右光線です。光線交差問題を解くには、\(t_l\) と \(t_r\) について微分し、結果をゼロに設定します。¢ と t について方程式を解き、パラメータの解値を光線方程式（式 12.82 と 12.83）に代入して、各光線上で他方の光線に最も近い点を求めます。2 つの点の位置を平均して深度推定値を求めます。
+<!--
+where \(\mathbf{b}\) is the baseline in sterco coordinates, and \(\mathbf{r}_l\); and \(\mathbf{r}_r\) are the left
 and right rays rotated into stereo coordinates. To solve the ray intersection
-problem, differentiate with respect to t, and t, and set the result equal to
+problem, differentiate with respect to \(t_l\) and \(t_r\) and set the result equal to
 zero. Solve the cquations for ¢ and t, and plug the solution values for the
 parameters into the ray equations (Equation 12.82 and 12.83) to obtain the
 point on each ray that is closest to the other ray. Average the two point
 locations to obtain the depth estimate.
-
+-->
+</p><p>
+ステレオ点の測定値は、ステレオ システムの座標系（左または右のカメラ、あるいは中立座標系）で表されます。ベースラインを決定するために、セクション 12.4 で示した相対的評定決定アルゴリズムが使用された場合、測定値は単位のない測定システムになります。左および右のカメラとステレオ ハードウェアの別の座標系との間の剛体変換が、外部標定問題（セクション 12.8）を解くことによって、または他の手段によって取得された場合、ステレオ点の測定値はキャリブレーション ポイントに使用された単位で表されます。ステレオ システムがどのようにキャリブレーションされたかに関係なく、点の測定値をシーンの絶対座標系に変換する必要があります。スケール ファクターを使用して絶対標定問題を解くことにより、測定値をシーンに適した単位系に同時に変換できます。
+<!--
 The stereo point measurements are in the coordinate system of the stereo
 system, either (he left or right camera, or a neutral coordinate system. If
 the algorithm for rclative oricntation presented in Section 12.4 was used
@@ -1077,111 +1489,168 @@ calibrated, we have to transform the point measurements into an absolute
 coordinate system for the scene. We can convert the measurements into a
 system of units appropriate to the scene at the same time by solving the
 absolute orientation problem with a scale factor.
-334 CHAPTER 12. CALIBRATION
-
-12.7 Absolute Orientation with Scale
-
+-->
+</p>
+<h2>12.7 スケール付きの絶対評定</h2>
+<!--
+<h2>12.7 Absolute Orientation with Scale</h2>
+-->
+<p>
+12.3節における絶対標定問題の定式化では、スケール変更を含む変換は許容されません。座標系間の変換は、回転と並進のみを含む剛体変換です。スケール変更は、例えば、両眼ステレオカメラ間のベースラインが不明または不正確な場合や、測定単位が異なる距離カメラ間で発生します。
+<!--
 The formulation of the absolute orientation problem in Section 12.3 does
 not. allow transformations that include a scale change; the transformation
 between coordinate systems is a rigid body transformation which includes
 only rotation and translation. Scale changes occur, for example, in binocular
 stereo wheu the baseline between the stereo cameras is unknown or incorrect
 or between range cameras with different measurement units.
-
+-->
+</p><p>
+12.3節で示した絶対評定の問題は、スケールの変更を含むように拡張できます。この拡張された問題の解は、視点を絶対座標系に合わせるための回転と平行移動、およびカメラ固有の測定単位を共通の単位系に変換するためのスケール係数を含む変換です。ある座標系での座標\(\mathbf{p}_1 = (x_1, y_1, z_1)\)と、別の座標系での座標\(\mathbf{p}_2 = (x_2, y_2, z_2)\)を持つ点\(\mathbf{p}\)を考えます。座標間の変換は
+<!--
 The absolute orientation problem, presented in Section 12.3, can be ex-
 tended to include scale changes. The solution to this extended problem will
 be a transformation that includes rotation and translation to align the view-
 point to an absolute coordinate system and includes a scale factor to convert
 camera-specific measurement units to the common system of units. Consider
-a point p with coordinates p, = (x1, y1, 21) in one coordinate system and co-
-ordinates py = (xa, ye, Z2) in another coordinate system. The transformation
+a point \(\mathbf{p}\) with coordinates \(\mathbf{p}_1 = (x_1, y_1, z_1)\) in one coordinate system and co-
+ordinates \(\mathbf{p}_2 = (x_2, y_2, z_2)\) in another coordinate system. The transformation
 between coordinates is
-
-P2 = skp, + Po, (12.86)
-
-where s is the scale change. This increases the number of parameters in the
+-->
+\[
+\mathbf{p}_2 = sR\mathbf{p}_1 + \mathbf{p}_0  \tag{12.86}
+\]
+ここで、\(s\) はスケールの変化です。これにより、絶対評定問題のパラメータ数は7つに増加します。回転に関するパラメータが3つ、移動に関するパラメータが3つ、そしてスケール係数です。スケーリング変換は均一スケーリングです。つまり、各軸の座標は同じ量だけスケーリングされます。
+<!--
+where \(s\) is the scale change. This increases the number of parameters in the
 absolute orientation problem to seven: three parameters for rotation, three
 parameters for translation, and the scale factor. The scaling transformation is
 uniform scaling: the coordinates of cach axis are scaled by the same amount.
-
+-->
+</p><p>
+絶対評定問題への入力は、第1および第2のビューのn個の共役ペアの座標系（scl）{(\(\mathbf{p}_{1,i}, \mathbf{p}_{2,i}\))}です。回帰問題は、回転\(R\)、並進\(\mathbf{p}_0\)、およびスケール\(s\)を最小化するものです。
+<!--
 The input to the absolute orientation problem is a scl of n conjugate
-pairs for the first and second views: {(P,,;,P2;)}- The regression problem is
-to find the rotation A, translation py, and scale s that minimize
-
-y (P», — sRp, 3 — Po). . (12.87)
-i=l
-
+pairs for the first and second views: {(\(\mathbf{p}_{1,i}, \mathbf{p}_{2,i}\))}. The regression problem is
+to find the rotation \(R\), translation \(\mathbf{p}_0\), and scale \(s\) that minimize
+-->
+\[
+\sum_{i=1}^n (\mathbf{p}_{2,i}-sR\mathbf{p}_{1,i}-\mathbf{p}_0)^2  \tag{12.87}
+\]
+7つの未知数に対する9つの方程式を得るには、少なくとも3つの点が必要です。実際には、精度を高めるために、より多くの点が使用されます。
+<!--
 The solution requires at least three points to get nine equations for the seven
 unknowns. In practice, more points are used to provide better accuracy.
+-->
+</p><p>
+点間の対応関係が既知であるという事実は一旦無視し、2つの点集合（第1座標系における点集合と第2座標系における点集合）が絶対座標空間における2つの点群であると仮定します。それぞれの点群の重心を計算します。
+<!--
 Ignore for the moment that the correspondence between points is known
 and imagine that the two sets of points (the set of points in the first coor-
 dinate system and the set in the second system) are two clouds of points in
 absolute coordinate space. Compute the centroid of each cloud of points:
-
-|
-
-1
-Pi = - Pas (12.88)
-
-i=l
-12.7. ABSOLUTE ORIENTATION WITH SCALE 335
-
-Do = — >> Po, (12.89)
-GEL
+-->
+\[
+\begin{align}
+\overline{\mathbf{p}}_1 &=\frac{1}{n}\sum_{i=1}^n \mathbf{p}_{1,i}  \tag{12.88} \\
+\\
+\overline{\mathbf{p}}_2 &= \frac{1}{n}\sum_{i=1}^n \mathbf{p}_{2,i} \tag{12.89}
+\end{align}
+\]
+そして、各点群を重心の周りのベクトルの束に変換します。
+<!--
 and transform each cloud of points to a bundle of vectors about the centroid:
-
-i= Piy- Pi: To, = Pa; — Po. (12.90)
-
+-->
+\[
+\mathbf{r}_{1,i}=\mathbf{p}_{1,i}-\overline{\mathbf{p}}_1,　　\mathbf{r}_{2,i}=\mathbf{p}_{2,i}-\overline{\mathbf{p}}_2  \tag{12.90}
+\]
+スケールパラメータは、各束のベクトルの平均長を計算することで決定できます。
+<!--
 The scale parameter can be determined by computing the mean length of
 the vectors in each bundle:
-
-2 Det I[r-2,sll?
-Dee lity ll?
-
+-->
+\[
+s^2=\frac{\sum_{i=1}^n ||\mathbf{r}_{2,i}||^2}
+{\sum_{i=1}^n ||\mathbf{r}_{1,i}||^2}  \tag{12.91}
+\]
+スケール係数は、回転や平行移動を知らなくても計算できます。これは、両眼立体視における基線距離の較正に非常に便利な式であり、少数の点だけを用いるよりも正確です。
+<!--
 The scale factor can be computed without knowing either the rotation or the
 translation. This is a very useful formula for calibrating the baselinc distance
 in binocular stereo and is more accurate than using only a few points.
-
+-->
+</p><p>
+回転とスケール係数が決定されたら、重心から簡単に移動を計算できます。
+<!--
 After the rotation and scale factor are determined, the translation can be
 easily computed from the centroids:
-
-Pp = Bo — sRpj. (12.92)
-
-(12.91)
-
+-->
+\[
+\mathbf{p}_0=\overline{\mathbf{p}}_2 - sR\overline{\mathbf{p}}_1 \tag{12.92}
+\]
+回転を計算することは、本質的には、光線束を重心の周りにどのように整列させるかを決定する問題です。最初のビューと2番目のビューにおける光線の座標のスカラー積の和から行列 \(M\) を作成します。
+<!--
 Computing the rotation is essentially the problem of determining how to
-align the bundles of rays about the centroids. Form the matrix M from the
-sum of scalar products of the coodinates of the rays in the first and second
+align the bundles of rays about the centroids. Form the matrix \(M\) from the
+sum of scalar products of the coodinates of the rays in the first and second views:
+-->
+\[
+M= \sum_{i=1}^n \mathbf{r}_{2,i}(\mathbf{r}_{1,i})^T \tag{12.93}
+\]
+行列\(Q = M^TM\)とすると、回転行列は
+<!--
+Let matrix \(Q = M^TM\). The rotation matrix is
+-->
+\[
+R=MS^{-1}  \tag{12.94}
+\]
 
-views:
+ここで行列 \(S\) は
+<!--
+where matrix \(S\) is
+-->
+\[
+S=Q^{1/2}  \tag{12.95}
+\]
+行列 \(Q\) の固有値-固有ベクトル分解は
+<!--
+The eigenvalue-eigenvector decomposition of matrix \(Q\) is
+-->
+\[
+Q = \lambda_1\mathbf{v}_1\mathbf{v}_1^T + \lambda_2\mathbf{v}_2\mathbf{v}_2^T+ \lambda_3\mathbf{v}_3\mathbf{v}_3^T  \tag{12.96}
+\]
 
-M= 3 ros(Tii)- (12.93)
-i=1
-Let matrix Q = M'M. The rotation matrix is
-R=Ms", (12.94)
-where matrix S is
-s=Q? (12.95)
-The eigenvalue-eigenvector decomposition of matrix Q is
-Q = Mvivt + Agveve + Agvavy (12.96)
-
-The cigenvalues of M?M are obtained by solving a cubic equation. The roots
+\(M^TM\)の固有値は3次方程式を解くことで得られる。3次方程式の根は直接的な公式[197]から計算できる。固有値を用いて線形方程式を解く。
+<!--
+The eigenvalues of \(M^TM\) are obtained by solving a cubic equation. The roots
 of the cubic equation can be computed from direct formulas [197]. Use the
 eigenvalucs to solve the linear equations
+-->
+\[
+(M^TM -\lambda_iI) \mathbf{v}_i =0  \tag{12.97}
+\]
 
-(MTM — Ai) vi =0, (12.97)
-336 CHAPTER 12. CALIBRATION
-
-for the orthogonal eigenvectors v1, v2, and v3. Matrix S' is the square root
-of matrix Q. Fortunately, matrix square roots and their inverses are easy to
+直交固有ベクトル \(\mathbf{v}_1, \mathbf{v}_2,\) および \(\mathbf{v}_3\) について。行列 \(S\) は行列 \(Q\) の平方根です。幸いにも、行列の平方根とその逆行列は固有値表現（式 12.96）で簡単に計算できます。行列 \(S\) の逆行列は
+<!--
+for the orthogonal eigenvectors \(\mathbf{v}_1, \mathbf{v}_2,\) and \(\mathbf{v}_3\). Matrix \(S\) is the square root of matrix \(Q\). Fortunately, matrix square roots and their inverses are easy to
 compute in the eigensystcm representation (Equation 12.96). The inverse of
-matrix 5 is
+matrix \(S\) is
+-->
+\[
+S^{-1}=(M^TM)^{-1/2}=\frac{1}{\sqrt{\lambda_1}}\mathbf{v}_1\mathbf{v}_1^T+\frac{1}{\sqrt{\lambda_2}}\mathbf{v}_2\mathbf{v}_2^T+\frac{1}{\sqrt{\lambda_3}}\mathbf{v}_3\mathbf{v}_3^T  \tag{12.98}
+\]
 
-sta (M?M) — at + sot + ya (12.98)
+固有ベクトルの外積を計算し、それを固有ベクトルの平方根で割り、この行列に \(M\) を掛けて回転行列 \(R\) を得ます。
+この構築法により、行列 \(R\) が直交行列になることが保証されます。
+<!--
 Compute the outer products of the eigenvectors, divided by the square root of
-the eigenvectors, and multiply this matrix by M to get the rotation matrix R.
-This method of construction guarantees that matrix R will be an orthonormal
+the eigenvectors, and multiply this matrix by \(M\) to get the rotation matrix \(R\).
+This method of construction guarantees that matrix \(R\) will be an orthonormal
 matrix.
-
+-->
+</p><p>
+このアルゴリズムは、回転行列の閉形式（非反復）解を提供します。式 12.91 の式を使用して、移動または回転を決定せずにスケールを決定でき、最終的に式 12.92 の式を使用して移動を決定できます。式 12.86 の変換は、双眼ステレオや距離カメラを含む任意の奥行き測定システムからの点測定値に適用でき、点測定値を絶対座標系に位置合わせし、測定値を絶対座標系の単位に変換します。測定単位は、絶対標定問題に使用されたキャリブレーション点の座標に使用された単位系になります。たとえば、絶対座標系のキャリブレーション点がミリメートル単位で、深度測定値が単位ベースラインを持つ双眼ステレオからのものである場合、これらのキャリブレーション点を使用して絶対標定問題を解くことによって得られる剛体変換は、ステレオ測定値をミリメートルに変換します。各座標には同じスケール係数が適用されるため、測定システムは各座標軸に沿って同じでなければなりません。
+<!--
 This algorithm provides a closed form (noniterative) solution for the ro-
 tation matrix. The scale can be determined without determining either the
 translation or rotation using the formula in Equation 12.91 and, finally, the
@@ -1199,24 +1668,25 @@ solving the absolute orientation problem with these calibration points will
 transform stereo measurements to millimeters. The system of measurement
 must be the same along each coordinate axis since the same scale factor s is
 applied to cach coordinate.
-
-12.8 Exterior Orientation
-
+-->
+</p>
+<h2>12.8 外部評定</h2>
+<!--
+<h2>12.8 Exterior Orientation</h2>
+-->
+<p>
+外部標定の問題は、画像平面座標 \((x^\prime, y^\prime)\) とシーン上の点の座標 \((x, y, z)\) との関係を絶対座標系で決定することです。外部標定問題は、ロボット工学やマシンビジョンではハンドアイ問題と呼ばれています。1.4.1 節の透視投影の説明で、カメラの観察者中心座標系の点 \((x, y, z)\) が画像平面上の点 \((x^\prime, y^\prime)\) に投影されることを思い出してください。この節までは、シーン上の点の座標をカメラの座標系で表すことで十分でした。しかし、多くの用途では、画像平面座標系で計算された測定値の座標を、シーンに対して定義された絶対座標系に関連付ける必要があります。像平面内の各点 \((x^\prime, y^\prime)\) は、投影中心から像平面内の \((x^\prime, y^\prime)\) を通過してシーンへと続く光線を定義します。シーン内のカメラの位置は投影中心の位置であり、カメラの向きは、投影中心から像平面上の点を通過する光線束の向きを決定します。像平面上の点はシーン内の一意の点に対応するわけではありませんが、像点を通過する光線の式とシーンの幾何学的形状に関するその他の情報を使用することで、絶対座標における一意の点を決定できる場合があります。例えば、像面上の点が壁上の点に対応し、その壁をモデル化する平面の方程式が分かっている場合、交差について光線と平面の方程式を解くことで、壁上の点の正確な位置を得ることができます。
+<!--
 The problem of exterior orientation is to determine the relationship between
-image plane coordinates (2', y’) and the coordinates (a, y, z) of scene points
+image plane coordinates \((x^\prime, y^\prime)\) and the coordinates \((x, y, z)\) of scene points
 in an absolute coordinate system. The exterior orientation problem is called
-
-the hand-eye problem in robotics and machine vision. L_| l.. lJ.
-1.4.1 on perspective projection that a point (x,y,z) in the viewer-centered
-12.8. EXTERIOR ORIENTATION 337
-
-coordinate system of the camcra is projected to a point (z’,y’) in the image
+the hand-eye problem in robotics and machine vision. Recall from Section 1.4.1 on perspective projection that a point \((x,y,z)\) in the viewer-centered coordinate system of the camcra is projected to a point \((x^\prime, y^\prime)\) in the image
 plane. Until this section, we have been content to represent the coordinates
 of points in the scene in the coordinate system of the camera; in many ap-
 plications, though, it is necessary to relate the coordinates of measurements
 computed in the image plane coordinate system to the absolute coordinate
-system defined for the scene. Each point (z’,y’) in the image plane defines
-a ray from the center of projection, passing through (x',y’) in the image
+system defined for the scene. Each point \((x^\prime, y^\prime)\) in the image plane defines
+a ray from the center of projection, passing through \((x^\prime, y^\prime)\) in the image
 plane, and continuing on into the scene. The position of the camera in the
 scene is the location of the center of projection, and the orientation of the
 camera determines the orientation of the bundle of rays from the center of
@@ -1228,168 +1698,268 @@ coordinates. For example, if we know that an image plane point corresponds
 to a point on a wall, and if we know the cquation for the plane that models
 the wall, then the exact location of the point on the wall can be obtained by
 solving the system of ray and plane equations for the intersection.
-
+-->
+</p><p>
+外部標定問題は、像平面上の各点に対応する光線束の位置と方向を決定し、各像平面上の点の座標をシーンの絶対座標系におけるその光線の座標に変換することです。この問題は図12.4に示されています。光線束の位置と方向は、カメラ座標系から絶対座標系への剛体変換として表されます。像平面上の点 \((x^\prime, y^\prime)\) は、カメラの3次元座標系における座標 \((x^\prime, y^\prime, f)\) を持ち、像平面は投影中心から距離 \(f\) だけ前方にあります。投影中心はカメラ座標系の原点に対応します。シーンにおけるカメラの位置は、投影中心の絶対座標系での位置です。カメラ座標では、像面上の点 \((x^\prime, y^\prime)\) を通過する光線の媒介変数方程式は
+<!--
 The exterior orientation problem is to determine the position and ori-
 entation of the bundle of rays corresponding to image plane points so that.
 the coordinates of each image plane point may be transformed to its ray in
 the absolute coordinate system of the scene. The problem is illustrated in
 Figure 12.4. The position and orientation of the bundle of rays is repre-
 sented as the rigid body transformation from camera coordinates to absolute
-coordinates. An image plane point (2’,y’) has coordinates (x’,y’, f) in the
+coordinates. An image plane point \((x^\prime, y^\prime)\) has coordinates \((x^\prime, y^\prime, f)\) in the
 three-dimensional coordinate system of the camera, with the image plane at
-a distance f in front of the center of projection. The center of projection
+a distance \(f\) in front of the center of projection. The center of projection
 corresponds to the origin of the camera coordinate system. The position of
 the camera in the scene is the location of the center of projection in abso-
 lute coordinates. In camera coordinates, the parametric equation of the ray
-passing through point (z’, y’) in the image plane is
+passing through point \((x^\prime, y^\prime)\) in the image plane is
+-->
+\[
+(x,y,z) =t(x^\prime, y^\prime, f)  \tag{12.99}
+\]
+パラメータ t はゼロ（投影中心）から無限大まで変化します。
+t = 1 において、カメラ座標系の点 x, y, z は像面点 x^\prime, y^\prime, f) です。像内の測定位置 x^\prime, y^\prime とカメラ定数 f の推定値が与えられれば、カメラ中心座標における光線の方程式が得られます。
+<!--
+with parameter \(t\) going from zero (at the center of projection) to infinity.
+At \(t = 1\), the point \((x,y,z)\) in the camera coordinate system is the image
+plane point \((x^\prime, y^\prime, f)\). Given a measured location \((x^\prime, y^\prime)\) in the image and an estimate for the camera constant \(f\), we have the equation for the ray in camera-centered coordinates.
+-->
+</p>
+<center><img src="images/fig12_4.png"></center>
+<p class="margin-large">
+図 12.4: 光線の束を対応するシーン ポイントに合わせることで、カメラの位置と方向がどのように決定されるかを示した図。
+<!--
+Figure 12.4: Iustration of how the position and orientation of the camera are determined by aligning the bundle of rays with corresponding scene points.
+-->
+</p><p>
+\(\mathbf{p} = (x, y, z)^T\) かつ \(\mathbf{p}^\prime = (x^\prime, y^\prime, f)^T\) とします。シーンの絶対座標系における光線の方程式は、カメラ座標から絶対座標への剛体変換を光線の媒介変数方程式 (式 12.99) に適用することで得られます。
+<!--
 
-(x,y,z) =t(2",y', f), (12.99)
-
-with parameter ¢ going from zero (at the center of projection) to infinity.
-At t = 1, the point (x,y,z) in the camera coordinate system is the image
-plane point (#’,y’, f). Given a measured location (z’,y’) in the image and
-338 CHAPTER 12. CALIBRATION
-
-Figure 12.4: Iustration of how the position and orientation of the camera are
-determined by aligning the bundle of rays with corresponding scene points.
-
-an estimate for the camera constant f, we have the equation for the ray in
-camera-centered coordinates.
-
-Let p = (a, y,z)" and p’ = (2’,y', f)*. The equation for the ray in the
+Let \(\mathbf{p} = (x, y,z)^T\) and \(\mathbf{p}^\prime = (x^\prime, y^\prime, f)^T\). The equation for the ray in the
 absolute coordinate system for the scene is obtained by applying the rigid
 body transformation from camera coordinates to absolute coordinates to the
 parametric equation for the ray (Equation 12.99),
+-->
+\[
+\mathbf{p} =tRp^\prime + \mathbf{p}_0  \tag{12.100}
+\]
 
-p =tRp' + po. (12.100)
-
+剛体変換は、位置が既知のシーン内のキャリブレーション点の投影位置（\((x_i^\prime, y_i^\prime)\) \((x_i, y_i, z_i)\) を測定し、透視投影の式を用いて画像平面上の点とシーン上の点を関連付け、剛体変換を解くことで決定できます。カメラの外部姿勢に関するパラメータ（回転角度とカメラ原点への並進ベクトル）は、カメラ定数などのカメラ内部形状の固有パラメータとは対照的に、外部パラメータと呼ばれます。
+<!--
 The rigid body transformation can be determined by measuring the position
-(zi, yf) of the projection of calibration points in the scene with known posi-
-tion (a4, yi, 2:), relating the image plane points to the scene points using the
+\((x_i^\prime, y_i^\prime)\) of the projection of calibration points in the scene with known posi-
+tion \((x_i, y_i, z_i)\), relating the image plane points to the scene points using the
 equations for perspective projection, and solving for the rigid body transfor-
 mation. The parameters for the exterior orientation of the camera (rotation
 angles and translation vector to the camera origin) are called the extrinsic
 parameters, as opposed to the intrinsic parameters of the internal geometry
 of the camera such as the camera constant.
-
+-->
+</p><p>
+外部標定問題は簡潔に述べられる。空間内で光線束の位置と方向を定め、各光線が対応するキャリブレーション点を通過するような、絶対座標からカメラ座標への剛体変換とは何か？座標系を明確にするために、添え字を用いて絶対座標とカメラ座標を区別する。絶対座標における点の位置は
+<!--
 The exterior orientation problem can be succinctly stated: what is the
 rigid body transformation from absolute coordinates to camera coordinates
-12.8. EXTERIOR ORIENTATION 339
-
-that positions and orients the bundle of rays in space so that cach ray passes
-through its corresponding calibration point? To make the coordinate systems
+that positions and orients the bundle of rays in space so that cach ray passes through its corresponding calibration point? To make the coordinate systems
 clear, we will use subscripts to distinguish absolute coordinates from camera
 coordinates. The position of a point in absolute coordinates is
+-->
+\[
+\mathbf{p}_a = (x_a, y_a, z_a)^T  \tag{12.101}
+\]
 
-Pa = (®a, Yas Za)” (12.101)
+カメラ座標における点の位置は
+<!--
 and the position of a point in camera coordinates is
-Be = (#05 Yes Ze)" (12.102)
+-->
+\[
+\mathbf{p}_c=(x_c,y_c,z_c)^T  \tag{12.102}
+\]
 
+外部標定問題を、絶対（シーン）座標からカメラ座標への変換として展開します。実用上必要なこの変換の逆変換は、式12.16で与えられます。絶対座標からカメラ座標への剛体変換は、
+<!--
 We will develop the exterior orientation problem as a transformation from
 absolute (scene) coordinates to camera coordinates. The inverse of this trans-
 formation, needed for practical applications, is given by Equation 12.16. The
 rigid body transformation from absolute coordinates to camera coordinates
 is
-
-Lo = TuxLa t+ Taya + Tuzta + Pe (12.103)
-Yo = TyxLa + lyyYa + Pyz%a + Py (12.104)
-Zo = Pala + PeyYa + Pezla + Pee (12.105)
-
+-->
+\[
+\begin{align}
+x_c &= r_{xx}x_a+r_{xy}y_a+r_{xz}z_a+p_x  \tag{12.103} \\
+\\
+y_c &= r_{yx}x_a+r_{yy}y_a+r_{yz}z_a+p_y  \tag{12.104} \\
+\\
+z_c &= r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z  \tag{12.105} 
+\end{align}
+\]
+カメラの座標系における点の位置は不明ですが、画像平面への点の投影は透視投影の方程式によって決定されます。
+<!--
 The positions of the points im the coordinate system of the camera are un-
 known, but the projection of the points onto the image plane is determined
 by the equations for perspective projection:
+-->
+\[
+\begin{align}
+\frac{x^\prime}{f} &= \frac{x_c}{z_c}  \tag{12.106} \\
+\\
+\frac{y^\prime}{f} &= \frac{y_c}{z_c}  \tag{12.107}
+\end{align}
+\]
 
-,
-
-7 = “= (12.106)
-
-i
-
-7 = ve (12.107)
-xe
-
-Solve the perspective equations for 2, and y,., and combine the results for
+\(x_c\) と \(y_c\) について透視方程式を解き、絶対座標からカメラ座標への変換の最初の 2 つの方程式 (方程式 12.103 と 12.104) の結果を方程式 12.105 を分母として結合して、画像平面座標 \((x^\prime, y^\prime)\) とキャリブレーション点の絶対座標を関連付ける 2 つの方程式を得ます。
+<!--
+Solve the perspective equations for \(x_c\) and \(y_c\), and combine the results for
 the first two equations for the transformation from absolute to camera coor-
 dinates (Equations 12.103 and 12.104) with Equation 12.105 as the denomi-
-nator to obtain two equations relating image plane coordinates (2’, y’) to the
+nator to obtain two equations relating image plane coordinates \((x^\prime, y^\prime)\) to the
 absolute coordinates for a calibration point:
-
-a! = Teal a + TaeyYa + e224 + Pe (12 108)
-fo Prxita + PeyYa + Prz2a + De ~
-
-Yo Pula + Paya + Pys2a t+ Py (12.109)
-f Pega + PeyYa + V2zta + De
-340 CHAPTER 12. CALIBRATION
-
+-->
+\[
+\begin{align}
+\frac{x^\prime}{f} &= \frac{r_{xx}x_a+r_{xy}y_a+r_{xz}z_a+p_x}
+{r_{zx}x_a+r_{zy}ya+r_{zz}z_aLp_z} \tag{12.108} \\
+\\
+\frac{y^\prime}{f} &= \frac{r_{yx}x_a+r_{yy}y_a+r_{yz}z_a+p_y}
+{r_{zx}x_a+r_{zy}ya+r_{zz}z_aLp_z} \tag{12.109}
+\end{align}
+\]
+各キャリブレーション ポイントでは、変換を制限する 2 つの方程式が生成されます。
+<!--
 Each calibration point yiclds two equations that constrain the transforma-
 tion:
+-->
+\[
+\begin{align}
+x^\prime(r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z)
+-f(r_{xx}x_a+r_{xy}y_a+r_{xz}z_a+p_x)= 0 \tag{12.110} \\
+\\
+y^\prime(r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z)
+-f(r_{yx}x_a+r_{yy}y_a+r_{yz}z_a+p_y)= 0 \tag{12.111} 
+\end{align}
+\]
 
-2! (Pepa tT yYat Vez%atDz) — fF CexBatteyYatlertat Pe) = 0 (12.110)
-Y (PewCatPeyYat lez %e +z) _ F(tyxtot+TyyYatTyz2at+Py) = 0. (12.111)
-
+6つのキャリブレーションポイントから、12個の変換パラメータに対して12個の方程式が得られますが、回転行列に直交性制約を適用すると、最小のキャリブレーションポイント数は4個に減ります。実際には、正確な解を得るためには、さらに多くのポイントが使用されます。回転行列の要素をオイラー角を用いた式に置き換え、非線形回帰問題を解きます。
+<!--
 Six calibration points would yield 12 cquations for the 12 transformation
 parameters, but using the orthonormality constraints for the rotation matrix
 reduces the minimum number of calibration points to four. Many more
 points would be used in practice to provide an accurate solution. Replace
 the elements of the rotation matrix with the formulas using Euler angles and
 solve the nonlinear regression problem.
-
-12.8.1 Calibration Example
-
+-->
+</p>
+<h3>12.8.1 キャリブレーションの例</h3>
+<!--
+<h3>12.8.1 Calibration Example</h3>
+-->
+<p>
+ロボットのアームの先端には、吸引ピックアップツールが装備されています。このツールは、吸引ツールを物体の中心付近に配置することで、小さく平らな物体を拾い上げるのに適しています。アームの届く範囲内のテーブルの上には平らな物体があります。絶対座標系はテーブルの片隅にあります。カメラはテーブルの上に配置され、テーブルは視野内にあります。画像平面内の点の位置は \((x^prime, y^prime)\) です。物体がテーブルトップの背景に対して良好なコントラストを持っている場合、画像平面の位置は一次モーメントを使用して推定できます。テーブルの絶対座標系における点の位置は \((x,y,z)\) です。絶対座標系に対するカメラの位置と向きは、外部標定問題を解くことで決定できます。
+<!--
 A robot is equipped with a suction pickup tool at the end of the arm. The
 tool is good for picking up small, flat objects if the suction tool is positioned
 near the center of the object. There are flat objects on a table within reach
 of the arm. The absolute coordinate system is at one corner of the table.
 A camera is positioned above the table, with the table within the field of
-view. The position of a point in the image plane is (2’,y’). If the object
+view. The position of a point in the image plane is \((x^prime, y^prime)\). If the object
 has good contrast against the background of the table top, then the image
 plane position can be estimated using first moments. The position of a point
-in the absolute coordinate system of the table is (x,y,z). The position and
+in the absolute coordinate system of the table is \((x,y,z)\). The position and
 orientation of the camera relative to the absolute coordinate system can be
 determined by solving the exterior orientation problem.
-
-Given the position (2’, y’) of the center of the object in the image plane,
-the location (x,y,z) in the absolute coordinate system of the center of the
+-->
+</p><p>
+画像平面における物体の中心の位置 \((x^\prime, y^\prime)\) が与えられた場合、テーブル上の部品の中心の絶対座標系における位置 \((x,y,z)\) は、カメラの原点から \((x^\prime, y^\prime)\) を通る光線がテーブルトップの平面と交差することによって与えられます。テーブルトップの式は、
+<!--
+Given the position \((x^\prime, y^\prime)\) of the center of the object in the image plane,
+the location \((x,y,z)\) in the absolute coordinate system of the center of the
 part on the table is given by intersecting the ray from the camera origin
-through (2’,y’) with the plane of the table top. Both the equation for the
-table top ‘
+through \((x^\prime, y^\prime)\) with the plane of the table top. Both the equation for the
+table top
+-->
+\[
+ax +by+cz+d=0  \tag{12.112}
+\]
 
-ag +byt+tez+d=0 (12.112)
-
+カメラ原点からの光線の方程式
+<!--
 and the equation for the ray from the camera origin
+-->
 
-y )=tl y' (12.113)
-12.9. INTERIOR ORIENTATION 341
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+=t
+\begin{pmatrix}
+x^\prime \\
+y^\prime \\
+f
+\end{pmatrix}
+\tag{12.113}
+\]
 
+絶対座標系でなければなりません。カメラからの光線は、外部標定問題を解くことによって得られる変換を用いて絶対座標系に変換できます。絶対座標系の原点がテーブル平面にあり、Z軸がテーブルに垂直である場合、式12.112は\(z = 0\)となり、交点は簡単に計算できます。
+<!--
 must be in the absolute coordinate system. The ray from the camera can
 be transformed to the absolute coordinate system using the transformation
 obtained by solving the exterior orientation problem. If the origin of the
 absolute coordinate system is in the plane of the table with the z axis normal
-to the table, then Equation 12.112 reduces to z = 0 and the intersection is
+to the table, then Equation 12.112 reduces to \(z = 0\) and the intersection is
 easy to compute.
-
-12.9 Interior Orientation
-
+-->
+</p>
+<h2>12.9 内部評定</h2>
+<!--
+<h2>12.9 Interior Orientation</h2>
+-->
+<p>
+内部標定の問題は、カメラの内部形状を決定することです。この形状は、カメラパラメータのセットによって表現されます。
+<!--
 The problem of interior orientation is to determine the internal geometry of
 the camera. The geometry is represented by a set of camera parameters:
+-->
+<div class="styleBullet">
+<ul><li>
+<strong>カメラ定数</strong>：投影中心から像面までの距離
 
-Camera constant for the distance of the image plane from the center of
+</li><br><li><strong>主点</strong>：像面座標系の原点の位置
+
+</li><br><li><strong>レンズ歪み係数</strong>：カメラの光学的な欠陥によって生じる像面座標の変化
+
+</li><br><li><strong>スケール係数</strong>：行と列の間の距離
+<!--
+<strong>Camera constant</strong> for the distance of the image plane from the center of
 projection
 
-Principal point for the location of the origin of the image plane coordinate
+</li><br><li><strong>Principal point</strong> for the location of the origin of the image plane coordinate
 system
 
-Lens distortion coefficients for the changes in image plane coordinates
+</li><br><li><strong>Lens distortion coefficients</strong> for the changes in image plane coordinates
 caused by optical imperfections in the camera
 
-Scale factors for the distances between the rows and columns
-
+</li><br><li><strong>Scale factors</strong> for the distances between the rows and columns
+-->
+</li></ul></div>
+</p><p>
+内部標定問題は、カメラ内部の光線束が透視投影の仮定に従うように、カメラの構造における誤差を補正する問題です。カメラパラメータは、カメラの外部標定の外的パラメータとは対照的に、内部パラメータと呼ばれます。内部標定問題は、カメラの内部パラメータを決定するための回帰問題です。
+<!--
 The interior orientation problem is the problem of compensating for errors in
 the construction of the camera so that the bundle of rays inside the camera
 obeys the assumptions of perspective projection. The camera parameters are
 called the intrinsic parameters, as opposed to the extrinsic parameters for the
 exterior orientation of the camera. The interior orientation problem is the
 regression problem for determining the intrinsic parameters of a camera.
+-->
+</p><p>
+カメラ定数はレンズの焦点距離と同じではありません。
+レンズの焦点が無限遠にある場合、カメラ定数は焦点距離と等しくなります。それ以外の場合、カメラ定数は焦点距離よりも小さくなります。
+主点は、光軸が像面と交差する点です。これは、像面座標系の原点を定めます。これまで、像面座標系の原点は、画像アレイの中心であると仮定されてきました（式12.1および12.2を参照）。カメラ定数は焦点距離に近く、主点は画像の中心に近いですが、これらの近似値は多くのアプリケーションでは十分ではない可能性があります。画像センサーのピクセルの行と列の間隔はカメラの仕様から決定できますが、フレームグラバーによって誤差が生じる可能性があり、その場合はキャリブレーションが必要です。
+<!--
 The camera constant is not the same as the focal length of the lens.
 When the lens is focused at infinity, then the camera constant is equal to
 the focal length; otherwise, the camera constant is less than the focal length.
@@ -1399,13 +1969,12 @@ point has been assumed to be the center of the image array (sce Equations
 12.1 and 12.2). Although the camera constant is close to the focal length and
 the principal point is close to the center of the image, these approximations
 may not be good enough for many applications. The spacing between the
-342 CHAPTER 12. CALIBRATION
-
 rows and columns of pixels in the image sensor can be determined from the
-camera specifications, but frame grabbers may introduce errors that must be
-
-calibrated.
-
+camera specifications, but frame grabbers may introduce errors that must be calibrated.
+-->
+</p><p>
+いくつかのキャリブレーションアルゴリズムは、内部標定問題と外部標定問題を同時に解きます。これは、カメラの外部標定が決定されるまで、画像平面上のキャリブレーション点の真の位置が分からないためです。しかし、内部標定問題は単独で解決可能であり、カメラの外部標定を絶対座標で知らなくても、カメラ定数、主点の位置、レンズの歪みを決定する方法がいくつかあります。内部パラメータと外部パラメータの両方を決定する方法については、12.10節で説明します。
+<!--
 Some calibration algorithms solve the interior orientation problems and
 exterior orientation problems at the same time. The motivation for this is
 that the true location of the calibration points on the image plane cannot
@@ -1415,13 +1984,19 @@ are several methods for determining the camera constant, location of the
 principal point, and lens distortions without knowing the exterior orientation
 of the camera in absolute coordinates. Methods for determining both the
 intrinsic and extrinsic parameters are covered in Section 12.10.
-
+-->
+</p><p>
+カメラの内部パラメータを外部パラメータから独立して決定するための基本的な考え方は、グリッド線などの規則的なパターンを持つキャリブレーション画像を使用することです。このパターンの歪みを利用してレンズの歪みを推定し、他の内部パラメータの公称値に対する補正値を計算し、カメラの性能を向上させます。
+<!--
 The fundamental idea in determining the intrinsic camera parameters
 independent of the extrinsic parameters is to use a calibration image with
 some regular pattern, such as a grid of lines. Distortions in the pattern are
 used to estimate the lens distortions and calculate corrections to the nominal
 values for the other intrinsic parameters.
-
+-->
+</p><p>
+レンズ歪みには、光線を適正量よりも大きくまたは小さく曲げる放射状歪みと、レンズ中心が光軸からずれることによって生じる偏芯の2つの要素があります。放射状歪みと偏芯の影響は多項式としてモデル化され、内部標定アルゴリズムはこれらの多項式の係数を推定します。図12.5は、レンズ偏芯誤差がない場合の、ほとんどのレンズ歪みが放射状に対称であることを示しています。光線は光軸に向かって適正量よりも大きくまたは小さく曲げられますが、この誤差はレンズ上（または像面内）の主点から同じ距離にあるすべての位置で同じです。
+<!--
 Lens distortions include two components: radial distortion that bends the
 rays of light by morc or less than the correct amount, and decentering caused
 by a displacement of the center of the lens from the optical axis. The radial
@@ -1432,74 +2007,110 @@ absence of lens decentering errors. Light rays are bent toward the optical
 axis by more or less than the correct amount, but this error is the same at
 all positions on the lens (or in the image plane) that are the same distance
 from the principal point.
-
+-->
+</p><p>
+光線の曲げ量の誤差は回転対称であるため、放射状の歪みは半径の偶数乗の多項式としてモデル化できます。\((x^\prime, y^\prime)\) を真の画像座標とし、\((\tilde{x}, \tilde{y})\) を主点の位置の推定値を用いてピクセル座標 \(i\) と \(j\) から得られる補正前の画像座標とします。
+<!--
 The radial distortion can be modeled as a polynomial in even powers of the
 radius, since crror in the amount of bending of the rays of light is rotationally
-symmetric. Let (x’, y’) denote the true image coordinates and (%,#) denote
-the uncorrected image coordinates obtained from the pixel coordinates i and
-j using an estimate for the location of the principal point:
+symmetric. Let \((x^\prime, y^\prime)\) denote the true image coordinates and \((\tilde{x}, \tilde{y})\) denote
+the uncorrected image coordinates obtained from the pixel coordinates \(i\) and \(j\) using an estimate for the location of the principal point:
+-->
+\[
+\begin{align}
+\tilde{x} &= j-\hat{c}_x \tag{12,114} \\
+\\
+\tilde{y} &= -(i-\hat{c}_y) \tag{12.115}
+\end{align}
+\]
 
-Re
-ll
-
-I-G (12,114)
--( - 4} (12.115)
-
-[
-
-—,
-ll
-12.9. INTERIOR ORIENTATION 343
-
-Ze
-
+</p>
+<center><img src="images/fig12_5.png"></center>
+<p class="margin-large">
+図12.5：ほとんどのレンズ歪みは放射状対称です。光線は像の中心に向かって、正しい量よりも多少曲げられます。放射状の歪みの量は、像面上の主点の真の位置から同じ距離にあるすべての点で同じです。
+<!--
 Figure 12.5: Most lens distortions are radially symmetric. The rays are bent
 toward the center of the image by more or less than the correct amount. The
 amount of racial distortion is the same at all points in the image plane that
 are the same distance from the true location of the principal point.
-
-The corrections (6x, 5y} will be added to the uncorrected coordinates to get
+-->
+</p><p>
+補正値 \((\delta x,\delta y)\) を補正前の座標に加算することで、真の画像平面座標が得られます。
+<!--
+The corrections \((\delta x,\delta y)\) will be added to the uncorrected coordinates to get
 the true image plane coordinates:
-
-gc = E+6x (12.116)
-yl = Gt by. (12.117)
-
+-->
+\[
+\begin{align}
+x^\prime &= \tilde{x} + \delta x  \tag{12.116} \\
+\\
+y^\prime &= \tilde{y} + \delta y \tag{12.117}
+\end{align}
+\]
+放射状レンズ歪みの補正は、像面中心からの放射状距離の偶数乗の多項式でモデル化されます。
+<!--
 The corrections for radial lens distortions are modeled by a polynomial in
 even powers of the radial distance from the center of the image plane:
+-->
+\[
+\begin{align}
+\delta x &= (\tilde{x} - x_p)(\kappa_1 r^2 + \kappa_2 r^4 + \kappa_3 r^6)  \tag{12.118} \\
+\\
+\delta y &= (\tilde{y} - y_p)(\kappa_1 r^2 + \kappa_2 r^4 + \kappa_3 r^6)  \tag{12.119}
+\end{align}
+\]
+ここで、\((x_p, y_p)\)は主点の位置の精度であり、
+<!--
+where \((x_p, y_p)\) is the refinement to the location of the principal point and
+-->
+\[
+r^2 = (\tilde{x} - x_p)^2 + (\tilde{y} - y_p)^2  \tag{12.120}
+\]
 
-be = (& — ap)(wir? + Kor* + nar®) (12.118)
-by = (§ - Yp)(Kir? + wort + Kr), (12.119)
+は画像中心からの半径距離の2乗です。\(x_p\)と\(y_p\)は、式12.114と12.115の\(\hat{c}_x\)と\(\hat{c}_y\)と同じではないことに注意してください。
+これらは補正前の画像座標を計算するために使用されます。\(x_p\)と\(y_p\)は、\(\hat{c}_x\)と\(\hat{c}_y\)に対する補正値です。キャリブレーション後、これらの補正値を初期推定値に適用できます。
+<!--
+is the square of the radial distance from the center of the image. Note that \(x_p\) and \(y_p\) are not the same as \(\hat{c}_x\) and \(\hat{c}_y\) in Equations 12.114 and 12.115,
+which are used to compute the uncorrected image coordinates; \(x_p\) and \(y_p\) are
+corrections to \(\hat{c}_x\) and \(\hat{c}_y\). After calibration, the corrections can be applied to the initial estirnates:
+-->
+\[
+\begin{align}
+c_x = \hat{c}_x + x_p \tag{12.121} \\
+\\
+c_y = \hat{c}_y - y_p  \tag{12.122}
+\end{align}
+\]
 
-where (ap, yp) is the refinement to the location of the principal point and
-r= (£— ay)? + (9 - wp)? (12.120)
-
-is Lhe square of the radial distance from the center of the image. Note that
-Zp and yp are not the same as ¢, and ¢, in Equations 12.114 and 12.115,
-344 CHAPTER 12. CALIBRATION
-
-which are used to compute the uncorrected image coordinates; x, and y, are
-corrections to ¢ and ¢,. After calibration, the corrections can be applied to
-
-the initial estirnates:
-
-Cy = Cy + Lp (12.121)
-Cy = by — Yp- (12.122)
-
-The calibration problem for correcting radial distortion is to find the coeffi-
-cients, K1, Ko, and «3, of the polynomial, Lens distortion models beyond the
+放射状歪みを補正するためのキャリブレーション問題は、多項式 \(\kappa_1, \kappa_2,\)、\(\kappa_3\) の係数を求めることです。6次を超えるレンズ歪みモデルはほとんど使用されません。実際、2次を超える多項式は必要ない場合もあります。レンズ歪みをモデル化するには主点の位置を正確に推定する必要があるため、主点の位置はキャリブレーション問題に含まれます。レンズ歪みのより強力なモデルには、レンズの偏心などの影響による接線方向の歪みが含まれる場合があります。
+<!--
+The calibration problem for correcting radial distortion is to find the coefficients, \(\kappa_1, \kappa_2,\) and \(\kappa_3\), of the polynomial, Lens distortion models beyond the
 sixth degree are rarely used; in fact, it may not be necessary to go beyond
 a second-degree polynomial. The location of the principal point is included
 in the calibration problem since an accurate estimate for the location of the
 principal point is required to model the lens distortions. More powerful mod-
 els for lens distortions can include tangential distortions due to effects such
 as lens decentcring:
+-->
+\[
+\begin{align}
+\delta x =& (\tilde{x}-x_p)(\kappa_1 r_2+\kappa_2 r_4+\kappa_3 r_6) \\
+\\
+&+\left[p_1\left(r^2+2(\tilde{x}-x_p)^2\right)+2p_2(\tilde{x}-x_p)(\tilde{y}-y_p)\right](1+p_3r^2) \tag{12.123}
+\end{align}
+\]
 
-dx = (%—ap)(Kiret+Kari+kare) (12.123)
-+ [pr (1?+-2(@-<p)”) + 2po(@—x))(G—yp)] (+ sr?)
+\[
+\begin{align}
+\delta y =& (\tilde{y}-y_p)(\kappa_1 r_2+\kappa_2 r_4+\kappa_3 r_6) \\
+\\
+&+\left[2p_1(\tilde{x}-x_p)(\tilde{y}-y_p)+2(?)p_2\left(r^2+2(\tilde{y}-y_p)^2\right)\right](1+p_3r^2) \tag{12.124}
+\end{align}
+\]
 
-by = (Y~Yp) (Kira + Kara + Kero) (12.124)
-+ |2p1(-@p)(G—yp) + Be (7? +2(G—-yp)*)] 1-+psr?).
-
+</p><p>
+視野内の異なる位置と方向にある複数の直線で構成されたキャリブレーションターゲットを使用します。唯一の要件は、直線であることです。直線は完全に水平または垂直である必要はありません。この方法では、外部標定問題を同時に解く必要はありません。レーザープリンタを使用すれば、水平線と垂直線のグリッドを簡単に作成できます。対角線はレンダリング精度が低くなりますが、外部標定は重要ではないため、グリッドを視野内の異なる位置に移動および回転させ、複数の画像を取得して、キャリブレーションセット用の大量のデジタル線セットを収集できます。グリッドは、光軸に垂直な平坦で剛性の高い面に取り付けます。線は平行である必要はないため、ターゲットの傾きはキャリブレーション手順に影響を与えません。画像全体にわたる小さなウィンドウにわたって第1モーメントを計算することにより、サブピクセル解像度で座標点の位置を決定します。ウィンドウサイズは、線の幅よりもいくらか大きく、線間の間隔よりも小さくする必要があります。 Hough 変換を使用すると、エッジを線にグループ化し、線パラメータの初期推定値を決定できます。
+<!--
 Use a calibration target consisting of several straight lines at different
 positions and orientations in the field of view. The only requirement is that
 the lines be straight; the lines do not have to be perfectly horizontal or ver-
@@ -1511,58 +2122,68 @@ different positions in the field of view, acquire several images, and gather a
 large set of digitized lines for the calibration set. Mount the grid on a flat,
 rigid surface that is normal to the optical axis. Since the lines do not have
 to be parallel, any tilt in the target will not affect the calibration procedure.
-Determine the location of the cdge points to subpixcl resolution by comput-
+Determine the location of the cdge points to subpixcl resolution by computing the first moment over small windows througout the image. The window size should be somewhat larger than the width of the lines, but smaller than the spacing between lines. The IIough transform can be used to group edges into lines and determine initial estimates for the line parameters.
+-->
+</p><p>
 
-welhe fol mone over anal sd MIMAKI. TAA
+真の（補正された）画像座標における各線\(l\)の式は
+<!--
+The equation for each line \(l\) in true (corrected) image coordinates is
+-->
+\[
+x^\prime \cos\theta_l+y^\prime \sin \theta_l - \rho_l= 0   \tag{12.125}
+\]
 
-size should be somewhat larger than the width of the lines, but smaller than
-12.9, INTERIOR ORIENTATION 345
-
-the spacing between lines. The IIough transform can be used to group edges
-into lines and determine initial estimates for the line parameters.
-The equation for each line / in true (corrected) image coordinates is
-
-2’ cos @, + y' sin & — py = 0. (12.125)
-
+各線の正確な位置と方向は不明であるため、線パラメータの推定値は内部標定問題の一部として精緻化する必要がある。\((\tilde{x}_{kl}, \tilde{y}_{kl})\) を線 \(l\) に沿ったエッジ点 \(k\) の座標とする。式 12.125 の真の画像座標 \((x^\prime, y^\prime)\) を、上記の補正モデルを用いて補正前の座標 \(\tilde{x}_{kl}+\delta x\) と \(\tilde{y}_{kl}+\delta y\) に置き換える。これにより、次の式が得られる。
+<!--
 Since the precise position and orientation of each linc is unknown, the esti-
 mates for the line parameters must be refined as part of the interior oricn-
-tation problem. Let (xj, yg) denote the coordinates of edge point k along
-line 7, Replace the true image coordinates (z’, y’) in Equation 12.125 with
-the uncorrected coordinates 2; + 6a and yg + é6y using the model for the
+tation problem. Let \((\tilde{x}_{kl}, \tilde{y}_{kl})\) denote the coordinates of edge point \(k\) along
+line \(l\), Replace the true image coordinates \((x^\prime, y^\prime)\) in Equation 12.125 with
+the uncorrected coordinates \(\tilde{x}_{kl}+\delta x\) and \(\tilde{y}_{kl}+\delta y\) using the model for the
 corrections given above. This yields an equation of the form
+-->
+\[
+f(\tilde{x}_{kl}, \tilde{y}_{kl};x_p,y_p,\kappa_1,\kappa_2,\kappa_3,p_1,p_2,p_3,\rho_l,\theta_l) = 0  \tag{12.126}
+\]
 
-Ff (ht, Yat: Lp: Yps Ky Re, Ka, Pi; Po, Ps, 01,6) = 0 (12.126)
-
+各観測点（エッジ点）の方程式と内部パラメータ。\(n\) 個のエッジ点に関する方程式の集合は、\(n\) 個の非線形方程式の連立方程式であり、非線形回帰を用いて解く必要がある。主点の位置に対する補正の初期値はゼロであり、放射状レンズ歪みと偏心に関する係数もゼロに初期化できる。全体的な最小化基準は、
+<!--
 for each observation (edge point) and the intrinsic parameters. The set. of
-equations for n edge points is a system of n nonlinear equations that must
+equations for \(n\) edge points is a system of \(n\) nonlinear equations that must
 be solved using nonlinear regression. The initial values for corrections to
 the location of the principal point are zero, and the coefficients for radial
 lens distortion and decentering can also be initialized to zero. The overall
 minimization criterion in
+-->
+\[
+\chi^2 = \sum_{k=1}^n
+\left(f(x_{kl}^\prime, y_{kl}^\prime;x_p,y_p,\kappa_1,\kappa_2,\kappa_3,p_1,p_2,p_3,\rho_l,\theta_l)\right)^2 \tag{12.127}
+\]
 
-nm
-x? = SF (en Yeas Lp, Up, K1, 82,83, Ply P2;P3; Pls 4)). (12.127)
-
-k=l
-This nonlinear regression problem can be solved for the location of the prin-
-cipal point (zp, y,); the parameters for the radial lens distortion «1, x2, and
-«3; and the parameters for the lens decentering pi, po, and p3. The param-
-eters of each line are estimated as a byproduct of determining the intrinsic
-
-parameters and can be discarded.
-
-Example 12.1 Suppose that a calibration table has been prepared to compen-
-sate for lens and camera distortions. The table provides a correction (dz, dy)
-for every row and column in the image array. How would this information
-be used in the overall system presented as an example in Section 12.8.1? Af-
-ter computing the position (,9) of the centroid of the object in the image
+この非線形回帰問題は、主点の位置\((x_p,y_p)\)、レンズの放射状歪みのパラメータ\(\kappa_1,\kappa_2\)、\(\kappa_3\)、そしてレンズの偏心パラメータ\(p_1, p_2,\)、\(p_3\)について解くことができます。各直線のパラメータは、固有パラメータを決定する際に副次的に推定されるため、無視することができます。
+<!--
+This nonlinear regression problem can be solved for the location of the principal point \((x_p,y_p)\); the parameters for the radial lens distortion \(\kappa_1,\kappa_2\), and \(\kappa_3\); and the parameters for the lens decentering \(p_1, p_2,\) and \(p_3\). The param-
+eters of each line are estimated as a byproduct of determining the intrinsic parameters and can be discarded.
+-->
+</p><p>
+<strong>例12.1</strong> レンズとカメラの歪みを補正するためのキャリブレーションテーブルが用意されているとします。このテーブルは、画像配列のすべての行と列に対して補正値 \((\delta x, \delta y)\) を提供します。この情報は、セクション12.8.1で例として示したシステム全体でどのように使用されるでしょうか。画像平面における物体の重心の位置 \((\tilde{x}, \tilde{y})\) を計算した後、ピクセル間の補正値を補間し、重心に補正値を加えることで、カメラの原点から物体までの光線の正しい座標を取得します。
+<!--
+<strong>Example 12.1</strong> Suppose that a calibration table has been prepared to compen-
+sate for lens and camera distortions. The table provides a correction \((\delta x, \delta y)\) for every row and column in the image array. How would this information
+be used in the overall system presented as an example in Section 12.8.1? After computing the position \((\tilde{x}, \tilde{y})\) of the centroid of the object in the image
 plane, interpolate the corrections between pixels and add the corrections to
 the centroid to get correct coordinates for the ray from the camera origin to
 the object.
-346 CHAPTER 12. CALIBRATION
-
-12.10 Camera Calibration
-
+-->
+</p>
+<h2>12.10 カメラのキャリブレーション</h2>
+<!--
+<h2>12.10 Camera Calibration</h2>
+-->
+<p>
+カメラキャリブレーション問題は、画像配列内のピクセルの位置をシーン内の点に関連付けることです。各ピクセルは透視投影によって画像化されるため、シーン内の点の光線に対応します。カメラキャリブレーション問題は、シーンの絶対座標系におけるこの光線の方程式を決定することです。カメラキャリブレーション問題には、外部標定問題と内部標定問題の両方が含まれます。これは、画像平面座標を絶対座標に関連付けるには、カメラの位置と方向、およびカメラ定数を決定する必要があり、画像配列の位置（ピクセル座標）を画像平面内の位置に関連付けるには、主点の位置、アスペクト比、およびレンズ歪みを決定する必要があるためです。カメラキャリブレーション問題には、剛体変換の外部パラメータ（外部標定）とカメラ自体の内部パラメータ（内部標定）の2組のパラメータを決定することが含まれます。
+<!--
 The camera calibration problem is to relate the locations of pixels in the
 image array to points in the scene. Since each pixel is imaged through per-
 spective projection, it corresponds to a ray of points in the scene. The camera
@@ -1577,248 +2198,377 @@ age plane. The camera calibration problem involves determining two sets
 of parameters: the extrinsic parameters for rigid body transformation (exte-
 rior orientation) and the intrinsic parameters for the camera itself (interior
 orientation).
-
+-->
+</p><p>
+内部パラメータの初期近似値を用いて、画像配列（ピクセル）座標から画像平面座標へのマッピングを得ることができます。画像配列にn行m列があり、主点が画像配列の中心にあると仮定します。
+<!--
 We can use an initial approximation for the intrinsic parameters to get
 a mapping from image array (pixel) coordinates to image plane coordinates.
 Suppose that there are n rows and m columns in the image array and assume
 that the principal point is located at the center of the image array:
+-->
+\[
+\begin{align}
+c_x &= \frac{m-1}{2}  \tag{12.128} \\
+\\
+c_y &= \frac{n-1}{2}  \tag{12.129}
+\end{align}
+\]
 
-Ce = — (12.128)
+グリッド位置\([i, j]\)のピクセルの画像平面座標は
+<!--
+The image plane coordinates for the pixel at grid location \([i, j]\) are
+-->
+\[
+\begin{align}
+\tilde{x} &= \tau_x d_x(j-c_x)  \tag{12.130} \\
+\\
+\tilde{y} &= -d_y(i-c_y) \tag{12.131}
+\end{align}
+\]
 
-cy = (12.129)
-
-The image plane coordinates for the pixel at grid location [2, j] are
-
-= Trdly(j — Cx) (12.130)
-= —d,(t— cy), (12.131)
-
-Sr Re
-
-where d,, and d, are the center-to-center distances between pixels in the ¢ and
-y directions, respectively, and 7, is a scale factor that accounts for distortions
+ここで、\(d_x\) と \(d_y\) はそれぞれ \(x\) 方向と \(y\) 方向におけるピクセル間の中心距離であり、\(\tau_x\) はデジタイザ回路のタイミングの問題によって生じるアスペクト比の歪みを考慮したスケール係数です。行と列の距離 \(d_x\) と \(d_y\) はCCDカメラの仕様書に記載されており、非常に正確です。しかし、スケール係数 \(\tau_x\) はカメラの固有パラメータのリストに追加し、キャリブレーションによって決定する必要があります。これらは補正されていない画像座標であり、レンズ歪みの影響が除去されていないことを強調するためにチルダでマークされていることに注意してください。座標は、主点の位置 \((c_x,c_y)\) とスケール係数 \(\tau_x\) の推定値の誤差によっても影響を受けます。
+<!--
+where \(d_x\) and \(d_y\) are the center-to-center distances between pixels in the \(x\) and \(y\) directions, respectively, and \(\tau_x\) is a scale factor that accounts for distortions
 in the aspect ratio caused by timing problems in the digitizer electronics. The
-row and column distances, d, and d,, are available from the specifications
-for the CCD camera and are very accurate, but the scale factor 7, must
-
+row and column distances, \(d_x\) and \(d_y\), are available from the specifications
+for the CCD camera and are very accurate, but the scale factor \(\tau_x\) must
 be added to the list of intrinsic parameters for the camera and determined
 through calibration. Note that these are uncorrected image coordinates,
-12.10. CAMERA CALIBRATION 347
-
 marked with a tilde to emphasize that the effects of lens distortions have not
 been removed. The coordinates are also affected by errors in the estimates
-for the location of the principal point (c,,c,) and the scale factor 7,.
-
+for the location of the principal point \((c_x,c_y)\) and the scale factor \(\tau_x\).
+-->
+</p><p>
+内部標定問題を解決する前に、外部標定問題を解決する必要があります。これは、キャリブレーション点が画像平面のどこに投影されるかを知るために、カメラの位置と向きを知る必要があるためです。投影点の位置がわかれば、投影位置 \(p_i^\prime\) と測定位置 \(\tilde{p}_i\) を使用してレンズの歪みを決定し、主点の位置と画像のアスペクト比を修正できます。外部標定問題の解は、レンズの歪みとカメラ定数に対して不変な制約に基づく必要がありますが、これは問題を解決する時点ではわかりません。
+<!--
 We must solve the exterior oricntation problem before attempting to solve
 the interior oricntation problem, since we must know how the camera is
 positioned and oriented in order to know where the calibration points project
 into the image plane. Once we know where the projected points should be, we
-can use the projected locations p; and the measured locations 9; to determine
+can use the projected locations \(p_i^\prime\) and the measured locations \(\tilde{p}_i\) to determine
 the lens distortions and correct the location of the principal point and the
 image aspect ratio. The solution to the exterior orientation problem must
 be based on constraints that are invariant to the lens distortions and camera.
 constant, which will not be known at the time that the problem is solved.
-
-12.10.1 Simple Method for Camera Calibration
-
+-->
+</p>
+<h3>12.10.1 カメラキャリブレーションの簡単な方法</h3>
+<!--
+<h3>12.10.1 Simple Method for Camera Calibration</h3>
+-->
+<p>
+この節では、Tsai [234] によって発表された、広く使用されているカメラキャリブレーション法について説明します。\(\mathbf{p}_0^\prime\) を像面上の原点の位置とし、\(\mathbf{r}_i^\prime\) を \(\mathbf{p}_0^\prime\) から像点 \(\mathbf{p}_i^\prime = (x_i^\prime, y_i^\prime) へのベクトルとし、\mathbf{p}_i = (x_i, y_i, z_i)\) をキャリブレーション点とし、\(\mathbf{r}_i\) を光軸上の点 \((0,0, z_i)\) から \(\mathbf{p}_i\) へのベクトルとします。補正されていない画像座標 \((\tilde{x}_i, \tilde{y}_i)\) と真の画像座標 \((x_i^\prime, y_i^\prime)\) の差がレンズの放射状歪みのみによるものである場合、\(\mathbf{r}_i^\prime\) は \(\mathbf{r}_i\) に平行です。カメラ定数と \(z\) 方向の移動は \(\mathbf{r}_i^\prime\) の方向に影響しません。なぜなら、両方の画像座標は同じ量だけ拡大縮小されるからです。これらの制約条件は、外部標定問題を解くのに十分です [234]。
+<!--
 This section cxplains the widely uscd camera calibration method published
-by Tsai [234]. Let pj be the location of the origin in the image plane, rj
-be the vector from pj to the image point pi = (2), y/), p; = (ei, vi, zi) be a
-calibration point, and r; be the vector from the point (0,0, z;) on the optical
-axis to p,. If the difference between the uncorrected image coordinates (#;, §;)
-and the true image coordinates (2%, yj) is due only to radial lens distortion,
-then rj is parallel to r;. The camera constant and translation in z do not
-affect the direction of r/, since both image coordinates will be scaled by the
+by Tsai [234]. Let \(\mathbf{p}_0^\prime\) be the location of the origin in the image plane, \(\mathbf{r}_i^\prime\) be the vector from \(\mathbf{p}_0^\prime\) to the image point \(\mathbf{p}_i^\prime = (x_i^\prime, y_i^\prime), \mathbf{p}_i = (x_i, y_i, z_i)\) be a
+calibration point, and \(\mathbf{r}_i\) be the vector from the point \((0,0, z_i)\) on the optical
+axis to \(\mathbf{p}_i\). If the difference between the uncorrected image coordinates \((\tilde{x}_i, \tilde{y}_i)\) and the true image coordinates \((x_i^\prime,y_i^\prime)\) is due only to radial lens distortion,
+then \(\mathbf{r}_i^\prime\) is parallel to \(\mathbf{r}_i\). The camera constant and translation in \(z\) do not
+affect the direction of \(\mathbf{r}_i^\prime\), since both image coordinates will be scaled by the
 same amount. ‘These constraints are sufficient to solve the exterior orientation
 problem [234].
-
-Assume that the calibration points lie in a plane with z = 0 and assume
+-->
+</p><p>
+キャリブレーション点が \(z = 0\) の平面上にあり、カメラがこの平面に対して以下の2つの重要な条件を満たすように配置されていると仮定します。
+<!--
+Assume that the calibration points lie in a plane with \(z = 0\) and assume
 that the camera is placed relative to this plane to satisfy the following two
 crucial conditions:
+-->
+<div class="styleBullet">
+<ul><li>
+1. 絶対座標の原点が視野内にありません。
 
+</li><br><li>2. 絶対座標の原点が、画像平面座標系の \(y\) 軸に近い画像内の点に投影されていません。
+<!--
 1. The origin in absolute coordinates is not in the field of view.
 
-2. The origin in absolute coordinates does not project to a point in the
-image that is close to the y axis of the image plane coordinate sys-
+</li><br><li>2. The origin in absolute coordinates does not project to a point in the
+image that is close to the \(y\) axis of the image plane coordinate sys-
 tem.
+-->
+</li></ul></div>
+</p><p>
 
+条件1は、ラジアルレンズ歪みの影響を、カメラ定数およびキャリブレーション面までの距離から切り離します。条件2は、以下の多くの式の分母に現れる剛体並進運動の\(y\)成分がゼロに近くならないことを保証します。これらの条件は、多くの画像撮影状況で容易に満たすことができます。例えば、カメラがテーブルの上に設置され、テーブルの中央を見下ろしているとします。絶対座標系は、\(z = 0\)をテーブル平面に対応させ、\(x\)軸と\(y\)軸をテーブルの端に沿わせ、テーブルの角を視野外の絶対座標の原点として定義できます。
+<!--
 Condition 1 decouples the effects of radial lens distortion from the camera
 constant and distance to the calibration plane. Condition 2 guarantees that
-348 CHAPTER 12. CALIBRATION
-
-the y component of the rigid body translation, which occurs in the denomi-
+the \(y\) component of the rigid body translation, which occurs in the denomi-
 nator of many equations below, will not be close to zero, These conditions
 are easy to satisfy in many imaging situations. For example, suppose that
 the camera is placed above a table, looking down at the middle of the table.
-The absolute coordinate system can be defined with z = 0 corresponding
-to the plane of the table, with the « and y axes running along the edges
+The absolute coordinate system can be defined with \(z = 0\) corresponding
+to the plane of the table, with the \(x\) and \(y\) axes running along the edges
 of the table, and with the corner of the table that is the origin in absolute
 coordinates outside of the field of view.
-
+-->
+</p><p>
+n 個のキャリブレーション点があるとします。各キャリブレーション点について、点の絶対座標 \((x_i, y_i, z_i)\) と、補正前の画像座標 \((\tilde{x}_i, \tilde{y}_i)\) が存在します。これらの観測値を用いて、行 \(a_i\)、行 \(a_i\)、行 \(A\) を作成します。
+<!--
 Suppose that there are n calibration points. For each calibration point,
-we have the absolute coordinates of the point (a;, y;, 2;) and the uncorrected
-image coordinates (2;, #;). Use these observations to form a matrix A with
-TOWS @;,
-
-ai = (Yiri, HY, —TiLi, —Liys, Yi). (12.132)
-Let u = (ur, tt, ug, U4, Us) be a vector of unknown parameters that are related
+we have the absolute coordinates of the point \((x_i, y_i, z_i)\) and the uncorrected
+image coordinates \((\tilde{x}_i, \tilde{y}_i)\). Use these observations to form a matrix \(A\) with
+rows \(a_i\),
+-->
+\[
+a_i = (\tilde{y}_ix_i, \tilde{y}_iy_i, -\tilde{x}_ix_i, -\tilde{x}_iy_i,\tilde{y}_i)  \tag{12.132}
+\]
+\(u = (u_1, u_2, u_3, u_4, u_5)\) を剛体変換のパラメータに関連する未知のパラメータのベクトルとします。
+<!--
+Let \(u = (u_1, u_2, u_3, u_4, u_5)\) be a vector of unknown parameters that are related
 to the parameters of the rigid body transformation:
+-->
+\[
+\begin{align}
+u_1 &= \frac{r_{xx}}{p_y}  \tag{12.133} \\
+\\
+u_2 &= \frac{r_{xy}}{p_y}  \tag{12.134} \\
+\\
+u_3 &= \frac{r_{yx}}{p_y}  \tag{12.135} \\
+\\
+u_4 &= \frac{r_{yy}}{p_y}  \tag{12.136} \\
+\\
+u_5 &= \frac{p_x}{p_y}  \tag{12.137}
+\end{align}
+\]
 
-uy = = 12.133
-1S ( }
-uy = tt (12,134)
-Py
-ug = “Ht (12.135)
-Py
-Tyy
-ug = THe 12.136
-1= 5 { )
-us = ©. (12.137)
-Py
-
-Form a vector b = (4, @,...,%,) from the n observations of the calibration
+キャリブレーション点のn個の観測値からベクトル\(\mathbf{b} = (\tilde{x}_1, \tilde{x}_2,...,\tilde{x}_n)\)を形成する。キャリブレーション点が5点を超える場合、過剰決定線形方程式系が得られる。
+<!--
+Form a vector \(\mathbf{b} = (\tilde{x}_1, \tilde{x}_2,...,\tilde{x}_n)\) from the n observations of the calibration
 points. With more than five calibration points, we have an overdetermined
-
 system of linear equations,
-Au =b, (12.138)
+-->
 
-for the parameter vector u. Solve this linear system using singular value
-decomposition, and use the solution parameters, uj, ue, ug, ug, and us, to
-compute the rigid body transformation, except for p,, which scales with the
-12.10. CAMERA CALIBRATION 349
+\[
+A\mathbf{u} =\mathbf{b}   \tag{12.138}
+\]
 
-First, compute the magnitude of the y component of translation. If w
-and wy are not both zero and ug and uy are not both vero, then
+パラメータベクトル \(\mathbf{u}\) について。この線形方程式を特異値分解を用いて解き、解パラメータ \(u_1, u_2, u_3, u_4,\)、\(u_5\) を用いて、カメラ定数 \(f\) に比例する \(p_z\) を除く剛体変換を計算します。\(p_z\) は後で決定されます。
+<!--
+for the parameter vector \(\mathbf{u}\). Solve this linear system using singular value
+decomposition, and use the solution parameters, \(u_1, u_2, u_3, u_4,\) and \(u_5\), to
+compute the rigid body transformation, except for \(p_z\), which scales with the camera constant \(f\) and will be determined later.
+-->
+</p><p>
+まず、並進の \(y\) 成分の大きさを計算します。\(u_1\) と \(u_2\) が両方ともゼロでなく、\(u_3\) と \(u_4\) が両方ともゼロでない場合、
+<!--
+First, compute the magnitude of the \(y\) component of translation. If \(u_1\) and \(u_2\) are not both zero and \(u_3\) and \(u_4\) are not both zero, then
+-->
+\[
+p_y^2 = \frac{U-[U^2-4(u_1u_4-u_2u_3)^2]^{1/2}}
+{2(u_1u_4-u_2u_3)^2} \tag{12.139}
+\]
+ここで\(U = u_1^2+ u_2^2 + u_3^2 + u_4^2\)である。そうでない場合、\(u_1\)と\(u_2\)が両方ともゼロであれば、
+<!--
+where \(U = u_1^2+ u_2^2 + u_3^2 + u_4^2\); otherwise, if \(u_1\) and \(u_2\) are both zero, then
+-->
+\[
+p_y^2 = \frac{1}{u_3^2+u_4^2} \tag{12.140}
+\]
+それ以外の場合は、\(u_1\)と\(u_2\)を使用して、
+<!--
+otherwise, using \(u_1\) and \(u_2\),
+-->
+\[
+p_y^2 = \frac{1}{u_1^2+u_2^2} \tag{12.141}
+\]
 
-U = (U? ~ A(uray — ugus)"]/?
-
-2(uyus — Ugus)?
-
-Dy = ; (12.139)
-
-where U = uv? + u2 + u2 + u2; otherwise, if uy and uw are both zero, then
-1 2 3 4 , L ,
-
-1
-—_— : 12.140
-Py ug t ul’ ( )
-otherwise, using uy, and we,
-p= l . (12.141)
-Y ug t+ ug
-
-Second, determine the sign of p,. Pick the calibration point p = (2, y, z)
-that projects to an image point that is farthest from the center of the im-
+</p><p>
+次に、\(p_y\)の符号を決定します。画像の中心から最も遠い画像点（視野の周辺で最も遠いシーン点とそれに対応する画像点）に投影されるキャリブレーション点\(\mathbf{p} = (x, y, z)\)を選択し、上記で得られた解ベクトルから\(r_{xx}, r_{xy}, r_{yx}, r_{yy},\)および\(p_x\)を計算します。
+<!--
+Second, determine the sign of \(p_y\). Pick the calibration point \(\mathbf{p} = (x, y, z)\) that projects to an image point that is farthest from the center of the im-
 age (the scene point and corresponding image point that are farthest in the
-periphery of the field of view), Compute ryz, T2y, Tye, Tyy, 20d pe from the
+periphery of the field of view), Compute \(r_{xx}, r_{xy}, r_{yx}, r_{yy},\) and \(p_x\) from the
 solution vector obtained above:
+-->
+\[
+\begin{align}
+r_{xx} &= u_1p_y  \tag{12.142} \\
+\\
+r_{xy} &= u_2p_y  \tag{12.143} \\
+\\
+r_{yx} &= u_3p_y  \tag{12.144} \\
+\\
+r_{yy} &= u_4p_y  \tag{12.145} \\
+\\
+p_x &= u_5p_y  \tag{12.146}
+\end{align}
+\]
 
-Too = UP, (12.142)
-Tey = UDy (12.143)
-Pye = UsPy (12.144)
-yy = UsPy (12.145)
-Po = Uspy. (12.146)
-
-Let € = Pert + Peyy + De aud €y = ryt + Tyyy + py. If €& and # have the
-same sign and &, and ¥ have the same sign, then p, has the correct sign
-(positive); otherwise, negate p,. Note that the parameters of the rigid body
-transformation computed above are correct, regardless of the sign of p,, and
+\(\xi_x = r_{xx}x+r_{xy}y+p_x\) かつ \(\xi_y=r_{yx}x+t_{yy}y+p_y\) とします。\(\xi_x\) と \(\tilde{x}\) が同じ符号で、\(xi_y\) と \(\tilde{y}\) が同じ符号の場合、\(p_y\) は正しい符号（正）を持ちます。それ以外の場合は、\(p_y\) を反転します。上記で計算した剛体変換のパラメータは、\(p_y\) の符号に関わらず正しいため、変更する必要はありません。
+<!--
+Let \(\xi_x = r_{xx}x+r_{xy}y+p_x\) and \(\xi_y=r_{yx}x+t_{yy}y+p_y\). If \(\xi_x\) and \(\tilde{x}\) have the
+same sign and \(xi_y\) and \(\tilde{y}\) have the same sign, then \(p_y\) has the correct sign
+(positive); otherwise, negate \(p_y\). Note that the parameters of the rigid body
+transformation computed above are correct, regardless of the sign of \(p_y\), and
 do not need to be changed.
+-->
+</p><p>
 
-Third, compute the remaining parameters of the rigid body transforma-
-tion:
+3番目に、剛体変換の残りのパラメータを計算します。
+<!--
+Third, compute the remaining parameters of the rigid body transformation:
+-->
+\[
+\begin{align}
+r_{xz} &= \sqrt{1-r_{xx}^2-r_{xy}^2}  \tag{12.147} \\
+\\
+r_{yz} &= \sqrt{1-r_{yx}^2-r_{yy}^2}  \tag{12.148}
+\end{align}
+\]
 
-= fl-72,—972, (12.147)
-
-rye = 1-12, —r2,. (12.148)
-350 CHAPTER 12. CALIBRATION
-
-Since the rotation matrix must be orthonormal, it must be true that R? R=
-I. Use this fact to compute the elements in the last row of the rotation
+回転行列は直交行列でなければならないので、\(R^TR=
+I\) が成り立ちます。この事実を利用して、回転行列の最終行の要素を計算します。
+<!--
+Since the rotation matrix must be orthonormal, it must be true that \(R^TR=
+I\). Use this fact to compute the elements in the last row of the rotation
 matrix:
-
-— pt _
-Tog = La Moe Peyl ye (12.149)
-Pre
-l= PyePay — re
-Tay = - * iw (12.150)
-uz
-—— ve —Teelnz — PayPye (12.151)
-
-If the sign of ran?ye + Pay?yy 18 positive, negate ry,. The signs of rz, and
-rzy may need to he adjusted after computing the camera constant in the
+-->
+\[
+\begin{align}
+r_{zx} &=\frac{1-r_{xx}^2-r_{xy}r_{yx}}{r_{xz}} \tag{12.149} \\
+\\
+r_{zy} &= \frac{1-r_{yx}r_{xy}-r_{yy}^2}{r_{yz}}  \tag{12.150} \\
+\\
+r_{zz} &= \sqrt{1-r_{zx}r_{xz}-r_{zy}r_{yz}} \tag{12.151}
+\end{align}
+\]
+\(r_{xx}r_{yx}+r_{xy}r_{yy}\) の符号が正の場合、\(r_{yz}\) を反転します。\(r_{zz}\) と \(r_{zy}\) の符号は、次の手順でカメラ定数を計算した後で調整する必要がある場合があります。
+<!--
+If the sign of \(r_{xx}r_{yx}+r_{xy}r_{yy}\) is positive, negate \(r_{yz}\). The signs of \(r_{zz}\) and \(r_{zy}\) may need to he adjusted after computing the camera constant in the
 following step.
+-->
+</p><p>
 
-Fourth, compute the camera constant f and p,, the z component of trans-
+4番目に、カメラ定数\(f\)と\(p_z\)（並進の\(z\)成分）を計算します。すべてのキャリブレーションポイントを用いて、以下の連立一次方程式を作成します。
+<!--
+Fourth, compute the camera constant \(f\) and \(p_z\), the \(z\) component of trans-
 lation. Use all of the calibration points to form a system of linear equations,
+-->
+\[
+A\mathbf{v} =\mathbf{b}  \tag{12.152}
+\]
 
-Av =b, (12.152)
-
-for estimating f and p,. Use each calibration point to compute the corre-
+\(f\)と\(p_z\)を推定するために、各キャリブレーションポイントを用いて、行列の対応する行を計算する。
+<!--
+for estimating \(f\) and \(p_z\). Use each calibration point to compute the corre-
 sponding row of the matrix,
+-->
+\[
+a_i = (r_{yx}x_i+r_{yy}y_i+p_y,-d_y\tilde{y}_i) \tag{12.153}
+\]
 
-Oj = (yaks + Pye + Py, — dy), (12.153)
-
+そして式12.152の右辺のベクトルの対応する要素は、
+<!--
 and the corresponding element of the vector on the right side of Equation
 12.152,
-bs = (Text + Pay yi) dy ti. (12.154)
+-->
+\[
+b_i = (r_{zx}x_i+r_{zy}y_i)d_y\tilde{y}_i \tag{12.154}
+\]
 
-The vector v contains the parameters to be estimated:
-v= (f,pz)". (12.155)
+ベクトル\(\mathbf{v}\)には推定するパラメータが含まれています。
+<!--
+The vector \(\mathbf{v}\) contains the parameters to be estimated:
+-->
+\[
+\mathbf{v}=(f,p_z)^T \tag{12.155}
+\]
 
+この連立方程式を解くには特異値分解を用います。カメラ定数 \(f < 0\) の場合、剛体変換の回転行列において \(r_{zx}\) と \(r_{zy}\) を反転します。
+<!--
 Use singular value decomposition to solve this system of equations. If the
-camera constant f < 0, then negate r,, and rz, in the rotation matrix for
+camera constant \(f < 0\), then negate \(r_{zx}\) and \(r_{zy}\) in the rotation matrix for
 the rigid body transformation.
+-->
+</p><p>
 
-Fifth, use the estimates for f and p, obtained in the previous step as
+5番目に、前のステップで得られた\(f\)と\(p_z\)の推定値を非線形回帰の初期条件として使用し、1次レンズ歪み\kappa_1と\(f\)と\(p_z\)のより良い推定値を計算し、それらを計算します。真の（正しい）画像平面座標\((x^\prime, y^\prime)\)は、カメラのキャリブレーション点と関連付けられています。
+透視投影による座標\((x_c, y_c, z_c)\)：
+<!--
+Fifth, use the estimates for \(f\) and \(p_z\) obtained in the previous step as
 the initial conditions for nonlinear regression to compute the first-order lens
+distortion \kappa_1 and better estimates for \(f\) and \(p_z\). The true (correct) image plane coordinates \((x^\prime, y^\prime)\) are related to the calibration points in camera.
+coordinates \((x_c, y_c, z_c)\) through perspective projection:
+-->
+\[
+\begin{align}
+x^\prime &= f\frac{x_c}{z_c}  \tag{12.156} \\
+\\
+y^\prime &= f\frac{y_c}{z_c}  \tag{12.157}
+\end{align}
+\]
 
-ddan CLOUT TT UT
-
-age plane coordinates (2’, y') are related to the calibration points in camera.
-12.10. CAMERA CALIBRATION 351
-
-coordinates (&,, Ye, Z¢) through perspective projection:
-go= f= (12.156)
-
-y = f¥. (12.157)
-
+真の（補正された）像面座標が、放射状レンズ歪みモデルの最初の項を用いて測定された（補正されていない）像面座標と関連付けられていると仮定します。
+<!--
 Assume that the true (corrected) image plane coordinates are related to the
 measured (uncorrected) image plane coordinates using the first term in the
 model for radial lens distortion:
+-->
+\[
+\begin{align}
+x^\prime &= \tilde{x}(1+\kappa_1r^2)  \tag{12.158} \\
+\\
+y^\prime &= \tilde{y}(1+\kappa_1r^2)  \tag{12.159}
+\end{align}
+\]
 
-av = #(1+ Kir?) (12.158)
-yo = H+ mr), (12.159)
+ここで半径 \(r\) は次のように与えられる。
+<!--
+where the radius \(r\) is given by
+-->
+\[
+r = \sqrt{\tilde{x}^2+\tilde{y}^2} \tag{12.160}
+\]
 
-where the radius r is given by
+補正されていない（測定された）画像平面座標 \((\tilde{x}, \tilde{y})\) はピクセル座標 \([i,j]\) と同じではないことに注意してください。これは、画像中心の位置 \((c_x, c_y)\)、行と列の間隔 \(d_x\) と \(d_y\)、および推定スケール係数 \(\tau_x\) がすでに適用されているためです。
+<!--
+Note that the uncorrected (measured) image plane coordinates \((\tilde{x}, \tilde{y})\) are not
+the same as the pixel coordinates \([i,j]\) since the location of the image center
+\((c_x, c_y)\), the row and column spacing \(d_x\) and \(d_y\), and the cstimated scale factor \(\tau_x\), have already been applied.
+-->
+</p><p>
 
-r= (fP+4R. (12.160)
-
-Note that the uncorrected (measured) image plane coordinates (%, 7) are not
-the same as the pixel coordinates [i,j] since the location of the image center
-(Cx, ¢y), the row and column spacing d, and d,, and the cstimated scale factor
-T, have already been applied.
-
-Use the y components of the equations for perspective projection, lens
+透視投影、レンズ歪み、および絶対座標からカメラ座標への剛体変換の方程式の \(y\) 成分を使用して、カメラ定数 \(f, z\) 変換とレンズ歪みに対する制約を取得します。
+<!--
+Use the \(y\) components of the equations for perspective projection, lens
 distortion, and the rigid body transformation from absolute coordinates to
-camera coordinates to get a constraint on the camera constant f, z transla-
+camera coordinates to get a constraint on the camera constant \(f, z\) transla-
 tion, and lens distortion:
+-->
+\[
+\tilde{y}_i(1+\kappa_1r^2)=f
+\frac{r_{yx}x_{a,i}+r_{yy}y_{a,i}+r_{yz}z_{a,i}+p_y}
+{r_{zx}x_{a,i}+r_{zy}y_{a,i}+r_{zz}z_{a,i}+p_z}  \tag{12.161}
+\]
 
-Fyr@aa t Pyydag + Pyztat + Py
-Pankag + PeyYas 7 Peetu + Pz
-
-jl + xr?) = f (12.161)
+これにより、パラメータ p,、f,、および #} に関して非線形回帰問題が生じます。
+z の測定値はスケールパラメータ s の影響を受けるため、z ではなく y の測定値を使用します。画像行間の間隔 dy は非常に正確で、カメラの仕様から容易に取得でき、デジタル化電子機器の問題の影響を受けません。
+<!--
 This leads to a nonlinear regression problem for the parameters p,, f, and #}.
 We use the measurements for y, rather than z, because the z measurements
 are affected by the scale parameter 7,. The spacing between image rows dy
 is very accurate and readily available from the camera specifications and is
 not affected by problems in the digitizing electronics.
-
-Since the calibration points were in a plane, the scale factor 7, cannot be
-detcrmined. Also, the location of the image center, c, and ¢,, has not been
+-->
+</p><p>
+キャリブレーション点は平面上にあるため、スケール係数 \(\tau_x\) を決定できません。また、画像中心の位置 \(c_x\) と \(c_y\) もキャリブレーションされていません。これらのキャリブレーション問題に関する参考文献は、本章末に掲載されています。
+<!--
+Since the calibration points were in a plane, the scale factor \(\tau_x\) cannot be
+detcrmined. Also, the location of the image center, \(c_x\) and \(c_y\), has not been
 calibrated. The list of further readings provided at the end of this chapter
 provides references to these calibration problems.
-352 CHAPTER 12. CALIBRATION
-
-12.10.2 Affine Method for Camera Calibration
+-->
+</p>
+<h3>12.10.2 カメラキャリブレーションのためのアフィン法</h3>
+<!--
+<h3>12.10.2 Affine Method for Camera Calibration</h3>
+-->
+<p>
+内部評定問題は外部評定問題と組み合わせることで、（未補正の）画像座標を絶対座標系における光線の位置と方向に関連付ける全体的な変換を得ることができます。補正されていない画像座標から真の画像座標への変換は、画像平面内のアフィン変換によってモデル化できると仮定します。この変換は、カメラ誤差のいくつかの要因を考慮しています。
+<!--
 
 The interior oricntation problem can be combined with the exterior oricnta-
 tion problem to obtain an overall transformation that relates (uncalibrated)
@@ -1827,150 +2577,252 @@ ordinate system. Assume that the transformation from uncorrceted image
 coordinates to true image coordinates can be modeled by an affine trans-
 formation within the image plane. ‘This transformation accounts for several
 sources of camera error:
+-->
+<div class="styleBullet">
+<ul><li>
+カメラ定数の値が不正確であることによる<strong>スケール誤差</strong>
 
-Scale error due to an inaccurate value for the camera constant
+</li><br><li>画像原点（主点）の推定値が不正確であることによる<strong>変換誤差</strong>
 
-Translation error due to an inaccurate cstimate for the image origin (prin-
+</li><br><li>光軸を中心とした<strong>イメージセンサーの回転</strong>
+</li><br><li>カメラ軸が直交していないことによる<strong>スキュー誤差</strong>
+
+</li><br><li>イメージセンサーの行と列の間隔が不均一であることによる<strong>差分スケーリング</strong>（非正方形ピクセル）
+<!--
+<strong>Scale error</strong> due to an inaccurate value for the camera constant
+
+</li><br><li><strong>Translation error</strong> due to an inaccurate cstimate for the image origin (prin-
 cipal point)
 
-Rotation of the image sensor about the optical axis
-Skew error due to nonorthogonal camera axes
+</li><br><li><strong>Rotation</strong> of the image sensor about the optical axis
+</li><br><li><strong>Skew error</strong> due to nonorthogonal camera axes
 
-Differential scaling caused by unequal spacing between rows and columns
+</li><br><li><strong>Differential scaling</strong> caused by unequal spacing between rows and columns
 in the image sensor (nonsquare pixels)
-
+-->
+</li></ul></div>
+</p><p>
+しかし、アフィン変換ではレンズの歪みによる誤差をモデル化することはできません。
+<!--
 However, an affine transformation cannot model the errors due to lens dis-
 tortions.
-
+-->
+</p><p>
+外部標定問題（12.8節）の展開において、絶対座標から画像座標への変換式を定式化しました。ここでは、真の画像座標から測定された（補正されていない）画像座標へのアフィン変換を追加して、絶対座標から測定された画像座標への全体的な変換を求めます。
+<!--
 In the development of the exterior orientation problem (Section 12.8),
 we formulated equations for the transformation from absolute coordinates to
 image coordinates. Now we will add an affine transformation from true image
 coordinates to measured (uncorrected) image coordinates to get the overall
 transformation from absolute coordinates to measured image coordinates.
-
+-->
+</p><p>
+誤差や内部パラメータの未知数による歪みをモデル化する画像平面におけるアフィン変換は、
+<!--
 The affine transformation in the image plane that models the distortions
 duc to errors and unknowns in the intrinsic parameters is
-
-E = Ayye! + dayy’ + by (12.162)
-
-y= Ayn! + dyyy! + by, (12.163)
-
-where we are mapping from true image plane coordinates (x’, y') to uncor-
-rected (measured) image coordinates (Z, 7). Use the equations for perspective
+-->
+\[
+\begin{align}
+\tilde{x} &= a_{xx}x^\prime+a_{xy}y^\prime+b_x \tag{12.162} \\
+\\
+\tilde{y} &= a_{yx}x^\prime+a_{yy}y^\prime+b_y \tag{12.163} 
+\end{align}
+\]
+ここで、真の像面座標 \((x^\prime, y^\prime)\) から補正されていない（測定された）像座標 \((\tilde{x}, \tilde{y})\) への写像を行っている。透視投影の式を用いる。
+<!--
+where we are mapping from true image plane coordinates \((x^\prime, y^\prime)\) to uncor-
+rected (measured) image coordinates \((\tilde{x}, \tilde{y})\). Use the equations for perspective
 projection,
+-->
+\[
+\begin{align}
+\frac{x^\prime}{f} &= \frac{x_c}{z_c} \tag{12.164} \\
+\\
+\frac{y^\prime}{f} &= \frac{y_c}{z_c} \tag{12.165}
+\end{align}
+\]
 
-ee (12.164)
-12.10. CAMERA CALIBRATION 353
+\(x^\prime\) と \(y^\prime\) をカメラ座標の比率に置き換えます。
+<!--
+to replace \(x^\prime\) and \(y^\prime\) with ratios of the camera coordinates:
+-->
+\[
+\begin{align}
+\frac{\tilde{x}}{f}=a_{xx}\left(\frac{x_c}{z_c}\right)+a_{xy}\left(\frac{y_c}{z_c}\right)+\frac{b_x}{f} \tag{12.166} \\
+\\
+\frac{\tilde{y}}{f}=a_{yx}\left(\frac{x_c}{z_c}\right)+a_{yy}\left(\frac{y_c}{z_c}\right)+\frac{b_y}{f} \tag{12.167}
+\end{align}
+\]
 
-¥ Ye 4
-[= 5, 12.165)
-foe (
-to replace x’ and y’ with ratios of the camera coordinates:
-x Le Ye by 1
-FZ = Ape | —} + ae (*) += 12.166
-f (=) "Nad f ( )
-y Lo fo b
-; = tye (=) + tty (2 ) +7 (12.167)
-
+カメラ座標は剛体変換によって絶対座標に関連付けられます。
+<!--
 Camera coodinates are related to absolute coordinates by a rigid body trans-
 formation:
+-->
+\[
+\begin{align}
+x_c = r_{xx}x_a+r_{xy}y_a+r_{xz}z_a+p_x \tag{12.168} \\
+\\
+y_c = r_{yx}x_a+r_{yy}y_a+r_{yz}z_a+p_y \tag{12.169} \\
+\\
+z_c = r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z \tag{12.170} 
+\end{align}
+\]
 
-Lo = Vrata + PryYa + Tee%a + Pe (12.168)
-Yo = lyr®a + PyyYa + PyzZa + Py (12.169)
-Ze = Vegka + Paya + Pezta + Be (12.170)
-
+これらの式を使って、アフィン変換におけるカメラ座標の比を絶対座標の式に置き換えることができます。
+<!--
 We can use these equations to replace the ratios of camera coordinates in the
 affine transformation with expressions for the absolute coordinates,
+-->
+\[
+\begin{align}
+\frac{\tilde{x}-b_x}{f} = 
+\frac{s_{xx}x_a+s_{xy}y_a+s_{xz}z_a+t_x}
+{s_{zx}x_a+s_{zy}y_a+s_{zz}z_a+t_z} \tag{12.171} \\
+\\
+\frac{\tilde{y}-b_y}{f} = 
+\frac{s_{yx}x_a+s_{yy}y_a+s_{yz}z_a+t_y}
+{s_{zx}x_a+s_{zy}y_a+s_{zz}z_a+t_z} \tag{12.172}
+\end{align}
+\]
 
-&— by Senlq + SayYa + Sxz2Za t+ te
-
-= 12.171
-f Szn€a + 82yYa + S222q + te ( )
-f Szaka + SzyYa + 8y22q F t,’ .
-
+ここで、係数はアフィン変換と剛体変換の係数の積の和です。外部標定の式（式12.108と式12.109）に似た、絶対座標と補正されていない画像座標を関連付ける一対の式が得られます。カメラ誤差のアフィンモデルは、絶対座標からカメラ座標への変換に組み込まれています。式12.171と式12.172は次のように書けます。
+<!--
 where the coefficients are sums of products of the coefficients in the affine
 transformation and the rigid body transformation. What we have is a pair
 of equations, similar to the equations for exterior orientation (Equations
 12.108 and 12.109), that relate absolute coordinates to uncorrected image
 coordinates. The affine model for camera errors has been absorbed into the
 transformation from absolute to camera coordinates. Equations 12.171 and
-
 12.172 can be written as
+-->
+\[
+\begin{align}
+\frac{\tilde{x}-b_x}{f} &= \frac{\tilde{x}_c}{\tilde{z}_c}=
+\frac{s_{xx}x_a+s_{xy}y_a+s_{xz}z_a+t_x}
+{s_{zx}x_a+s_{zy}y_a+s_{zz}z_a+t_z} \tag{12.173} \\
+\\
+\frac{\tilde{y}-b_y}{f} &= \frac{\tilde{y}_c}{\tilde{z}_c}=
+\frac{s_{yx}x_a+s_{yy}y_a+s_{yz}z_a+t_y}
+{s_{zx}x_a+s_{zy}y_a+s_{zz}z_a+t_z} \tag{12.174} 
+\end{align}
+\]
 
-f Ze S2n€a + SzyYa t+ S2zta tte :
-y- by _ Ye _ SyeLa + SyyYa + Syz2a + ty (12 174)
-
-f Ze Szekq + SzyYa + 82220 +t,
-354 CHAPTER 12. CALIBRATION
-
+（補正されていない）画像座標は透視投影によってカメラ座標と関連付けられているが、カメラ座標空間はカメラの誤差を考慮して歪められていることを示す。
+<!--
 to show that the (uncorrected) image coordinates are related to the camera
 coordinates by perspective projection, but the space of camera coordinates
 has been warped to account for the camera errors.
-
+-->
+</p><p>
+式12.171と12.172に戻ると、主点6の位置に対する補正と、をアフィン変換に吸収して、
+<!--
 Returning to Equations 12.171 and 12.172, we can absorb the corrections
 to the location of the principal point, 6, and by, into the affine transformation
 to get
+-->
+\[
+\begin{align}
+\tilde{x}_i(s_{zx}x_{a,i}+s_{zy}y_{a,i}+s_{zz}z_{a,i}+t_z)-f(s_{xx}x_{a,i}+s_{xy}y_{a,i}+s_{xz}z_{a,i}+t_x)=0  \tag{12.175} \\
+\\
+\tilde{y}_i(s_{zx}x_{a,i}+s_{zy}y_{a,i}+s_{zz}z_{a,i}+t_z)-f(s_{yx}x_{a,i}+s_{yy}y_{a,i}+s_{yz}z_{a,i}+t_y)=0  \tag{12.176}
+\end{align}
+\]
 
-Bj (Sex Past SzyYait Szztai tts) — f(Seelait SryYait Se2%it+t,) =0 (12.175)
-Ui(SeeVait SeyYas + 82220; tte) _ F (Sy2%aitSyyYait Syz%aitty) =0, (12.176)
-
+これは、各キャリブレーション点とそれに対応する画像平面上の測定位置から、変換パラメータの2つの線形方程式が得られることを示しています。カメラ定数の公称値fは、カメラ座標系におけるtayの構築に必要なため、アフィン変換には吸収されません。
+<!--
 which shows that cach calibration point and its corresponding measured lo-
 cation in the image plane provides two linear equations for the parameters
 of the transformation. The nominal value f for the camera constant is not
 absorbed into the affine transformation since it is needed for constructing the
 tay in camera coordinates.
-
+-->
+</p><p>
+較正点の集合は、変換の係数について解くことができる同次線形方程式の集合を生成します。12個の未知数に対する12個の方程式を得るには少なくとも6個の較正点が必要ですが、精度を高めるにはより多くの較正点を使用する必要があります。すべての係数がゼロになる自明な解を避けるには、\(t_x\) や \(t_y\) などのパラメータの値を固定し、それを方程式の右辺に移動します。線形方程式の連立方程式を形成します。
+<!--
 The set of calibration points yields a set of homogeneous linear equations
 that can be solved for the coefficients of the transformation. At least six
 points are needed to get 12 equations for the 12 unknowns, but more calibra-
 tion points should be used to increase accuracy. To avoid the trivial solution
 with all coefficients equal to zero, fix the value of one of the parameters, such
-as t, or ty, and move it 10 the right side of the equation. Form a system of
-
+as \(t_x\) or \(t_y\), and move it 10 the right side of the equation. Form a system of
 linear equations,
-Au=b, (12.177)
+-->
+\[
+A\mathbf{u}=\mathbf{b}  \tag{12.177}
+\]
 
-where u is the vector of transformation coefficients; row 7 of the A matrix
+ここで、\(\mathbf{u}\) は変換係数のベクトルであり、\(A\) 行列の行 \(i\) にはキャリブレーション点 7 の絶対座標と、その絶対座標と \(\tilde{x}_i, \tilde{y}_i,\) または \(f\) との積が格納されます。\(\mathbf{b}\) ベクトルの要素 \(i\) は、\(t_x\) または \(t_y\) に選択された定数です。画像平面内のアフィン変換は外部標定の回転行列と組み合わされているため、変換行列はもはや直交行列ではありません。この連立一次方程式は、直交性の制約なしに、特異値分解などの一般的な数値手法を使用して解くことができます。
+<!--
+where \(\mathbf{u}\) is the vector of transformation coefficients; row \(i\) of the \(A\) matrix
 is filled with absolute coordinates for calibration point 7 and products of the
-absolute coordinates and #;, gj, or f; and clement ¢ of the b vector is the
-constant chosen for ¢, or t,. Since the affine transformation within the im-
+absolute coordinates and \(\tilde{x}_i, \tilde{y}_i,\) or \(f\); and clement \(i\) of the \(\mathbf{b}\) vector is the
+constant chosen for \(t_x\) or \(t_y\). Since the affine transformation within the im-
 age plane is combined with the rotation matrix for exterior orientation, the
 transformation matrix is no longer orthonormal. The system of linear equa-
 tions can be solved, without the orthonormality constraints, using common
 numerical methods such as singular value decomposition.
-
+-->
+</p><p>
+この変換は絶対座標を測定画像座標にマッピングする。応用には逆変換が必要となる。
+<!--
 The transformation maps absolute coordinatcs to measured image coor-
 dinates. Applications require the inverse transformation, given by
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+=S^{-1}\left[
+\begin{pmatrix}
+\tilde{x}_i \\
+\tilde{y}_i \\
+f
+\end{pmatrix}
+-
+\begin{pmatrix}
+t_x \\
+t_y \\
+t_z
+\end{pmatrix}
+\right] \tag{12.178}
+\]
 
-y |}=Sti) & }-] ty Wh, (12.178
-
-iy
-
-haat
-oo
-
-8
-12.10. CAMERA CALIBRATION 355
-
+これは、画像内の測定座標から絶対座標における光線の方程式を決定するために使用できます。カメラ定数\(f\)は、キャリブレーションアルゴリズムの定式化を通じて変更されずに保持されていることに注意してください。カメラ定数の補正はアフィン変換（式12.162および12.163）に含まれているため、レンズの焦点距離をfとして使用できます。最後に、ピクセル座標\([i, j]\)から画像座標への変換は、
+<!--
 which can be used to determine the equation of a ray in absolute coordinates
 from the measured coordinates in the image. Note that the camera constant
-f has been carried unchanged through the formulation of the calibration
+\(f\) has been carried unchanged through the formulation of the calibration
 algorithm. Since corrections to the camera constant are included in the
 affine transformation (Equations 12.162 and 12.163), the focal length of the
 lens can be used for f. Finally, the transformation from pixel coordinates
-(i, j] to image coordinates,
+\([i, j]\) to image coordinates,
+-->
+\[
+\begin{align}
+\tilde{x} &= s_x(j-c_x) \tag{12.179} \\
+\\
+\tilde{y} &=-s_y(i-c_y) \tag{12.180}
+\end{align}
+\]
 
-& = 8,(j — cz) (12.179)
-§ = —s,(i—c,), (12.180)
-
-y
-
+は、カメラ誤差モデル（式12.162および式12.163）と組み合わせて、絶対座標とピクセル座標間の変換を展開できるアフィン変換です。
+<!--
 is an affine transformation that can be combined with the model for camcra
 errors (Equations 12.162 and 12.163) to develop a transformation between
 absolute coordinates and pixel coordinates.
-
-12.10.3. Nonlinear Method for Camera Calibration
-
+-->
+</p>
+<h3>12.10.3. カメラキャリブレーションのための非線形手法</h3>
+<!--
+<h3>12.10.3. Nonlinear Method for Camera Calibration</h3>
+-->
+<p>
+キャリブレーションポイントの集合が与えられた場合、画像平面におけるキャリブレーションポイントの投影を決定し、投影位置の誤差を計算し、これらの誤差を用いてカメラキャリブレーションパラメータを求めます。キャリブレーションポイントが画像平面のどこに投影されるべきかを知る必要があるため、外部標定問題も同時に解きます。このセクションで示す方法は、12.10.2セクションで説明した手順とは異なります。12.10.2では、内部標定問題と外部標定問題が単一のアフィン変換に統合されていますが、この手順では、実際のカメラキャリブレーションパラメータが取得され、カメラがシーン内のどこに配置されるかに関係なく使用できます。
+<!--
 Given a set of calibration points, determine the projections of the calibration
 points in the image plane, calculate the errors in the projected positions, and
 use these errors to solve for the camera calibration parameters. Since it is
@@ -1981,42 +2833,75 @@ presented in this section is different from the procedure explained in Section
 into a single affine transformation, in that the actual camera calibration
 parameters are obtained and can be used regardless of where the camera is
 later located in scene.
-
+-->
+</p><p>
+カメラキャリブレーション問題の解決原理は、キャリブレーションポイントの画像平面への投影位置 \((x_i^\prime, y_i^\prime)\) を測定し、正しい位置からの点の偏差 \((\delta x_i, \delta y_i)\) を計算し、これらの測定値をカメラパラメータをモデル化する方程式に代入することです。各キャリブレーションポイントから2つの方程式が得られます。解法には少なくとも未知数をカバーするのに十分な方程式が必要ですが、精度を高めるために未知数よりも多くの方程式が使用され、過剰決定された方程式のセットは非線形回帰を用いて解かれます。
+<!--
 The principle behind the solution to the camera calibration problem is to
-measure the locations (i, y;) of the projections of the calibration points onto
-the image plane, calculate the deviations (6z,, 6y;) of the points from the cor-
+measure the locations \((x_i^\prime, y_i^\prime)\) of the projections of the calibration points onto
+the image plane, calculate the deviations \((\delta x_i, \delta y_i)\) of the points from the cor-
 rect positions, and plug these measurements into the equations that model
 the camera parameters. Each calibration point yields two equations. The
 solution requires at least enough equations to cover the unknowns, but for
 increased accuracy more equations than unknowns are used and the overde-
 termined set. of equations is solved using nonlinear regression.
-
+-->
+</p><p>
+カメラのおおよその位置と姿勢は絶対座標で既知であると仮定する。回転角度の初期推定値が分かっているので、回転行列のオイラー角を用いて外部標定問題を定式化することができる。回帰問題のパラメータは、回転角度 \(\omega, \phi,\) と \(\kappa\)、カメラの絶対座標での位置 \(p_x, p_y,\) と \(p_z\)、カメラ定数 \(f\)、主点の位置に対する補正値 \((x_p, y_p)\)、そして放射状レンズ歪みの多項式係数 \(\kappa_1, \kappa_2,\) と \(\kappa_3\) である。外部標定問題の方程式は以下の通りである。
+<!--
 Assume that the approximate position and orientation of the camera in
 absolute coordinates is known. Since we have initial estimates for the rota-
 tion angles, we can formulate the exterior orientation problem in terms of
-356 CHAPTER 12. CALIBRATION
-
 the Euler angles in the rotation matrix. The pararecters of the regression
-problem are the rotation angles w, ¢, and x; the position of the camera in
-absolute coordinates py, py, and p,; the camera constant f; the corrections
-to the location of the principal point (¢p, yp); and the polynomial coefficients
-for radial lens distortion «1, «2, and «3. The equations for the exterior ori-
+problem are the rotation angles \(\omega, \phi,\) and \(\kappa\); the position of the camera in
+absolute coordinates \(p_x, p_y,\) and \(p_z\); the camera constant \(f\); the corrections
+to the location of the principal point \((x_p, y_p)\); and the polynomial coefficients
+for radial lens distortion \(\kappa_1, \kappa_2,\) and \(\kappa_3\). The equations for the exterior ori-
 entation problem are
+-->
+\[
+\begin{align}
+\frac{x^\prime}{f} &=
+\frac{r_{xx}x_a+r_{xy}y_a+r_{xz}z_a+p_x}
+{r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z} \tag{12.181} \\
+\\
+\frac{y^\prime}{f} &=
+\frac{r_{yx}x_a+r_{yy}y_a+r_{yz}z_a+p_y}
+{r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z} \tag{12.182} 
+\end{align}
+\]
 
-f Pepa, Tay Yo + Pegg + Pe ‘
-y! _ Tyeta + lua + Pyzka + Dy (12.182)
+\(x^\prime\)と\(y^\prime\)をカメラモデルからの修正された位置に置き換えます。
+<!--
+Replace \(x^\prime\) and \(y^\prime\) with the corrected positions from the camera model,
+-->
+\[
+\begin{align}
+\frac{(\tilde{x}-x_p)(1+\kappa_1r^2+\kappa_2r^4+\kappa_3r^6)}{f} &=
+\frac{r_{xx}x_a+r_{xy}y_a+r_{xz}z_a+p_x}
+{r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z}  \tag{12.183} \\
+\\
+\frac{(\tilde{y}-y_p)(1+\kappa_1r^2+\kappa_2r^4+\kappa_3r^6)}{f} &=
+\frac{r_{yx}x_a+r_{yy}y_a+r_{yz}z_a+p_y}
+{r_{zx}x_a+r_{zy}y_a+r_{zz}z_a+p_z}  \tag{12.184} 
+\end{align}
+\]
 
-fo Peale + Paya + Peta + Ps
-Replace «’ and y' with the corrected positions from the camera model,
+回転行列の要素を、式12.13に示されているオイラー角を用いた回転行列の各要素の公式に置き換えます。非線形回帰を用いて、カメラパラメータと外部標定を解きます。回帰アルゴリズムには適切な初期条件が必要です。対象が平面で、カメラ軸が平面に垂直で、画像が対象物のほぼ中心に配置されている場合、初期条件は簡単に得られます。絶対座標系は、x軸とy軸がカメラ軸と平行になるように設定されていると仮定します。初期条件は次のとおりです。
 
-(&—2p) (1+ Ky r?tkgrt+ngr*) _ Tne ka 7 Tay Ya T Pe22a + Pe (12.183)
+\[
+\begin{align}
+&\omega=\phi=\kappa=0 \\
+&x=\text{原点からの x の並進} \\
+&y=\text{原点からの y の並進} \\
+&z=\text{較正面からのカメラの距離} \\
+&f=\text{レンズの焦点距離} \\
+&x_p = y_p = 0 \\
+&\kappa_1=\kappa_2=\kappa_3=0
+\end{align}
+\]
 
-f Pegta Paya TP azkq 7 Dz
-
-(G— up) tar? +rart+ mgr) — Pye ®a + PyyYa + Pye%a + Py (12.184)
-
-f Tee®a + Paya + Pzzta + Pe
-
+<!--
 and replace the elements of the rotation matrix with the formulas for the
 rotation matrix entries in terms of the Euler angles, provided in Equation
 12.13. Solve for the camera parameters and exterior orientation using nonlin-
@@ -2025,104 +2910,102 @@ If the target is a planc, the camera axis is normal to the plane, and the im-
 age is roughly centered on the target, then the initial conditions arc casy to
 obtain. Assume that the absolute coordinate system is set up so that the x
 and y axes are parallel to the camera axes. The initial conditions are:
+\[
+\begin{align}
+&\omega=\phi=\kappa=0 \\
+&x=\text{translation in x from the origin} \\
+&y=\text{translation in y from the origin} \\
+&z=\text{distance of the camera from the calibration plane} \\
+&f=\text{focal length of the lens} \\
+&x_p = y_p = 0 \\
+&\kappa_1=\kappa_2=\kappa_3=0
+\end{align}
+\]
+-->
 
-=¢=nr =0
-
-= translation in « from the origin
-
-= translation in y from the origin
-
-distance of the camera from the calibration plane
-
-il
-
-il
-
-wr we ce BE
-
-focal length of the lens
-
-=
-Il
-
-=:
-ll
-land
-12.11. BINOCULAR STEREO CALIBRATION 357
-
+</p><p>
+レーザープリンターを使えば、点のターゲットを簡単に作成できます。画像内の点の補正されていない位置は、連結成分の一次モーメントを計算することで見つけることができます。
+<!--
 It is easy to build a target, of dots using a laser printer. The uncorrected po-
 sitions of the dots in the image can be found by computing the first moments
 of the connected components.
-
+-->
+</p><p>
+非線形回帰の欠点は、パラメータに適切な初期値が必要であることです。しかし、利点は、非線形回帰に関する文献が多数存在し、非線形問題を解くためのアドバイスや、パラメータ推定値の誤差を推定する方法が提供されていることです。
+<!--
 The disadvantage to nonlincar regression is that good initial values for
 the parameters are needed, but the advantage is that there is a body of
 literature on nonlinear regression with advice on solving nonlinear problems
 and methods for estimating crrors in the parameter estimates.
-
-12.11 Binocular Stereo Calibration
-
+-->
+</p>
+<h2>12.11 両眼立体視キャリブレーション</h2>
+<!--
+<h2>12.11 Binocular Stereo Calibration</h2>
+-->
+<p>
+このセクションでは、本章で紹介した手法を、ステレオカメラのキャリブレーションとステレオ計測値の利用のための実用的なシステムにどのように組み合わせることができるかについて説明します。これにより、様々なキャリブレーション問題間の関係性を検討することができます。
+<!--
 In this section we will discuss how the techniques presented in this chapter
 can be combined in a practical system for calibrating sterco cameras and
 using the stereo measurements. This provides a forum for reviewing the
 relationships between the various calibration problems.
-
+-->
+</p><p>
+両眼立体視の実用的なシステムを開発するには、いくつかの課題があります。
+<!--
 There are scveral tasks in developing a practical system for binocular
 stereo:
+-->
+<div class="styleBullet">
+<ul><li>
+1. 各カメラの内部パラメータをキャリブレーションする。
+</li><br><li>2. 相対評定問題を解く。
 
+</li><br><li>3. エピポーラ線が画像の行に対応するように画像を再サンプリングする。
+
+</li><br><li>4. 特徴マッチングまたは相関によって共役ペアを計算する。
+</li><br><li>5. 各共役ペアのステレオ交差問題を解く。
+</li><br><li>6. ベースライン距離を決定する。
+
+</li><br><li>7. 絶対評定問題を解き、点の測定値をステレオカメラの座標系からシーンの絶対座標系に変換する。
+<!--
 1. Calibrate the intrinsic parameters for each camera.
-2. Solve the relative orientation problem.
+</li><br><li>2. Solve the relative orientation problem.
 
-3. Resample the images so that the epipolar lines correspond to image
+</li><br><li>3. Resample the images so that the epipolar lines correspond to image
 rows.
 
-4. Compute conjugate pairs by feature matching or correlation.
-5. Solve the stereo intersection problem for each conjugate pair.
-6. Determine baseline distance.
+</li><br><li>4. Compute conjugate pairs by feature matching or correlation.
+</li><br><li>5. Solve the stereo intersection problem for each conjugate pair.
+</li><br><li>6. Determine baseline distance.
 
-7. Solve the absolute orientation problem to transform point measure-
+</li><br><li>7. Solve the absolute orientation problem to transform point measure-
 ments from the coordinate system of the stereo cameras to an absolute
 coordinate system for the scene.
-
+-->
+</li></ul></div>
+</p><p>
+双眼ステレオシステムのキャリブレーションにはいくつかの方法があり、図12.6の図の様々な経路に対応しています。まず、各カメラをキャリブレーションして、カメラ定数、主点の位置、レンズ歪みの補正テーブル、その他の内部パラメータを決定する必要があります。左右のステレオカメラをキャリブレーションしたら、ステレオシステムでカメラを使用するには基本的に3つの方法があります。
+<!--
 There are several ways to calibrate a binocular stcreo system, correspond-
 ing to various paths through the diagram in Figure 12.6. To start, cach
 camera must be calibrated to determine the camera constant, location of the
-358 CHAPTER 12. CALIBRATION
-
-Left Camera Right camera
-Interior Interior
-orientation orientation
-
-Relative
-! orientation
-
-Baseline - \
-
-calibration
-- [ Compute |
-
-Exterior
-orientation
-
-inlersections
-Y - — 4 Compute
-intersections
-~ Absolute
-orientation
-Absolute with scale
-
-orientation
-
-|
-
-Point coordinates
-
-Figure 12.6: A diagram of the steps in various procedures for calibrating a
-binocular stereo system.
-
 principal point, correction table for lens distortions, and other intrinsic pa-
 rameters. Once the left and right stereo camcras have becn calibrated, there
 are basically three approaches to using the cameras in a stereo system.
-
+-->
+</p>>
+<center><img src="images/fig12_6.png"></center>
+<p class="margin-large">
+図12.6: 両眼立体視システムを較正するためのさまざまな手順のステップを示す図。
+<!--
+Figure 12.6: A diagram of the steps in various procedures for calibrating a
+binocular stereo system.
+-->
+</p><p>
+最初のアプローチは、相対的な向きの問題を解決し、ステレオカメラを使用して既知の距離にある点を測定するなど、他の方法でベースラインを決定することです。これにより、2台のカメラ間の剛体変換が完全にキャリブレーションされます。点の測定値は、ステレオカメラのローカル座標系で収集できます。ベースラインがキャリブレーションされているため、点の測定値は実単位で表され、ステレオシステムを使用してシーン内のオブジェクト上の点間の関係を測定できます。点の測定値を別の座標系に変換する必要がない限り、絶対的な向きの問題を解決するためにILは必要ありません。
+<!--
 The first approach is to solve the relative orientation problem and de-
 termine the baseline by other means, such as using the stereo cameras to
 measure points that are a known distance apart. This fully calibrates the
@@ -2133,14 +3016,14 @@ the stereo system can be used to measure the relationships between points
 on objects in the scene. IL is not necessary to solve the absolute oricntation
 problem, unless the point measurements must be transformed into another
 coordinate system.
-
+-->
+</p><p>
+2つ目のアプローチは、相対的な向きの問題を解決し、単位基線距離を仮定することで得られる任意の測定システムで点の測定値を取得することです。点の測定値は、未知のスケール係数を除いて正確です。距離の単位が不明であっても、距離比と角度は正確です。基線距離が後で取得された場合、点の座標に基線距離を掛けて、既知の単位での点の測定値を得ることができます。点の測定値を別の座標系に変換する必要がある場合は、スケール付きの絶対的な向きの問題（セクション12.7）を解決します。これにより、追加の計算なしで基線距離の較正と点の座標の既知の単位への変換が実現されます。
+<!--
 The second approach is to solve the relative orientation problem and
 obtain point measurcments in the arbitrary system of measureiment that.
 results from assuming unit baseline distance. The point measurements will be
-
 correct, except for the unknown scale factor. Distance ratios and angles will
-12.12. ACTIVE TRIANGULATION 359
-
 be correct, even though the distances are in unknown units. If the baseline
 distance is obtained later, then the point coordinates can be multiplied by the
 baseline distance to gct point measurements in known units. If it is necessary
@@ -2148,94 +3031,159 @@ to transform the point measurements into another coordinate system, thon
 solve the absolute orientation problem with scale (Section 12.7), since this
 will accomplish the calibration of the baseline distance and the conversion of
 point coordinates into known units without additional computation.
-
+-->
+</p><p>
+3つ目のアプローチは、各ステレオカメラの外部標定問題を解くことです。これにより、左右のカメラの座標系から絶対座標への変換が行われます。12.6節の方法を用いて光線を交差させることで得られる点の測定値は、自動的に単位が既知の絶対座標系になるため、それ以上の変換は不要です。
+<!--
 The third approach is to solve the exterior orientation problem for each
 sterco camera. This provides the transformation from the coordinate systems
 of the left and right camera into absolute coordinates. The point measure-
 meuts obtained by intersecting rays using the methods of Section 12.6 will
 automatically be in absolute coordinates with known units, and no further
 transformations are necessary.
-
-12.12 Active Triangulation
-
+-->
+</p>
+<h2>12.12 アクティブ三角測量</h2>
+<!--
+<h2>12.12 Active Triangulation</h2>
+-->
+<p>
+このセクションでは、シーン内の不透明な面に光面を投影するアクティブセンサーを用いて点の座標を決定する方法について説明します。また、アクティブ三角測量システムのキャリブレーション方法についても紹介します。
+<!--
 This section will cover methods for determining the coordinates of a point
 using an active sensor that projects a plane of light onto opaque surfaces in
 the scene. A method for calibrating an active triangulation system will be
 presented.
-
+-->
+</p><p>
+カメラ中心座標における単純な幾何学から始め、絶対座標における一般的なケースへと進みます。光平面が、\(y\)軸に平行で、\(x\)軸に沿って\(b_x\)だけ変位した軸を中心に回転すると仮定します。\(\theta\)を\(z\)軸に対する光平面の向きとします。\(\theta = 0\)のとき、光平面は\(y-z\)平面に平行であり、\(\theta\)の正の値は\(y\)軸を中心とした反時計回りの回転に対応します。ベクトル幾何学では、光平面の法線は
+<!--
 We will start with a simple geometry in camera-centered coordinates and
 proceed to the general case in absolute coordinates. Suppose that the planc
-of light rotates about an axis that is parallel to the y axis and displaced along
-the x axis by 8. Let @ be the orientation of the plane relative to the z axis.
-With @ = 0, the plane of light is parallel to the y-z plane and positive values
-for @ correspond to counterclockwise rotation about the y axis. In terms of
+of light rotates about an axis that is parallel to the \(y\) axis and displaced along
+the \(x\) axis by \(b_x\). Let \(\theta\) be the orientation of the plane relative to the \(z\) axis.
+With \(\theta = 0\), the plane of light is parallel to the \(y-z\) plane and positive values
+for \(\theta\) correspond to counterclockwise rotation about the \(y\) axis. In terms of
 vector geometry, the normal to the plane is
+-->
+\[
+\mathbf{n} = (n_x, n_y, n_z) = (\cos(\theta), 0, \sin(\theta))  \tag{12.185}
+\]
 
-n = (nz, Ny, n) = (cos(@), 0, sin(#)), (12.185)
+ベースラインは
+<!--
 the baseline is
-b = (be, by, 62) = (62,0,0), (12.186)
-and point p = (2, y, 2) lics in the plane if
-(p—b)-n=0. (12.187)
+-->
+\[
+\mathbf{b} = (b_x, b_y, b_z) = (b_x,0,0)   \tag{12.186}
+\]
 
+そして点\(\mathbf{p} = (x, y, z)\)が平面上にある場合、
+<!--
+and point \(\mathbf{p} = (x, y, z)\) lies in the plane if
+-->
+\[
+(\mathbf{p}-\mathbf{b})\cdot\mathbf{n}=0   \tag{12.187}
+\]
+
+光線はシーンを照らし、不透明な表面と交差して空間に曲線を描き、それがカメラによって撮影されます。線検出演算子を用いて、投影された曲線上の点の位置を推定します。推定された直線点の座標が\((x^\prime, y^\prime)\)であると仮定します。これは、空間における光線に対応し、次式で表されます。
+<!--
 The planc of light illuminates the scene and intersects an opaque surface to
 produce a curve in space that is imaged by the camera. A line detection
-360 CHAPTER 12. CALIBRATION
-
 operator is used to estimate the locations of points along the projected curve
 in the image plane. Suppose that an estimated linc point has coordinates
-(z',y’). This corresponds to a ray in space represented by the equation
+\((x^\prime, y^\prime)\). This corresponds to a ray in space represented by the equation
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
+z
+\end{pmatrix}
+=t
+\begin{pmatrix}
+x^\prime \\
+y^\prime \\
+f
+\end{pmatrix}
+\tag{12.188}
+\]
 
-&
-y |=tl yf, (12.188)
+ここで、\(f\)は投影中心から像面までの距離です。
+式12.187の\(\mathbf{p}\)を光線の式に置き換え、\(t\)について解きます。
+<!--
+where \(f\) is the distance of the image plane from the center of projection.
+Replace \(\mathbf{p}\) in Equation 12.187 with the equation for the ray and solve for \(t\),
+-->
+\[
+t=\frac{b_x \cos\theta}{x^\prime\cos\theta-f\sin\theta^\prime} \tag{12.189}
+\]
 
-where f is the distance of the image plane from the center of projection.
-Replace p in Equation 12.187 with the equation for the ray and solve for ¢,
-by, cos 6
-
-t= ————_—__ 12.189
-x’ cos — f sing’ ( )
-
+これを光線の式に代入すると、カメラ中心座標における点の座標が得られます。
+<!--
 and plug into the equation for the ray to get the coordinates of the point in
 camera-centered coordinates:
-
-2'by cos 8
-F cost—f sind
-
+-->
+\[
+\begin{pmatrix}
+x \\
+y \\
 z
-
-_ y' by cos
-Y | =| wost-fsmo |° (12.190)
-2 fon cos 6
-
-2 cos 0—f sind
-
+\end{pmatrix}
+=
+\begin{pmatrix}
+\frac{x^\prime b_x \cos\theta}{x^\prime\cos\theta-f\sin\theta} \\
+\frac{y^\prime b_x \cos\theta}{x^\prime \cos\theta-f\sin\theta} \\
+\frac{f b_x \cos\theta}{x^\prime\cos\theta-f\sin\theta}
+\end{pmatrix} \tag{12.190}
+\]
+カメラの外部評定がキャリブレーションされている場合、光線は絶対座標で表すことができます。平面の位置と方向も絶対座標で表されている場合、点の測定も絶対座標で表されます。
+<!--
 If the exterior orientation of the camera has been calibrated, then the ray
 can be represented in absolute coordinates; if the position and oricntation
 of the plane are also represented in absolute coordinates, then the point
 measurements will be in absolute coordinates.
-
+-->
+</p><p>
+これらの方程式を一般化して、平面を空間内で任意の位置と向きにすることができる。平面が軸wを中心に反時計回りに\(\theta\)回転し、法線nが\(\theta = 0\)の向きに対応するとする。\(R(\theta)\)を回転行列とする。点\(\mathbf{p}\)が平面上にある場合、
+<!--
 It is easy to generalize these equations to allow an arbitrary position and
 orientation for the plane in space. Suppose that the plane is rotated by
-@ counterclockwise about an axis w and the normal n corresponds to the
-orientation with @ = 0. Let R(@) be the rotation matrix. A point p lies in
+\(\theta\) counterclockwise about an axis w and the normal n corresponds to the
+orientation with \(\theta = 0\). Let \(R(\theta)\) be the rotation matrix. A point \(\mathbf{p}\) lies in the plane if
+-->
+\[
+(\mathbf{p}-\mathbf{b})\cdot R(\theta)\mathbf{n} = 0  \tag{12.191}
+\]
+\(\mathbf{b}\)を変化させることで、空間における平面の位置を変えることもできる。
+<!--
+We can also change the position of the plane in space by varying \(\mathbf{b}\),
+-->
+\[
+(\mathbf{p}-\mathbf{b}(d))\cdot R(\theta)\mathbf{n} = 0  \tag{12.192}
+\]
 
-the plane if
-(p—b)- R(@)n = 0. (12.191)
-
-We can also change the position of the plane in space by varying b,
-(p — b(d)) - R(O)n = 0, (12.192)
-
-where d is the control parameter of a linear actuator.
-12.13. ROBUST METHODS 361
-
-12.13. Robust Methods
-
+ここで、\(d\)はリニアアクチュエータの制御パラメータです。
+<!--
+where \(d\) is the control parameter of a linear actuator.
+-->
+</p>
+<h2>12.13. ロバストな手法</h2>
+<!--
+<h2>12.13. Robust Methods</h2>
+-->
+<p>
+本章で紹介したキャリブレーション手法はすべて最小二乗回帰を用いていますが、これは共役ペアの形成における不一致に起因する外れ値の影響を非常に受けやすい手法です。キャリブレーションを堅牢にするには、再標本抽出計画を用いるか、回帰手順をロバストノルムを使用するように変更するかの2つの方法があります。
+<!--
 All of the calibration methods presented in this chapter have used least-
 squares regression, which is very sensitive to outliers duc to mismatches in
 forming the conjugate pairs. There are two approaches to making calibration
 robust: use a resampling plan or change the regression procedure to use a
 robust norm.
-
+-->
+</p><p>
+再サンプリング計画を実行するには、較正データから得られたn個の共役対集合から、m個の共役対のすべての組み合わせを考慮する必要がある。サブセットのサイズmは、較正問題に対する良好な解を得るのに十分な大きさでなければならない。[207]の最小二乗基準に従って、すべての共役対に対する変換の適合度を比較することにより、最適なパラメータのセクションを選択する。最適なパラメータ推定値を使用して共役対集合から外れ値を除去し、残りのすべての共役対を用いて較正手順を繰り返す。
+<!--
 To implement a resampling plan, it is necessary to consider all combina-
 tions of m conjugate pairs from the set of n conjugate pairs obtained from
 the calibration data. The size m of the subset must be large enough to get a
@@ -2244,23 +3192,37 @@ by comparing the fit of the transformation to all conjugate pairs according to
 the least. median of squares criterion [207]. Use the best parameter estimates
 to remove outliers from the set of conjugate pairs, and repeat the calibration
 procedure using all of the remaining conjugate pairs.
-
+-->
+</p><p>
+もう一つのアプローチは、二乗ノルムをロバストノルムに置き換えることです[197, pp. 558-565]。較正手順で線形回帰を使用する場合は、重み付き最小二乗解法を使用します。重み付け最小二乗回帰問題が重みなしロバスト回帰問題と等価になるように重みを計算します。残差\(r_i\)のロバストノルムが\(\rho(r_i)\)である場合、次のように解きます。
+<!--
 The other approach involves replacing the square norm with a robust
 norm [197, pp. 558-565]. If the calibration procedure uses linear regression,
 then usc a weighted lcast-squares solution method. Calculate the weights
 so that the weighted least-squares regression problem is cquivalent to the
-unweighted robust regression problem. If the robust norm for residual r; is
+unweighted robust regression problem. If the robust norm for residual \(r_i\) is
+\(\rho(r_i)\), then solve
+-->
+\[
+w_ir_i^2 = \rho(r_i)  \tag{12.193}
+\]
 
-p(r;), then solve
-wr? = (ri) (12.193)
-
+重みw, を求め、この重みを共役対に使用します。これにより、反復重み付け最小二乗法が実現します。これは、一連の回帰問題を、反復ごとに重みを調整しながら解きます。非線形回帰の場合、この解法ではロバストノルムを直接使用できる場合があります。
+<!--
 for the weight w,; and use this weight for the conjugate pair. This leads to
 iterative reweighted least-squares: a sequence of regression problems is solved
 with the weights adjusted between iterations. For nonlincar regression, the
 solution method may allow the robust norm to be used directly.
+-->
+</p>
+<h2>12.14 むすび</h2>
+<!--
+<h2>12.14 Conclusions</h2>
+-->
+<p>
 
-12.14 Conclusions
-
+この章では、写真測量における基本的な問題である絶対標定、相対標定、外部標定、内部標定を含む、いくつかのキャリブレーション手法を紹介しました。内部標定問題は、ほとんどのマシンビジョンアルゴリズムで想定されている画像形成の仮定にカメラが従うことを保証するために、あらゆるカメラに対して解決する必要があります。残りのキャリブレーション問題は、画像解析で使用される手法と深度測定で使用される手法の2つのグループに分けられます。外部標定問題は、画像解析アプリケーションにおいて、画像測定値をシーンの形状に関連付ける必要がある場合に解決する必要があります。相対標定問題は、両眼ステレオで深度測定値を取得するために、2台のカメラをキャリブレーションするために使用されます。絶対標定問題は、両眼ステレオやアクティブセンシングを含む、あらゆる深度測定システムの位置と方向をキャリブレーションするために使用されます。これにより、カメラ座標での深度測定値を、アプリケーションで使用される座標系に変換できます。
+<!--
 Several methods for calibration have been presented in this chapter, includ-
 ing the basic problems in photogrammetry: absolute, relative, exterior, and
 interior orientation. The interior orientation problem should be solved for
@@ -2268,8 +3230,6 @@ any camera to ensure that the camera obeys the assumptions of image forma-
 tion assumed by inost machine vision algorithms. The remaining calibration
 problems can be divided into two groups: methods used in image analysis
 and methods used in depth measurement. The exterior orientation problem
-362 CHAPTER 12. CALIBRATION
-
 must be solved for an image analysis application when it is necessary to relate
 image measurements to the geometry of the scene. The relative orientation
 problem is used to calibrate a pair of cameras for obtaining depth measure-
@@ -2278,9 +3238,15 @@ calibrate the position and oricntation of any system for depth measurement,
 including binocular stcreo or active sensing, so that the depth measurements
 in camera coordinates can be translated into the coordinate system used in
 the application.
-
-Further Reading
-
+-->
+</p>
+<h2>さらに学ぶために</h2>
+<!--
+<h2>Further Reading</h2>
+-->
+<p>
+写真測量の優れた入門書としてHorn [109] が挙げられますが、彼はまた、正規直交行列 [113] と単位四元数 [110] を用いた絶対標定問題の閉形式の解法も発表しています。アメリカ写真測量学会は写真測量に関する包括的な論文集 [224] を出版しており、写真測量に関する書籍もいくつかあります [17, 95, 170, 254]。写真測量はもともと航空写真から地形図を作成するために開発されたため、写真測量という名称は写真上で測定を行うことを意味します。地上写真測量については、「非地形写真測量ハンドブック」で取り上げられており、マシンビジョンでの使用方法も含まれています [137]。Tsai [234] によって開発されたカメラキャリブレーション技術は広く使用されています。カメラキャリブレーションに関するさらなる研究は、Lenz と Tsai [154] によって行われています。ホーン[111]は、相対的配向問題の解決策に関する優れた解説を発表しました。ブラウン[51]は、レンズの放射状歪みと偏芯を補正するアルゴリズムを発表しました。
+<!--
 An excellent introduction to photogrammetry is provided by Horn [109],
 who has also published a closed-form solution to the absolute orientation
 problem using orthonormal matrices [113] and unit quaternions [110]. The
@@ -2296,84 +3262,111 @@ calibration has been done by Lenz and Tsai [154]. Horn [111] published
 an excellent description of the solution to the relative orientation problem.
 Brown [51] published the algorithm for correcting radial lens distortions and
 decentering.
-
+-->
+</p><p>
+写真測量では通常、物体とカメラが剛体変換によって移動すると仮定します。多くの場合、物体は移動に伴って変形し、並進、回転、スケール変化も生じます。Booksteinは、薄板スプラインを用いて様々な分野における非剛体変形のモデリングに関する膨大な文献を発表しています[39, 40, 41, 42]。
+<!--
 Photogrammetry usually assumes that objects and cameras move by rigid
 body transformations. In many cases, an object will deform as it moves, in
 addition to undergoing translation, rotation, and change in scale. Bookstein
 has published an extensive body of literature on modcling nonrigid deforma-
 tions in diverse fields using thin-plate splines [39, 40, 41, 42].
+-->
+</p>
+<h2>演習</h2>
+<!--
+<h2>Exercises</h2>
+-->
+<p>
+<div class="styleBullet">
+<ul><li>
+12.1 キャリブレーションにおいて、何種類の評定が考えられるか？いくつかの例を挙げ、それらの違いを説明してください。
+演習 363
 
-Exercises
+</li><br><li>12.2 写真測量はなぜカメラキャリブレーション問題に関係するのでしょうか？例を挙げて説明してください。
 
+</li><br><li>12.3 長方形ピクセルは画像測定にどのような影響を与えますか？領域や領域の重心の測定において、ピクセルの長方形性をどのように補正できますか？領域の相対的な位置と方向の測定にどのような影響を与えますか？現実世界で正確な測定を行うために、どのような注意が必要ですか？
+
+</li><br><li>12.4 アフィン変換を定義してください。画像内で異なる時点においてアフィン変換を受ける物体の例を3つ、受けない物体の例を3つ挙げてください。
+
+</li><br><li>12.5 オイラー角を定義してください。どこで使用されますか？それぞれの長所と短所は何ですか？
+
+</li><br><li>12.6 クォータニオンとは何ですか？なぜキャリブレーションにおける回転の表現としてクォータニオンが優れていると考えられているのですか？絶対評定のキャリブレーションを例に挙げて、その説明を述べてください。
+
+</li><br><li>12.7 共面性制約を定義してください。カメラキャリブレーションにおいて、共面性制約はどこでどのように使用されますか？
+
+</li><br><li>12.8 ハンドアイシステムを設計しているとします。このシステムでは、カメラが作業空間の固定位置に取り付けられています。ロボットアームであるハンドは、作業空間内の物体を拾い上げて配置するために使用されます。どのようなキャリブレーションスキームが必要ですか？
+
+</li><br><li>12.9 上記の問題において、カメラがロボットアーム自体に取り付けられている場合、物体の位置を特定するためにどのようなキャリブレーションスキームが必要ですか？この問題を解くために必要な固定された既知の点はいくつありますか？問題ですか？
+
+</li><br><li>12.10 ロボットアームにステレオシステムを搭載し、ポイントの深度を簡単に計算し、より器用な操作を行えるようにします。この場合、どのようなキャリブレーション方式が必要ですか？
+キャリブレーションのためのシーンポイントを選択する基準は何ですか？どのようなポイントの配置がキャリブレーションに適していませんか？
+
+</li><br><li>12.11 カメラをキャリブレーションするために、どのようなカメラパラメータを決定する必要がありますか？直接測定せずにこれらのパラメータを決定するにはどうすればよいでしょうか？カメラメーカーが提供するデータシートから入手できるパラメータは何ですか？
+<!--
 12.1 How many types of orientations are possible in calibration? Consider
 some examples and illustrate the difference among them.
 EXERCISES 363
 
-12.2
 
-12.3
 
-12.4
-
-12.5
-
-12.6
-
-12.7
-
-12.8
-
-12.9
-
-12.10
-
-Why is photogrammetry concerned with the camera calibration prob-
+</li><br><li>12.2 Why is photogrammetry concerned with the camera calibration prob-
 lem? Illustrate using an cxample.
 
-What is the effect of rectangular pixels on image measurements? How
+</li><br><li>12.3 What is the effect of rectangular pixels on image measurements? How
 can you compensate for the rectangularity of pixels in measuring areas
 and centroids of regions? How will it affect measurements of relative
 locations and orientations of regions? What care would you take to
 get. correct measurements in the real world?
 
-Define affine transformation. Give three examples of objects that will
+</li><br><li>12.4 Define affine transformation. Give three examples of objects that will
 undergo an affine transformation in an image at different time instants
 and three examples of objects that will not.
 
-Define Euler angles. Where are they used? What are their strengths
+</li><br><li>12.5 Define Euler angles. Where are they used? What are their strengths
 and weaknesses”?
 
-What are quaternions? Why are they considered a good represen-
+</li><br><li>12.6 What are quaternions? Why are they considered a good represen-
 tation for rotation in calibration? Demonstrate this considering the
 calibration of absolute orientation.
 
-Define the coplanarity constraint. Where and how is it used in camera
+</li><br><li>12.7 Define the coplanarity constraint. Where and how is it used in camera
 calibration?
 
-Suppose that you are designing a hand-eye system. In this system a
+</li><br><li>12.8 Suppose that you are designing a hand-eye system. In this system a
 camera is mounted at a fixed position in the work space. The hand, a
 robot arm, is used to pick and place objects in the work space. What
 kind of calibration scheme will you require?
 
-In the above problem, if the camera is mounted on the robot arm
+</li><br><li>12.9 In the above problem, if the camera is mounted on the robot arm
 itself, what kind of calibration scheme will you require to find the
 location of objects? How many fixed known points will you require
 to solve the problem?
 
-Now let’s provide a sterco system on our robot arm so that we can
+</li><br><li>12.10 Now let’s provide a sterco system on our robot arm so that we can
 compute the depth of points easily and perform more dexterous ma-
 nipulations. What kind of calibration scheme is required in this case?
 What are the criteria for selecting scene points for calibration? What
 arrangements of points are bad for calibration?
-364 CHAPTER 12. CALIBRATION
 
-12.11 What camera paramcters should be determined for calibrating a cam-
+</li><br><li>12.11 What camera paramcters should be determined for calibrating a cam-
 cra? How can you determine these parameters without directly mea-
 suring them? What parameters are available from the data sheets
 provided by the camera manufacturer?
+-->
+</li></ul></div>
+</p>
+<h2>コンピュータープロジェクト</h2>
+<!--
+<h2>Computer Projects</h2>
+-->
+<p>
+<div class="styleBullet">
+<ul><li>
+12.1 レーンマーカーを用いてサッカー場の3次元モデルを作成するためのカメラキャリブレーションアルゴリズムを開発します。視野内に十分な数のレーンマーカー、その交差点、その他の類似の特徴が見えるものとします。カメラキャリブレーションの問題を解決し、それを用いて各選手の位置、身長、ボールの位置を特定するための手法を開発してください。
 
-Computer Projects
-
+</li><br><li>12.2 ステレオカメラのキャリブレーションアルゴリズムを開発してください。このアルゴリズムを用いて、移動ロボットに搭載された一連のカメラをキャリブレーションしてください。環境内の既知のキャリブレーションポイントを用いてカメラキャリブレーションを決定し、それを用いてすべてのポイントまでの正確な距離を取得する手法を開発してください。
+<!--
 12,1 You want to develop a camera calibration algorithm for preparing a
 three-dimensional model of a football field using lane markers. Assume
 that a sufficient number of lane markers, their intersections, and other
@@ -2381,11 +3374,12 @@ similar features are visible in the field of view. Develop an approach
 to solve the camera calibration problem and use it to determine the
 location of each player, their height, and the location of the ball.
 
-12.2 Develop an algorithm for the calibration of sterco cameras. Use this
+</li><br><li>12.2 Develop an algorithm for the calibration of sterco cameras. Use this
 algorithm to calibrate a set of cameras mounted on a mobile robot.
 Develop an approach that will use known calibration points in an envi-
 ronment to determine the camera calibration and then use this to get
-the exact distance to all points. -->
+the exact distance to all points.
+-->
 </p>
     </body>
 </html>
