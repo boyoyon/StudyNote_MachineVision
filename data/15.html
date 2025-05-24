@@ -75,7 +75,7 @@
     </style>
     </head>
     <body>
-        <h1><center>15章 物体認識(準備中)</center></h1>
+        <h1><center>15章 物体認識</center></h1>
 <p>
 物体認識システムは、事前に既知の物体モデルを用いて、現実世界の画像から物体を見つけ出す。このタスクは驚くほど困難である。人間は物体認識を容易かつ瞬時に行う。しかし、このタスクを機械に実装するためのアルゴリズム記述は非常に困難であった。本章では、物体認識における様々なステップについて説明し、多くのアプリケーションで物体認識に使用されてきたいくつかの手法を紹介する。ビジョンシステムが実行する必要がある様々な種類の認識タスクについて説明する。これらのタスクの複雑さを分析し、認識タスクの様々なフェーズで有用なアプローチを紹介する。
 <!-- An object recognition system finds objects in the real world from an image
@@ -105,7 +105,9 @@ the architecture and main components of object recognition and discuss their
 role in object recognition systems of varying complexity.-->
 
 
-<p><p>
+<p>
+<center><img src="images/fig15_1.png"></center>
+<p>
 <center>図 15.1: オブジェクト認識システムのさまざまなコンポーネントが示されている。</center>
 <!-- Figure 15.1: Different components of an object recognition system are shown.-->
 <p><p>
@@ -296,9 +298,19 @@ Difficulties in image segmentation are due to the presence of multiple
 oecluding objects in images.-->
 
 </p><p>
-<!-- The object recognition task is affected by several factors. We classify the
+物体認識タスクは様々な要因の影響を受けます。私たちは物体認識問題を以下のクラスに分類します。<br>
+<!--
+The object recognition task is affected by several factors. We classify the
 object recognition problem into the following classes.<br>
+-->
+</p><p>
+<strong>2次元</strong><br>
 
+多くのアプリケーションでは、画像は投影が正投影であるとみなせるほどの距離から取得されます。物体がシーン内で常に一定の安定した位置にある場合、それらは2次元であるとみなすことができます。
+このようなアプリケーションでは、2次元のモデルベースを使用できます。考えられるケースは2つあります。
+<!--
+
+</p><p>
 <strong>Two-dimensional</strong><br>
 
 In many applications, images are acquired from a distance sufficient to con-
@@ -306,17 +318,32 @@ sider the projection to be orthographic. If the objects are always in one
 stable position in the scenc, then they can be considered two-dimensional.
 In these applications, one can use a two-dimensional modclbase. There are
 two possible cases:
+-->
+<div class="styleBullet">
+<ul><li>
+● リモートセンシングや多くの産業用途のように、物体が遮蔽されることはありません。
 
+</li><br><li>● 物体は、他の対象物体によって遮蔽されたり、部品箱問題のように部分的にしか見えなかったりする場合があります。
+</p><p>
+場合によっては、物体が遠く離れていても、異なる位置に現れ、複数の安定したビューが生じることがあります。このような場合も、問題は本質的に2次元物体認識とみなすことができます。
+<!--
 ● Objects will not be occluded, as in remote sensing and many industrial
 applications.
 
-● Objects may be occluded by other objects of interest or be partially
+</li><br><li>● Objects may be occluded by other objects of interest or be partially
 visible, as in the bin of parts problem.
 </p><p>
 In some cases, though the objects may be far away, they may appear in
 different positions resulting in multiple stable views. In such cases also, the
 problem may be considered inherently as two-dimensional object recognition.
+-->
+</li></ul></div>
+</p><p>
 
+<strong>3次元</strong><br>
+
+物体の画像を任意の視点から取得できる場合、2つの視点で物体の見え方が大きく異なる可能性があります。3次元モデルを用いた物体認識では、画像の遠近法効果と視点を考慮する必要があります。モデルが3次元であるのに対し、画像には2次元情報しか含まれていないという事実は、物体認識のアプローチに影響を与えます。ここでも、考慮すべき2つの要素は、物体が他の物体から分離されているかどうかです。
+<!--
 <strong>Three-dimensional</strong><br>
 
 If the images of objects can be obtained from arbitrary viewpoints, then an
@@ -326,23 +353,40 @@ have to be considered. The fact that the models are three-dimensional and
 the images contain only two-dimensional information affects object rcecogni-
 tion approaches. Again, the two factors to be considered are whether objects
 are separated from other objects or not.
-
+-->
 </p><p>
-
+3次元の場合、物体認識タスクで使用される情報を考慮する必要があります。2つの異なるケースがあります。
+<!--
 For three-dimensional cases, one should consider the information used in
 the object recognition task. Two different cases are:
+-->
 
-e Intensity: There is no surface information available explicitly in in-
+<div class="styleBullet">
+<ul><li>
+● 輝度：輝度画像では、表面情報を明示的に得ることができません。輝度値を用いることで、物体の3次元構造に対応する特徴を認識することができます。
+
+</li><br><li>● 2.5次元画像：多くのアプリケーションでは、画像から観察者中心座標を用いた表面表現を利用できるか、あるいは計算することができます。この情報は物体認識に利用できます。
+距離画像も2.5次元です。これらの画像は、特定の視点から見た画像内の異なる点までの距離を示します。
+<!--
+● Intensity: There is no surface information available explicitly in in-
 tensity images. Using intensity valucs, featurcs corresponding to the
 three-dimensional structure of objects should be recognized.
 
-e 2.5-dimensional images: In many applications, surface representations
+</li><br><li>● 2.5-dimensional images: In many applications, surface representations
 with viewer-centered coordinates are available, or cau be computed,
 from images. This information can be used in object recognition.
 Range images are also 2.5-dimensional. These images give the distance
 to different points in an image from a particular view point.
+-->
+</li></ul></div>
+</p><p>
 
-Segmented
+<strong>セグメント化</strong><br>
+
+画像はオブジェクトを背景から分離するためにセグメント化されています。
+第3章のセグメンテーションで説明したように、オブジェクト認識とセグメンテーションの問題は、ほとんどの場合密接に関連しています。アプリケーションによっては、オブジェクトを簡単にセグメント化できる場合もあります。オブジェクトがセグメント化されていない場合、認識の問題はセグメンテーションの問題と密接に関連しています。
+<!--
+<strong>Segmented</strong><br>
 
 The images have been segmenicd to separate objects from the background.
 As discussed in Chapter 3 on segmentation, object recognition and segmen-
@@ -350,9 +394,15 @@ tation problems are closcly linked in most cases. In some applications, it is
 possible to segment oul an object. easily. In cases when the objects have not
 been segmented, the recognition problem is closely linked with the segmen-
 tation problem.
-
-15.3 Object Representation
-
+-->
+</p>
+<h2>15.3 オブジェクト表現</h2>
+<!--
+<h2>15.3 Object Representation</h2>
+-->
+<p>
+画像はカメラの視点から見た風景を表します。物体をカメラ中心、あるいは視聴者中心の座標系で表現するのが自然です。別の方法としては、物体中心の座標系で表現する方法があります。もちろん、物体をワールド座標系で表現することも可能です。物体の相対位置を用いて、ある座標系から別の座標系に変換するのは容易であるため、物体を表現するために適切な座標系を選択する際の中心的な課題は、特徴検出とそれに続く処理において最も効率的な表現を可能にする表現の容易さです。
+<!--
 Images represent a scenc from a camcra’s perspective. It appears natural to
 represent objects in a camera-centric, or viewer-centered, coordinate system.
 Another possibility is to represent objects in an object-centered coordinate
@@ -361,17 +411,24 @@ also. Since it is easy to transform from one coordinate system to another
 using their relative positions, the central issue in selecting the proper coor-
 dinate system to represent objects is the ease of representation to allow the
 most efficient representation for feature detection and subsequent processes.
-
+-->
+</p><p>
+表現は、特定の操作を他の操作を犠牲にして効率的に実行することを可能にします。物体認識のための表現も例外ではありません。設計者は、設計上の問題におけるパラメータを考慮して、タスクに最適な表現を選択する必要があります。以下は、物体認識において一般的に使用される表現です。
+<!--
 A representation allows certain operations to be efficient at the cost of
 other operations. Representations for object recognition are no exception.
 Designers must consider the parameters in their design problems to select
-466 CHAPTER 15. OBJECT RECOGNITION
-
 the best representation for the task. The following are commonly used rep-
 resentations in object. recognition.
-
-15.3.1 Observer-Centered Representations
-
+-->
+</p>
+<h3>15.3.1 観察者中心の表現</h3>
+<!--
+<h3>15.3.1 Observer-Centered Representations</h3>
+-->
+<p>
+物体がカメラに対して比較的少数の安定した位置に現れる場合、それらは観察者中心座標系で効率的に表現できます。カメラが固定位置にあり、物体がカメラに対して特定の側面のみを映すように移動する場合は、それらのビューのみに基づいて物体を表現できます。リモートスキャンのように、カメラが物体から遠く離れている場合は、物体の3次元性は無視できます。このような場合、物体は限られたビューセット、実際にはほとんどの場合1つのビューのみで表現できます。最後に、アプリケーションドメイン内の物体が互いに大きく異なる場合は、観察者中心の表現で十分な場合があります。
+<!--
 If objects usually appear in a relatively few stable positions with respect to
 the camera, then they can be represented efficiently in an observer-centered
 coordinate system. If a camera is located at a fixed position and objects
@@ -382,11 +439,17 @@ ignored. In such cases, the objects can be represented only by a limited
 set of views—in fact, only one view in most cases. Finally, if the objects
 in a domain of applications are significantly different from each other, then
 observer-centered representations may be enough.
-
+-->
+</p><p>
+観察者中心表現は画像空間で定義されます。テーマ表現は、カメラの相対位置における物体画像の特徴と詳細を捉えます。
+<!--
 Observer-centered representations are defined in image space. These rep-
 resentations capture characteristics and details of the images of objects in
 their relative camera positions.
-
+-->
+</p><p>
+物体認識における最も初期かつ最も厳密なアプローチの一つは、特徴ベクトルを用いて物体を特徴付けるというものです。この特徴ベクトルは、応用分野において物体を区別するのに役立つ重要な特性を捉えます。このアプローチで選択される特徴は、通常、物体画像の全体的な特徴です。これらの特徴は、設計者の経験に基づいて選択されるか、同じクラスの物体をグループ化しながら他のクラスのメンバーと区別する際の特徴の有効性を分析することによって選択されます。パターン分類においては、多くの特徴選択手法が開発されてきました。これらの手法は、異なるクラスの既知の物体の特徴の確率分布を調査し、これらの分布を用いて、特徴が分類に十分な識別力を持つかどうかを判断します。
+<!--
 One of the earliest and most rigorous approaches for object recognition
 is based on characterizing objects using a feature vector. This feature vec-
 tor captures essential charactcristics that help in distinguishing objects in
@@ -399,20 +462,28 @@ developed in pattern classification. These techniques study the probabilistic
 distribution of features of known objects from diffcrent classes and use these
 distributions to determine whether a feature has sufficient discrimination
 power for classification.
-
+-->
+</p><p>
+図15.2は、特徴空間の2次元バージョンを示しています。物体はこの空間内の点として表されます。異なる特徴はそれぞれ異なる重要度を持ち、単位も異なる場合があります。これらの問題は通常、特徴に異なる重みを割り当て、特徴を正規化することで解決されます。
+<!--
 In Figure 15.2 we show a two-dimensional version of a feature space. An
 object is represented as a point in this space. It is possible that different
 features have different mmportance and that their units are different. ‘These
 problems are usually solved by assigning different weights to the features and
 by normalizing the features.
-15.3. OBJECT REPRESENTATION 467
-
-~ Fy
-
+-->
+</p>
+<center><img src="images/fig15_2.png"></center>
+<p>
+図15.2: 物体認識のための2次元特徴空間。この空間内の各物体は点である。特徴空間の距離尺度を定義するには、特徴を均一な単位に正規化する必要がある。
+<!--
 Figure 15.2: Two-dimensional feature space for object recognition. Each
 object in this space is a point. Features must be normalized to have uniform
 units so that one may define a distance measure for the feature space.
-
+-->
+</p><p>
+文献に記載されている2次元物体認識のためのいわゆるアプローチのほとんどは、物体の画像特徴に基づくアプローチです。これらのアプローチは、画像を複数の局所特徴に分割し、物体を画像特徴とそれらの関係として表現します。この物体の表現により、部分的なマッチングも可能になります。画像にオクルージョンがある場合、この表現は特徴空間よりも強力です。図15.3に、物体の局所特徴とその表現方法を示します。
+<!--
 Most so-called approaches for two-dimensional object recognition in the
 literature are the approaches based on the image features of objects. These
 approaches try to partition an image into several local features and then
@@ -420,13 +491,22 @@ represent an object as image features and relations among them. This repre-
 sentation of objects allows partial matching also. In the presence of occlusion
 in images, this representation is more powerful than feature space. In Figure
 15.3 we show local features for an object and how they will be represented.
-
-15.3.2 Object-Centered Representations
-
+-->
+</p>
+<h3>15.3.2 オブジェクト中心の表現</h3>
+<!--
+<h3>15.3.2 Object-Centered Representations</h3>
+-->
+<p>
+オブジェクト中心表現では、オブジェクトに付随する座標系におけるオブジェクトの記述を使用します。この記述は通常、3次元的な特徴またはオブジェクトの記述に基づいています。
+<!--
 An object-centered representation uses description of objects in a coordi-
 nate system attached to objects. This description is usually based on three-
 dimensional features or description of objects.
-
+-->
+</p><p>
+物体中心表現は、カメラパラメータや位置に依存しません。したがって、物体認識に有用であるためには、既知のカメラと視点から物体画像、あるいは画像内の物体特徴を生成するのに十分な情報を持つ必要があります。この要件は、物体中心表現が物体の幾何学的側面を明示的に捉えるべきであることを示唆しています。ここでは、一般的に用いられるいくつかの物体中心表現について説明します。
+<!--
 Object-centered representations are independent of the camera param-
 eters and location. Thus, to make them useful for object recognition, the
 representation should have cnough information to produce object images or
@@ -434,19 +514,23 @@ object features in images for a known camera and viewpoint. This require-
 ment suggests that object-centered representations should capture aspects
 of the geometry of objects explicitly. Some commonly used object-centered
 representations are discussed here.
-468 CHAPTER 15. OBJECT RECOGNITION
+-->
 
-© Point of high curvature (convex)
-Z\ Point of high curvature (concave)
-Intersection of lines
-
-(a) (b)
-
+</p>
+<center><img src="images/fig15_3.png"></center>
+<p>
+図15.3: (a)では、物体の顕著な局所特徴が強調表示されています。(b)は、物体のグラフ表現を示しています。この表現は、グラフマッチング手法を用いた物体認識に使用されます。
+<!--
 Figure 15.3: In (a) an object is shown with its prominent local features
 highlighted. A graph representation of the object is shown in (b). This rep-
 resentation is used for object recognition using a graph matching approach.
+-->
+</p><p>
+<strong>構成的立体幾何学</strong><br>
 
-Constructive Solid Geometry
+物体のCSG表現は、ブロック、円錐、円柱、球といった単純な体積プリミティブと、和、積、差といったブール演算を用いて行われます。任意の曲面を持つ物体は、少数のプリミティブのみで表現することはできないため、CSG手法は物体認識にはあまり役立ちません。これらの表現は、CAD/CAMアプリケーションにおける物体表現に使用されます。図15.4は、単純な物体のCSG表現を示しています。
+<!--
+<strong>Constructive Solid Geometry</strong><br>
 
 A CSG representation of an object uses simple volumetric primitives, such as
 blocks, cones, cylinders, and spheres, and a set of boolean operations: union,
@@ -455,8 +539,13 @@ resented using just a few chosen primitives, CSG approaches are not very
 uscful in object recognition. These representations are used in object repre-
 sentation in CAD/CAM applications. In Figure 15.4, a CSG representation
 for a simple object is shown.
+-->
+</p><p>
+<strong>空間占有</strong><br>
 
-Spatial Occupancy
+3次元空間内の物体は、その物体が占める3次元空間の重複しない部分領域を用いて表現できます。単純な占有に加えて、空間内の点における物体の他の特性を表現することも考えられます。この表現には、ボクセル表現、八分木、四面体セル分解など、多くのバリエーションがあります。図15.5に、物体のボクセル表現を示します。
+<!--
+<strong>Spatial Occupancy</strong><br>
 
 An object in three-dimensional space may be represented by using nonover-
 lapping subregions of the three-dimensional space occupied by an object. In
@@ -464,97 +553,128 @@ addition to simple occupancy, one may consider representing other properties
 of objects at points in space. There are many variants of this representation
 such as voxel representation, octree, and tetrahedral cell decomposition. In
 Figure 15.5, we show a voxel representation of an object.
-15.3. OBJECT REPRESENTATION
+-->
 
-1)
-M—a
-
-=
-
-—v
-
-Lo
-
-469
-
+</p>
+<center><img src="images/fig15_4.png"></center>
+<p>
+図15.4: オブジェクトのCSG表現は、いくつかの基本的なプリミティブとそれらの間の演算を用いてオブジェクトを表現します。ここでは、オブジェクトとそのCSG表現を示します。
+<!--
 Figure 15.4: A CSG representation of an object uses some basic primitives
 and operations among them to represent an object. Here we show an object
-
 and its CSG representation.
-
-|
-
-ime
-
-Figure 15.5: A voxel representation of an object.
-470 CHAPTER 15. OBJECT RECOGNITION
-
+-->
+</p>
+<center><img src="images/fig15_5.png"></center>
+<p>
+<center>図 15.5: オブジェクトのボクセル表現。</center>
+<!--
+<center>Figure 15.5: A voxel representation of an object.</center>
+-->
+</p><p>
+空間占有表現は、物体の詳細な記述を含みますが、非常に低レベルの記述です。この種の表現は、仮説形成プロセスを可能にするために、物体の特定の特徴を見つけるために処理される必要があります。
+<!--
 A spatial occupancy representation contains a detailed description of an
 object, but it is a very low-level description. This type of representation
 noust be processed to find specific features of objects to enable the hypothesis
 formation process.
+-->
+</p><p>
+<strong>多視点表現</strong><br>
 
-Multiple-View Representation
+物体は画像から認識される必要があるため、空間的に等間隔に配置された視点、あるいは戦略的に選択された視点から得られた複数の視点を用いて3次元物体を表現することができます。限られた物体の集合に対して、物体の任意の数の視点を考慮し、各視点を観察者中心表現で表現することができます。
+<!--
+<strong>Multiple-View Representation</strong><br>
 
 Since objects must be recognized from images, one may represent a three-
 dimensional object using several views obtained either from regularly spaced
 viewpoints in space or from some strategically selected viewpoints. For a
 limited set of objects, one may consider arbitrarily many views of the object
 and then represent cach view in an observer-centered representation.
-
+-->
+</p><p>
+3次元オブジェクトは、アスペクトグラフを用いて表現できます。アスペクトグラフは、オブジェクトのすべての安定したビューを表します。つまり、アスペクトグラフは、ビュー空間をオブジェクトが安定したビューを持つ領域に分割することによって得られます。オブジェクトのアスペクトグラフは、すべての安定したビュー間の関係を表します。図15.6に、単純なオブジェクトとそのアスペクトグラフを示します。
+<!--
 A three-dimensional object can be represented using its aspect graph. An
 aspect graph represents all stable views of an object. Thus, an aspect graph
 is obtained by partitioning the view-space into areas in which the object has
 stable views. The aspect graph for an object represents a relationship among
 all the stable views. In Figure 15.6 we show a simple object and its aspect
 graph.
+-->
+</p>
+<center><img src="images/fig15_6.png"></center>
+<p>
+図15.6: オブジェクトとそのアスペクトグラフ。アスペクトグラフの各ノードは安定したビューを表します。枝は、ある安定したビューから偶然のビューを経て他の安定したビューへとどのように移行するかを示しています。
+<!--
+Figure 15.6: An object and its aspect graph. Each node in the aspect graph
+represents a stable view. The branches show how one can go from one stable
+view to other stable views through accidental views.
+-->
+</p><p>
+<strong>面境界表現</strong><br>
 
-Surface-Boundary Representation
+立体は、その周囲を囲む面を定義することで表現できます。境界面は、コンピュータグラフィックスでよく使われるいくつかの手法のいずれかを用いて表現できます。これらの表現は、三角形パッチから非一様有理Bスプライン（NURBS）まで多岐にわたります。これらの表現のいくつかについては、第13章で説明しました。
+<!--
+<strong>Surface-Boundary Representation</strong><br>
 
 A solid object can be represented by defining the surfaces that bound the ob-
 ject. The bounding surfaces can be represented using one of several methods
 popular in computer graphics. These representations vary from triangular
 patches to nonuniform rational B-splines (NURBS). Some of these represen-
 tations were discussed in Chapter 13.
+-->
+</p><p>
+<strong>スイープ表現：一般化された円筒</strong><br>
 
-Sweep Representations: Generalized Cylinders
+物体の形状は、円筒の軸または背骨として機能する3次元空間曲線、2次元の断面形状、そして断面を空間曲線に沿ってどのようにスイープするかを定義するスイープ規則によって表現できます。断面は軸に沿って滑らかに変化させることができます。この表現を図15.7に示します。
+<!--
+<strong>Sweep Representations: Generalized Cylinders</strong><br>
 
 Object shapes can be represented by a three-dimensional space curve that
 acts as the spine or axis of the cylinder, a two-dimensional cross-sectional
 figure, and a sweeping rule that defines how the cross section is to be swept
 along the space curve. The cross section can vary smoothly along the axis.
 This representation is shown in Figure 15.7.
-
-For many industrial and other objects, the cross section of objects varies
-smoothly along an axis in space, and in such cases this representation is
-satisfactory. For arbitrarily shaped objects, this condition is usually not
-satisfied, making this representation unsuitable.
-15.3. OBJECT REPRESENTATION 471
-
-Op my 4
-
-of te
-
-Op Oy
-
-Figure 15.6: An object and its aspect graph. Each node in the aspect graph
-represents a stable view. The branches show how one can go from one stable
-view to other stable views through accidental views.
-
+-->
+</p>
+<center><img src="images/fig15_7.png"></center>
+<p>
+図15.7: オブジェクトとその一般化された円筒表現。円筒の軸は破線で示され、座標軸は円筒の中心軸を基準に描かれ、各点における断面は円筒の中心軸に直交していることに注意してください。
+<!--
 Figure 15.7: An object and its generalized cylinder representation. Note the
 axis of the cylinder is shown as a dashed line, the coordinate axes are drawn
 with respect to the cylinder’s central axis, and the cross sections at each
 point are orthogonal to the cylinder’s central axis.
-472 CHAPTER 15. OBJECT RECOGNITION
+-->
+</p><p>
+多くの工業製品やその他の物体では、物体の断面は空間軸に沿って滑らかに変化するため、このような場合にはこの表現で十分です。しかし、任意の形状の物体の場合、この条件は通常満たされず、この表現は不適切となります。
+<!--
+For many industrial and other objects, the cross section of objects varies
+smoothly along an axis in space, and in such cases this representation is
+satisfactory. For arbitrarily shaped objects, this condition is usually not
+satisfied, making this representation unsuitable.
+-->
 
-15.4 Feature Detection
-
+</p>
+<h2>15.4 特徴検出</h2>
+<!--
+<h2>15.4 Feature Detection</h2>
+-->
+<p>
+物体認識には様々な種類の特徴が用いられます。ほとんどの特徴は、画像内の領域または境界に基づいています。領域または閉じた境界は、物体または物体の一部である実体に対応すると想定されます。一般的に用いられる特徴には、以下のようなものがあります。
+<!--
 Many types of features are used for object recognition. Most features are
 based on cither regions or boundaries in an image. It is assumed that a
 region or a closed boundary corresponds to an entity that is either an object
 or a part of an object. Some of the commonly used features are as follows.
+-->
+</p><p>
+<strong>グローバル特徴</strong><br>
 
-Global Features
+グローバル特徴とは、通常、画像内の領域の特性であり、面積（サイズ）、周囲長、フーリエ記述子、モーメントなどが挙げられます。グローバル特徴は、領域内のすべての点を考慮して領域全体について取得することも、領域の境界上の点のみについて取得することもできます。いずれの場合も、すべての点、その位置、強度特性、および空間関係を考慮して得られる記述子を見つけることが目的です。これらの特徴については、本書のさまざまな箇所で説明されています。
+<!--
+<strong>Global Features</strong><br>
 
 Global features usually are some characteristics of regions in images such as
 area (size), perimeter, Fourier descriptors, and moments. Global features can
@@ -563,8 +683,13 @@ only for those points on the boundary of a region. In each case, the intent is
 to find descriptors that are obtained by considcring all points, their locations,
 intensity characteristics, and spatial relations. Thesc features were discussed
 at different places in the book.
+-->
+</p><p>
+<strong>局所特徴</strong><br>
 
-Local Features
+局所特徴は通常、物体の境界上にあるか、または領域内の識別可能な小さな領域を表します。曲率や関連する特性は、局所特徴として一般的に使用されます。曲率は境界上の曲率である場合もあれば、面上で計算される場合もあります。面は、強度面または2.5次元空間上の面である場合があります。曲率の高い点は一般にコーナーと呼ばれ、物体認識において重要な役割を果たします。局所特徴には、小さな境界セグメントまたは面パッチの特定の形状が含まれる場合があります。一般的に使用される局所特徴には、曲率、境界セグメント、コーナーなどがあります。
+<!--
+<strong>Local Features</strong><br>
 
 Local features are usually on the boundary of an object or represent a dis-
 tinguishable small area of a region. Curvature and related properties are
@@ -575,8 +700,14 @@ commonly called corners and play an important role in object recognition.
 Local features can contain a specific shape of a small boundary segment or a
 surface patch. Some commonly used local features arc curvature, boundary
 segments, and corners.
+-->
+</p><p>
 
-Relational Features
+<strong>関係特徴</strong><br>
+
+関係特徴は、異なるエンティティ（領域、閉輪郭、または局所特徴）の相対的な位置に基づいています。これらの特徴には通常、特徴間の距離と相対的な方向測定が含まれます。これらの特徴は、画像内の多数の領域または局所特徴を用いて複合オブジェクトを定義する際に非常に有用です。ほとんどの場合、エンティティの相対的な位置がオブジェクトを定義します。全く同じ特徴でも、わずかに異なる関係にあると、全く異なるオブジェクトを表す場合があります。
+<!--
+<strong>Relational Features</strong><br>
 
 Relational features are based on the relative positions of different entities, ei-
 ther regions, closed contours, or local features. These features usually include
@@ -585,65 +716,60 @@ tures are very uscful in defining composite objects using many regions or local
 features in images. In most cases, the relative position of entities is what de-
 fines objects. The exact same feature, in slightly different relationships, may
 represent entirely different objects.
-15.5. RECOGNITION STRATEGIES 473
-
-Spatially close
-
-Comnectcd
-
-x
-g Bi je
-= S
-Z a, is
-i
-i
-E
-Above
-
-T
-Number of Regions 2
-
-Area 42574 pixels
-Perimeter i 1343 pixels
-
-Figure 15.8: An object and its partial representation using multiple local and
-global features.
-
+-->
+</p><p>
+図15.8は、オブジェクトと、その特徴を用いた記述を示しています。オブジェクトを記述するために、局所的特徴と全体的特徴の両方を使用できます。オブジェクト間の関係は、複合的特徴を形成するために使用できます。
+<!--
 In Figure 15.8, an object and its description using features are shown.
 Both local and global features can be used to describe an object. The rela-
 tions among objects can be used to form composite features.
-
-15.5 Recognition Strategies
-
+-->
+</p>
+<center><img src="images/fig15_8.png"></center>
+<p>
+<center>図15.8: 複数の局所的特徴と全体的特徴を用いたオブジェクトとその部分的表現</center>
+<!--
+Figure 15.8: An object and its partial representation using multiple local and
+global features.
+-->
+</p>
+<h2>15.5 認識戦略</h2>
+<!--
+<h2>15.5 Recognition Strategies</h2>
+-->
+<p>
+物体認識とは、適切な特徴が検出された後に実行する必要がある一連の手順です。前述のように、画像内で検出された特徴に基づいて、画像内に存在する可能性のある物体についての仮説を立てる必要があります。これらの仮説は、物体モデルを用いて検証する必要があります。すべての物体認識手法が、強力な仮説形成および検証手順を必要とするわけではありません。ほとんどの認識戦略は、これらの2つの手順をさまざまな程度で組み合わせるように進化してきました。図15.9に示すように、これら2つの手順の3つの異なる組み合わせを使用できます。これらの組み合わせにおいても、このセクションで前述した要因によって特徴付けられるアプリケーションコンテストによって、1つまたは両方の手順がどのように実装されるかが決まります。以下では、さまざまな状況における物体の認識に使用されるいくつかの基本的な認識戦略について説明します。
+<!--
 Object recognition is the sequence of steps that must be performed after
 appropriate features have been detected. As discussed earlier, based on the
 detected features in an image, one must formulate hypotheses about possi-
 ble objects in the image. These hypotheses must be verificd using models
 of objects. Not all object recognition techniques require strong hypothesis
 formation and verification steps. Most recognition strategies have evolved to
-474 CHAPTER 15. OBJECT RECOGNITION
-
-Features | Hypothesizer Object
-Classifier
-Features Verifler Object
-Sequential
-matching
-Features Object
-Hypothesizer Verifier Jer
-
-Figure 15.9: Depending on the complexity of the problem, a recognition strat-
-egy may need to use either or both the hypothesis formation and verification
-steps.
-
 combine these two steps in varying amounts. As shown in Figure 15.9, one
 may use three different possible combinations of these two steps. Even in
 these, the application contest, characterized by the factors discussed earlier
 in this section, detcrmines how one or both steps are implemented. In the
 following, we discuss a few basic recognition strategies used for recognizing
 objects in different situations.
-
-15.5.1 Classification
-
+-->
+</p>
+<center><img src="images/fig15_9.png"></center>
+<p>
+図15.9: 問題の複雑さに応じて、認識戦略では仮説形成と検証のステップのどちらか、または両方を使用する必要がある場合があります。
+<!--
+Figure 15.9: Depending on the complexity of the problem, a recognition strat-
+egy may need to use either or both the hypothesis formation and verification
+steps.
+-->
+</p>
+<h3>15.5.1 分類</h3>
+<!--
+<h3>15.5.1 Classification</h3>
+-->
+<p>
+分類における基本的な考え方は、特徴に基づいて物体を認識することです。パターン認識アプローチはこのカテゴリに属し、その可能性は多くのアプリケーションで実証されています。ニューラルネットベースのアプローチアルゴリズムもこのカテゴリに属します。ここでは、一般的に使用されるいくつかの分類手法について簡単に説明します。このカテゴリのすべての手法は、画像内でN個の特徴が検出され、これらの特徴が同じ距離空間で表現できるように正規化されていることを前提としています。分類後にこれらの特徴を正規化する手法についても簡単に説明します。以下の説明では、物体の特徴は、その特定の物体認識タスク用に定義されたN次元特徴空間内の点として表現できるものと仮定します。
+<!--
 The basic idea, in classification is to recognize objects based on features. Pat-
 tern recognition approaches fall in this category, and their potential has been
 demonstrated in many applications. Neural net-based approaches algo fall in
@@ -655,142 +781,196 @@ to normalize these features after classification. In the following discussion,
 it will be assumed that the features for an object can be represented as a
 point in the N-dimensional fcature space defined for that particular object
 recognition task.
-15.5. RECOGNITION STRATEGIES 475
+-->
 
-~ Fi
+</p><p>
+<strong>最近傍分類器</strong><br>
 
-Figure 15.10: The prototypes of each class are represented as points in the
-feature space. An unknown object is assigned to the closest class by using a
-distance measure in this space.
-
-Nearest Neighbor Classifiers
+各クラスのモデルオブジェクト（理想的な特徴量）が既知であり、クラス \(i\) について \(f_{ij}, j = 1,...,.N, i= 1,...,M\) と表現されるとします。ここで \(M\) はオブジェクトクラスの数です。次に、未知のオブジェクト \(U\) の特徴を検出して測定し、それを \(u_j, j = 1,...,N\) と表現するとします。
+2次元の特徴空間の場合、この状況は図15.10に示されています。
+オブジェクトのクラスを決定するには、特徴空間内の各クラスを表す点からの距離を計算することで、各クラスとの類似度を測定し、最も近いクラスに割り当てます。距離は、ユークリッド距離、または任意の特徴の重み付き組み合わせのいずれかになります。一般に、クラス\(j\)から未知のオブジェクトまでの距離\(d_j\)は次のように計算されます。
+<!--
+<strong>Nearest Neighbor Classifiers</strong><br>
 
 Suppose that a model object (ideal feature values) for each class is known
-and is represented for class i as fij, 7 = 1,...,.N,i= 1,...,M where M@
+and is represented for class \(i\) as \(f}{ij}, j = 1,...,.N, i= 1,...,M\) where \(M\)
 is the number of object classes. Now suppose that we detect and measure
-features of the unknown object U and represent them as uj, 7 = 1,...,N.
+features of the unknown object \(U\) and represent them as \(u_j, j = 1,...,N\).
 For a 2-dimensional feature space, this situation is shown in Figure 15.10.
 To decide the class of the object, we measure its similarity with each class by
 computing its distance from the points representing each class in the feature
 space and assign it to the nearest class. The distance may be either Euclidean
 or any weighted combination of features. In general, we compute the distance
-d; of the unknown object from class 7 as given by
+\(d_j\) of the unknown object from class \(j\) as given by
+-->
+\[
+d_i=\left[\sum_{j=1}^N (u_j - f_{ij})^2\right]^{1/2} \tag{15.1}
+\]
 
-N ie
-d= b (uy — wo , (15.1)
-j=l
-then the object is assigned to the class R such that
-M
-dg = min {d,). (15.2)
+すると、オブジェクトはクラス\(R\)に割り当てられ、
+<!--
+then the object is assigned to the class \(R\) such that
+-->
 
-i=1
-476 CHAPTER 15. OBJECT RECOGNITION
+\[
+d_R = \min_{i=1}^M [d_i]  \tag{15.2}
+\]
 
-Fy
-4 w
-rey
-oe
-o fe,
-ac
-. a]
-*
-» é . .
-14,4
-a
-
-~ F,
-
-Figure 15.11: All known objects of each class are represented as points in
-the feature space. Each class is thus represented by a cluster of points in the
-feature space. Either the centroid of the cluster representing the class or the
-closest point of each class is considered the prototype for classification.
-
+</p>
+<center><img src="images/fig15_10.png"></center>
+<p>
+図15.10: 各クラスのプロトタイプは特徴空間内の点として表されます。未知のオブジェクトは、この空間における距離尺度を用いて最も近いクラスに割り当てられます。
+<!--
+Figure 15.10: The prototypes of each class are represented as points in the
+feature space. An unknown object is assigned to the closest class by using a
+distance measure in this space.
+-->
+</p><p>
+上記では、プロトタイプオブジェクトを表す特徴点までの距離を考慮して、クラスまでの距離を計算しました。実際には、プロトタイプオブジェクトを見つけるのは難しい場合があります。多くのオブジェクトがクラスに属することが分かっている場合があります。この場合、クラスのすべての既知のオブジェクトの特徴値を考慮する必要があります。この状況は図15.11に示されています。このような状況では、2つの一般的なアプローチがあります。
+<!--
 In the above, the distance to a class was computed by considering distance
 to the feature point representing a prototype object. In practice, it may be
 difficult to find a prototype object. Many objects may be known to belong to
 a class. In this case, one must consider feature values for all known objects
 of a class. This situation is shown in Figure 15.11. Two common approaches
 in such a situation are
+-->
+</p>
+<center><img src="images/fig15_11.png"></center>
+<p>
+図15.11: 各クラスの既知のオブジェクトはすべて、特徴空間内の点として表現されます。したがって、各クラスは特徴空間内の点のクラスターによって表現されます。クラスを表すクラスターの重心、または各クラスの最も近い点が、分類のプロトタイプと見なされます。
+<!--
+Figure 15.11: All known objects of each class are represented as points in
+the feature space. Each class is thus represented by a cluster of points in the
+feature space. Either the centroid of the cluster representing the class or the
+closest point of each class is considered the prototype for classification.
+-->
+<div class="styleBullet">
+<ul><li>
+1. クラスターの重心をプロトタイプオブジェクトの特徴点とみなし、そこまでの距離を計算します。
 
+</li><br><li>2. 各クラスの最も近い点までの距離を考慮します。
+<!--
 1. Consider the centroid of the cluster as the prototype object’s feature
 point, and compute the distance to this.
 
-2. Consider the distance to the closest point of cach class.
 
-Bayesian Classifier
+</li><br><li>2. Consider the distance to the closest point of cach class.
+-->
+</li></ul></div>
+</p><p>
+
+<strong>ベイズ分類器</strong><br>
+
+ベイズアプローチは、上記の例のように物体の分布が単純ではない場合に物体を認識するために用いられてきました。一般的に、異なる物体の特徴値には大きな重複が見られます。
+<!--
+<strong>Bayesian Classifier</strong><br>
 
 A Bayesian approach has becn used for recognizing objects when the distri-
 bution of objects is not as straightforward as shown in the cases above. In
 general, there is a significant overlap in feature valucs of different objects.
-15.5. RECOGNITION STRATEGIES 477
-
-P(x|W,)
-
-P(xlw,)
-
-x
-
-Figure 15.12: The conditional density function for p(x|w,;). This shows the
-probability of the feature values for each class.
-
+-->
+</p><p>
+したがって、図15.12の1次元特徴空間に示すように、複数のオブジェクトが同じ特徴値を持つ場合があります。特徴空間における観測値の場合、複数のオブジェクトクラスは同等に良い候補となります。このような場合に意思決定を行うには、ベイズ推定を用いることができます。
+<!--
 Thus, as shown for the one-dimensional feature space in Figure 15.12, several
 objects can have same feature value. For an observation in the feature space,
 multiple-object classes are equally good candidates. To make a decision in
 such a case, one may use a Bayesian approach to decision making.
-
+-->
+</p>
+<center><img src="images/fig15_12.png"></center>
+<p>
+図15.12: \(p(x|w_j)\)の条件付き密度関数。これは各クラスの特徴値の確率を示しています。
+<!--
+Figure 15.12: The conditional density function for \(p(x|w_j)\). This shows the
+probability of the feature values for each class.
+-->
+</p><p>
+ベイズ的アプローチでは、オブジェクトの特徴と出現頻度に関する確率的知識が用いられます。クラス \(j\) のオブジェクトの出現確率が \(P(w_j)\) であると仮定します。これは、クラス \(j\) のオブジェクトが出現する確率が \(P(w_j)\) であることが事前に分かっていることを意味します。したがって、他の知識がない場合でも、未知のオブジェクトを \(P(w_j)\) が最大となるクラスに割り当てることで、エラーの確率を最小化できます。
+<!--
 In the Bayesian approach, probabilistic knowledge about. the features for
 objects and the frequency of the objects is used. Suppose that we know that
-the probability of objects of class j is P(w;). This means that a priori we
-know that the probability that an object of class 7 will appear is P(w,), and
+the probability of objects of class \(j\) is \(P(w_j)\). This means that a priori we
+know that the probability that an object of class \(j\) will appear is \(P(w_j)\), and
 hence in absence of any other knowledge we can minimize the probability
-of error by assigning the unknown object to the class for which P(w,) is
-
+of error by assigning the unknown object to the class for which \(P(w_j)\) is
 maximum.
+-->
+</p><p>
+物体のクラスに関する決定は通常、特徴量の観測に基づいて行われます。確率 \(p(x|w_j)\) が与えられており、図 15.12 に示すようになっていると仮定します。条件付き確率 \(p(x|w_j)\) は、与えられた確率情報に基づいて、特徴量が \(x\) と観測された場合、物体がクラス \(j\) に属する確率は \(p(x|w_j)\) であることを示しています。この知識に基づいて、物体の事後確率 \(p(w_j|x)\) を計算できます。事後確率とは、与えられた情報と観測値に対して、未知の物体がクラス \(j\) に属する確率です。ベイズの定理を用いると、この確率は次のように表されます。
+<!--
 Decisions about the class of an object are usually made based on feature
-
-observations. Suppose that the probability p(|w,) is given and is as shown
-in Figure 15.12. The conditional probability p(#|w;) tells us that based on
+observations. Suppose that the probability \(p(x|w_j)\) is given and is as shown
+in Figure 15.12. The conditional probability \(p(x|w_j)\) tells us that based on
 the probabilistic information provided, we know that if the feature value is
-observed to be 2, then the probability that the object belongs to class 7 is
-p(z|w,;). Based on this knowledge, we can compute the a posteriori proba-
-bility p(w;|z) for the object. The a posteriori probability is the probability
+observed to be \(x\), then the probability that the object belongs to class \(j\) is
+\(p(x|w_j)\). Based on this knowledge, we can compute the a posteriori proba-
+bility \(p(w_j|x)\) for the object. The a posteriori probability is the probability
 that, for the given information and observations, the unknown object belongs
-to class 7. Using Bayes’ rule, this probability is given as:
-478 CHAPTER 15. OBJECT RECOGNITION
+to class \(j\). Using Bayes’ rule, this probability is given as:
+-->
 
-=~ x
+</p><p>
 
-Figure 15.13: A posteriori probabilities for two different values of a priori
-probabilities for objects.
+\[
+P(w_j|x)=\frac{p(x|w_j)P(w_j)}{p(x)} \tag{15.3}
+\]
 
-P(w;|x) me) (15.3)
-where y
-ple) = 2 P(@|w;) P(e). (15.4)
+ここで
+<!--
+where
+-->
+\[
+p(x) = \sum_{j=1}^N p(x|w_j) P(w_j)  \tag{15.4}
+\]
 
-The wnknown object should be assigned to the class with the highest a
-posteriori probability P(w;|r). As can be scen from the above equations, and
+</p><p>
+未知の物体は、事後確率\(P(w_j|x)\)が最も高いクラスに割り当てられるべきです。上記の式からわかるように、また図15.13に示すように、事後確率は物体に関する事前知識に依存します。物体の事前確率が変化すれば、結果も変化します。
+<!--
+The unknown object should be assigned to the class with the highest a
+posteriori probability \(P(w_j|x)\). As can be scen from the above equations, and
 as shown in Figure 15.13, a posteriori probability depends on prior knowledge
 about the objects. If a priori probability of the object changes, so will the
 result.
-
+-->
+</p>
+<center><img src="images/fig15_13.png"></center>
+<p>
+<center>図15.13: オブジェクトの事前確率とは異なる2つの値に対する事後確率</center>
+<!--
+Figure 15.13: A posteriori probabilities for two different values of a priori
+probabilities for objects.
+-->
+</p><p>
+上記では、1つの特徴量に対するベイズ的アプローチについて説明しました。複数の特徴量に対する条件付き密度関数を考慮することで、ベイズ的アプローチを複数の特徴量に簡単に拡張できます。
+<!--
 We discussed the Bayesian approach above for one feature. It can be easily
 extended to multiple features by considering conditional density functions for
 multiple features.
+-->
+</p><p>
+<strong>オフライン計算</strong><br>
 
-Off Line Computations
+上記の分類手法は、特徴空間を考慮し、物体の特徴特性に関する知識に基づいて、特徴空間を分割し、特徴空間内の各点にクラス決定を割り当てます。特徴空間内の各点にクラスを割り当てるためのすべての計算は、未知の物体の認識を開始する前に行われます。これをオフライン計算と呼びます。これらのオフライン計算により、実行時の計算が削減されます。認識プロセスはルックアップテーブルに効率的に変換できるため、非常に迅速に実装できます。
+<!--
+<strong>Off-Line Computations</strong><br>
 
 The above classification approaches consider the feature space, and then,
 based on the knowledge of the feature characteristics of objects, a method is
-used +o partition the feature space so that a class decision is assigned to each
+used to partition the feature space so that a class decision is assigned to each
 point in the feature space. To assign a class to each point in the feature space,
 all computations are donc before the recognition of unknown objects begins.
-15.5. RECOGNITION STRATEGIES 479
-
 This is called off-line computation. These off-line computations reduce the
 computations at the run time. The recognition process can be effectively
 converted to a look-up table and hence can be implemented very quickly.
+-->
+</p><p>
+<strong>ニューラルネット</strong><br>
 
-Neural Nets
+ニューラルネットは物体認識タスクに提案されています。ニューラルネットは分類アプローチを実装します。その魅力は、クラスに対する非線形境界を用いて特徴空間を分割する能力にあります。これらの境界は、ニューラルネットの学習によって得られます。学習フェーズでは、認識対象となる物体のインスタンスが多数提示されます。学習セットが、認識フェーズで後に遭遇するすべての物体を表すように慎重に選択されていれば、ニューラルネットは特徴空間における分類境界を学習できます。認識フェーズでは、ニューラルネットは他の分類器と同様に動作します。
+<!--
+<strong>Neural Nets</strong><br>
 
 Neural nets have been proposed for object recognition tasks. Neural nets im-
 plement a classification approach. Their attraction lics in their ability to parti-
@@ -800,14 +980,23 @@ stances of objects to be recognized are shown. If the training set is carefully 
 lected to represent all objects encountered later during the recognition phase,
 then the net may learn the classification boundaries in its feature space. Dur-
 ing the recognition phase, the net works like any other classifier.
-
+-->
+</p><p>
+ニューラルネットの最も魅力的な特徴は、非線形分類境界と学習能力を利用できることです。最も深刻な制約は、適用領域に関する既知の事実を導入できないことと、その性能をデバッグするのが難しいことです。
+<!--
 The most attractive feature of neural nets is their ability to use nonlinear
 classification boundaries and learning abilities. The most serious limitations
 have been the inability to introduce known facts about the application do-
 main and difficulty in debugging their performance.
-
-15.5.2. Matching
-
+-->
+</p>
+<h3>15.5.2. マッチング</h3>
+<!--
+<h3>15.5.2. Matching</h3>
+-->
+<p>
+分類手法では、有効な特徴とアプリケーションの知識を利用します。多くのアプリケーションでは、特徴の確率とクラス確率に関する事前知識が得られないか、分類器を設計するための十分なデータがありません。このような場合、モデルを未知のオブジェクトに直接マッチングさせ、最もマッチングするモデルを選択してオブジェクトを分類することができます。これらの手法では、各モデルを順番に検討し、モデルを画像データに適合させることで、モデルと画像コンポーネントの類似度を判断します。これは通常、セグメンテーションの後に行われます。以下では、基本的なマッチング手法について説明します。
+<!--
 Classification approaches use effective features and knowledge of the applica-
 tion. In many applications, a priori knowledge about the feature probabiliti-
 tics and the class probabilities is not available or not enough data is available
@@ -817,35 +1006,49 @@ ject. These approaches consider each model in sequence and fit the model to
 image data to determine the similarity of the model to the image component.
 This is usually done after the segmentation has been done. In the following
 we discuss basic matching approaches.
+-->
+</p><p>
+<strong>特徴マッチング</strong><br>
 
-Feature Matching
+各オブジェクトクラスがその特徴によって表現されていると仮定します。前述のように、i番目のクラスにおける\(j\)番目の特徴の値は\(f_{ij}\)で表されます。未知のオブジェクトの場合、その特徴は\(u_j\)で表されます。i番目のクラスに対するオブジェクトの類似度は、次のように表されます。
+<!--
+<strong>Feature Matching</strong><br>
 
 Suppose that each object. class is represented by its features. As above, let us
-assume that the jth feature’s value for the ith class is denoted by f,;. For an
-unknown object the features are denoted by u;. The similarity of the object
-480 CHAPTER 15. OBJECT RECOGNITION
-
+assume that the \(j\)-th feature’s value for the ith class is denoted by \(f_{ij}\). For an
+unknown object the features are denoted by \(u_j\). The similarity of the object
 with the ith class is given by
-
-N
-
-Si = D1 048; (15.5)
-jel
-
-where w; is the weight for the jth feature. The weight is selected based
-on the relative importance of the feature. The similarity value of the jth
-feature is s;, This could be the absolute difference, normalized difference, or
+-->
+\[
+S_i = \sum_{j=1}^N w_js_j \tag{15.5}
+\]
+ここで、\(w_j\)は\(j\)番目の特徴量の重みです。重みは特徴量の相対的な重要度に基づいて選択されます。\(j\)番目の特徴量の類似度は\(s_j\)です。これは絶対差、正規化差、またはその他の距離尺度で表すことができます。最も一般的な方法は、
+<!--
+where \(w_j\) is the weight for the \(j\)-th feature. The weight is selected based
+on the relative importance of the feature. The similarity value of the \(j\)-th
+feature is \(s_j\), This could be the absolute difference, normalized difference, or
 any other distance measure. The most common method is to use
-
-83 = [uy — fig| (15.6)
-
+-->
+\[
+s_j = |u_j - f_{ij}|  \tag{15.6}
+\]
+また、この機能で使用される重みの正規化を考慮します。
+<!--
 and to account for normalization in the weight used with the feature.
-
-The object is labeled as belonging to class & if S; is the highest similarity
+-->
+</p><p>
+類似度が \(S_k\) の値が最高値の場合、オブジェクトはクラス \(k\) に属するとラベル付けされます。このアプローチでは、局所的またはグローバルな特徴量を使用することに注意してください。特徴量間の関係は使用しません。
+<!--
+The object is labeled as belonging to class \(k\) if \(S_k\) is the highest similarity
 value. Note that in this approach, we use features that may. be local or
 global. We do not use any relations arnong the features.
+-->
+</p><p>
+<strong>シンボリックマッチング</strong><br>
 
-Symbolic Matching
+物体は、その特徴だけでなく、特徴間の関係によっても表現できます。特徴間の関係は、空間的なものやその他の形式をとることができます。このような場合、物体はグラフとして表現できます。図15.8に示すように、グラフの各ノードは特徴を表し、ノードを結ぶアークは物体間の関係を表します。したがって、物体認識問題はグラフマッチング問題として考えられます。
+<!--
+<strong>Symbolic Matching</strong><br>
 
 An object could be represented not only by its features but also by the
 telations among features. The relations among features may be spatial or
@@ -853,13 +1056,19 @@ some other type. An object in such cases may be represented as a graph.
 As shown in Figure 15.8, each node of the graph represents a feature, and
 arcs connecting nodes represent relations among the objects. The object
 recognition problem then is considered as a graph matching problem.
-
+-->
+</p><p>
+グラフマッチング問題は次のように定義できます。2つのグラフ\(G_1\)と\(G_2\)が与えられます。これらのグラフにはノード\(N_{ij}\)が含まれます。ここで、\(i\)と\(j\)はそれぞれグラフ番号とノード番号を表します。ノード\(j\)と\(k\)の関係は\(R_{ijk}\)で表されます。すべてのノードと関数の類似性を考慮したグラフの類似度尺度を定義します。
+<!--
 A graph matching problem can be defined as follows. Given two graphs
-G, and G2 containing nodes N,;, where 7 and j denote the graph number
-and the node number, respectively, the relations among nodes j and & is
-represented by Rjj,. Define a similarity measure for the graphs that considers
+\(G_1\) and \(G_2\) containing nodes \(N_{ij}\), where \(i\) and \(j\) denote the graph number
+and the node number, respectively, the relations among nodes \(j\) and \(k\) is
+represented by \(R_{ijk}\). Define a similarity measure for the graphs that considers
 the similarities of all nodes and functions.
-
+-->
+</p><p>
+マシンビジョンのほとんどのアプリケーションでは、認識対象となる物体は部分的にしか見えていない可能性があります。認識システムは、物体を部分的な視野から認識する必要があります。全体的な特徴量を用い、すべての特徴量が揃っていなければならない認識手法は、このようなアプリケーションには適していません。ある意味では、部分視野物体認識の問題は、グラフ理論で研究されているグラフ埋め込み問題に似ています。物体認識における問題は、ノードの類似性とそれらの関係を考慮し始めると、異なるものになります。
+<!--
 In most applications of machine vision, objects to be recognized may be
 partially visible. A recognition system must recognize objects from their par-
 tial views. Recognition techniques that use global features and must have all
@@ -867,13 +1076,22 @@ features present are not suitable in these applications. In a way, the partial-
 view object recognition problem is similar to the graph embedding problem
 studied in graph theory. The problem in object recognition becomes different
 when we start considering the similarity of nodes and relations among them.
-
+-->
+</p><p>
+このタイプのマッチングについては、後ほど検証のセクションで詳しく説明します。
+<!--
 We discuss this type of matching in more detail later, in the section on
 verification.
-15.6. VERIFICATION 481
-
-15.5.3 Feature Indexing
-
+-->
+</p><p>
+<h3>15.5.3 特徴のインデックス作成</h3>
+<!--
+<h3>15.5.3 Feature Indexing</h3>
+-->
+<p>
+物体の数が非常に多く、特徴空間の分割では問題を解決できない場合は、インデックス手法が魅力的になります。
+前述のシンボリックマッチング手法は順次的な手法であり、未知の物体をすべての物体と比較する必要があります。この手法の順次的な性質により、物体の数が多い場合には適していません。このような場合、探索空間を大幅に削減する仮説生成器を使用できるはずです。次のステップは、削減された集合内の各物体のモデルを画像と比較して物体を認識することです。
+<!--
 If the number of objects is very large and the problem cannot be solved
 using fcature space partitioning, then indexing techniques become attractive.
 The symbolic matching approach discussed above is a sequential approach
@@ -882,29 +1100,47 @@ sequential nature of the approach makes it unsuitable with a number of
 objects. In such a case, one should be able to use a hypothesizer that reduces
 the search space significantly. The next step is to compare the models of each
 object in the reduced set with the image to recognize the object.
-
+-->
+</p><p>
+特徴インデックス手法は、オブジェクトの特徴を用いてモデルベースを構築します。画像内でインデックスセットの特徴が検出されると、その特徴を用いて探索空間を縮小します。インデックスセットから複数の特徴が検出され、探索空間を縮小することで、オブジェクト認識にかかる総時間を短縮することも可能です。
+<!--
 Feature indexing approaches use features of objects to structure the mod-
 elbase. When a feature from the indexing set is detected in an image, this
 feature is used to reduce the search space. More than one feature from the
 indexing set may be detected and used to reduce the search space and in
 turn reduce the total time spent on object recognition.
-
+-->
+</p><p>
+インデックスセット内の特徴量は、モデルベースの知識を用いて決定する必要があります。そのような知識が利用できない場合は、学習スキームを使用する必要があります。このスキームは、特徴量セット内の各特徴量の頻度を分析し、特徴量の頻度に基づいてインデックスセットを形成し、データベースの構造化に使用します。
+<!--
 The features in the indexing set must be determined using the knowledge
 of the modelbase. If such knowledge is not available, a learning scheme
 should be used. This scheme will analyze the frequency of each feature from
 the feature set and, based on the frequency of features, form the indexing
 set, which will be used for structuring the database.
-
+-->
+</p><p>
+インデックスデータベースには、オブジェクトの名前とモデルに加えて、インデックス機能が現れるオブジェクトの向きとポーズに関する情報も常に保存する必要があります。この情報は検証段階で役立ちます。
+<!--
 In the indexed database, in addition to the names of the objects and their
 models, information about the orientation and pose of the object in which
 the indexing feature appears should always be kept. This information helps
 in the verification stage.
-
+-->
+</p><p>
+候補オブジェクトセットが形成されたら、検証フェーズで最適なオブジェクト候補を選択する必要があります。
+<!--
 Once the candidate object set has been formed, the verification phase
 should be used for selecting the best object candidate.
-
-15.6 Verification
-
+-->
+</p>
+<h2>15.6 検証</h2>
+<!--
+<h2>15.6 Verification</h2>
+-->
+<p>
+ある物体の画像が与えられ、その物体が画像内に何回、どこに現れるかを知る必要があるとします。このような問題は、本質的には物体認識の問題ではなく、検証の問題です。もちろん、検証アルゴリズムを用いて、大規模なモデルベースから各モデルの存在を網羅的に検証することは可能ですが、そのような網羅的なアプローチはあまり効果的な方法とは言えません。検証アプローチは、候補となる物体が1つ、あるいは多くても数個である場合に望ましいものです。検証には多くのアプローチがあります。ここでは、一般的に用いられるいくつかのアプローチについて説明します。
+<!--
 Suppose that we are given an image of an object and we need to find how
 many times and whcre this object appears in an image. Such a problem is
 essentially a verification, rather than an object recognition, problem. Obvi-
@@ -913,202 +1149,263 @@ of each model from a large modelbase, but such an exhaustive approach will
 not be a very effective method. A verification approach is desirable if one, or
 at most a few, objects are possible candidates. There are many approaches
 for verification. Here we discuss some commonly used approaches.
-482 CHAPTER 15. OBJECT RECOGNITION
-
-15.6.1 Template Matching
-
-Suppose that we have a template g[i, j] and we wish to detect its instances in
-an image f(z, 7]. An obvious thing to do is to place the template at a location
+-->
+</p><p>
+<h3>15.6.1 テンプレートマッチング</h3>
+<!--
+<h3>15.6.1 Template Matching</h3>
+-->
+<p>
+テンプレート \(g[i, j]\) があり、画像 \(f[i, j]\) 内でそのインスタンスを検出したいとします。当然のことですが、テンプレートを画像内のある場所に置き、テンプレートの強度値と画像の対応する強度値を比較することで、その点におけるテンプレートの存在を検出します。強度値が完全に一致することは稀なので、テンプレートの強度値と画像の対応する強度値との間の相違度合い（disarrangement）を測る必要があります。いくつかの測度が定義できます。
+<!--
+Suppose that we have a template \(g[i, j]\) and we wish to detect its instances in
+an image \(f[i,j]\). An obvious thing to do is to place the template at a location
 in an image and to detect its presence at that point by comparing intensity
 values in the template with the corresponding values in the image. Since it is
 rare that, intensity values will match exactly, we require a measure of dissim-
 ilarity between the intensity values of the template and the corresponding
 values of the image. Sevcral measures may be defined:
-
-max, |f — | (15.7)
-Y lf-al (15.8)
-RgleR
-XY GF -9 (15.9)
-Ls, eR
-
-where F# is the region of the template.
-
+-->
+\[
+\begin{align}
+&\max_{[i,j]\in R} |f-g|  \tag{15.7} \\
+\\
+& \sum_{[i,j]\in R} |f-g| \tag{15.8} \\
+\\
+& \sum_{[i,j]\in R} (f-g)^2 \tag{15.9}
+\end{align}
+\]
+ここで、\(R\) はテンプレートの領域です。
+<!--
+where \(R\) is the region of the template.
+-->
+</p><p>
+二乗誤差の和は最も一般的な指標です。テンプレートマッチングの場合、この指標は間接的に計算できるため、計算コストを削減できます。簡略化するには次のようにします。
+<!--
 The sum of the squared errors is the most popular measure. In the
 case of template matching, this measure can be computed indirectly and
 computational cost can be reduced. We can simplify:
+-->
+\[
+\sum_{[i,j]\in R} (f-g)^2=\sum_{[i,j]\in R} f^2 + \sum_{[i,j]\in R} g^2 - 2\sum_{[i,j]\in R} fg \tag{15.10}
+\]
 
-S-9P = VP? + YH? 2 fs (15.10)
-
-li9] ER lige R jl eR
-
-Now if we assume that f and g are fixed, then > fg gives a measure of
+</p><p>
+ここで、\(f\)と\(g\)が固定されていると仮定すると、\(\sum fg\)は不一致の尺度を与えます。テンプレートのすべての位置とインスタンスを取得するための合理的な戦略は、テンプレートをシフトし、画像内のすべての点で一致尺度を使用することです。したがって、m x nテンプレートの場合、次のように計算します。
+<!--
+Now if we assume that \(f\) and \(g\) are fixed, then \(\sum fg\) gives a measure of
 mismatch. A reasonable strategy for obtaining all locations and instances of
 the template is to shift the template and use the match measure at every
 point in the image. Thus, for an m x n template, we compute
-
-m Te
-Mis, j) = SOV ok] fe+ G40) (15.11)
-k=l 1=1
-where & and J are the displacements with respect to the template in the
-image.!
+-->
+\[
+M[i,j]=\sum_{k=1}^m\sum_{l=1}^n g[k.l] f[i+k,j+l] \tag{15.11}
+\]
+ここで、\(k\) と \(l\) は画像内のテンプレートに対する変位です。<sup>1</sup>
+<!--
+where \(k\) and \(l\) are the displacements with respect to the template in the
+image.<sup>1</sup>
+-->
+</p><p class="margin-large">
+<syp>1</sup>
+この操作は、\(f\) と \(g\) 間の相互相関と呼ばれます。
+<!--
+This operation is called the cross-correlation between \(f\) and \(g\).
+-->
+</p><p>
+私たちの目的は、局所的最大値であり、かつある閾値を超える位置を見つけることです。しかし、上記の計算では、\(f\)と\(g\)が一定であると仮定したために、小さな問題が発生しました。この計算を画像に適用すると、テンプレート\(g\)は一定ですが、\(f\)の値は変化します。すると、\(M\)の値は\(f\)に依存するため、異なる位置における一致を正しく示すことができなくなります。この問題は、正規化相互相関を用いることで解決できます。一致度\(M\)は、次のように計算できます。
+<!--
 Our aim will be to find the locations that are local maxima and are above a
 certain threshold value. However, a minor problem in the above computation
-
-1This operation is called the cross-correlation between f and g.
-15.6. VERIFICATION 483
-
-was introduced when we assumed that f and g are constant. When applying
-this computation to images, the template g is constant, but the value of f
-will be varying. The valuc of M will then depend on f and hence will not
+was introduced when we assumed that \(f\) and \(g\) are constant. When applying
+this computation to images, the template \(g\) is constant, but the value of \(f\)
+will be varying. The valuc of \(M\) will then depend on \(f\) and hence will not
 give a correct indication of the match at different locations. This problem
-can be solved by using normalized cross-correlation. The match measure M
+can be solved by using normalized cross-correlation. The match measure \(M\)
 then can be computed using
-
-m on
-
-Cylit, J) = OM alk P+ BHU (15.12)
-
-k=1l=1
-
-(ha Dh lit ag + RP
-
-It can be shown that M takes maximum value for [2,7] at which g = ef. In
+-->
+\[
+\begin{align}
+C_{fg}[i,j] &= \sum_{k=1}^m \sum_{l=1}^n g[k,l]f[i+k,j+l]  \tag{15.12} \\
+\\
+M[i,j] &= \frac{C_{fg}[i,j]}{\{\sum_{k=1}^m\sum_{l=1}^n f^2[i+k, j+l]\}^{1/2}} \tag{15.13}
+\end{align}
+\]
+Mは、\(g = cf\)となる\([i,j]\)で最大値をとることが示せます。図15.14に、画像、テンプレート、そして上記の計算結果を示します。テンプレートの位置で局所的最大値が得られることに注目してください。
+<!--
+It can be shown that M takes maximum value for \([i,j]\) at which \(g = cf\). In
 Figure 15.14, we show an image, a template, and the result of the above com-
 putation. Notice that at the location of the template, we get local maxima.
-
+-->
+</p>
+<center><img src="images/fig15_14.png"></center>
+<p>
+図15.14: テンプレート(a)、画像(b)、上で説明したテンプレートマッチング計算の結果(c)、および一致位置を見つけるためのしきい値処理の結果(d)、T = 240。
+<!--
+Figure 15.14: A template (a), an image (b), the result of the template match-
+ing computations discussed above (c), and the thresholded result to find the
+match locations (d), T = 240.
+-->
+</p><p>
+上記の計算は、2値画像では大幅に簡素化できます。
+テンプレートマッチング手法は光コンピューティングで非常に人気があり、畳み込みの周波数領域特性を利用して計算を簡素化します。
+<!--
 The above computations can be simplified significantly in binary images.
 Template matching approaches have been quite popular in optical comput-
 ing: frequency domain characteristics of convolution are used to simplify the
 computation.
-
+-->
+</p><p>
+テンプレートマッチングの大きな限界は、テンプレートの移動にしか機能しないことです。回転やサイズ変更の場合は効果がありません。また、オブジェクトの部分的なビューのみの場合にも機能しません。
+<!--
 A major limitation of template matching is that it only works for trans-
 lation of the template. In case of rotation or size changes, it is ineffective. It
 also fails in case of only partial views of objects.
-
-M[i,j] = (15.13)
-
-15.6.2. Morphological Approach
-
+-->
+</p>
+<h3>15.6.2. 形態学的アプローチ</h3>
+<!--
+<h3>15.6.2. Morphological Approach</h3>
+-->
+<p>
+形態学的アプローチは、テンプレートの存在と位置を検出するためにも使用できます。2値画像の場合、構造要素をテンプレートとして使用し、画像を開くと、テンプレートが適合するすべての位置が表示されます。グレー画像の場合は、グレー画像形態学を使用できます。図15.15に、テンプレートに対する結果を示します。
+<!--
 Morphological approaches can also be used to detect the presence and lo-
 cation of templates. For binary images, using the structuring clement as
 the template and then opening the image will result in all locations where
 the template fits in. For gray images, one may use gray-image morphology.
 These results are shown for a template in Figure 15.15.
-
-15.6.3 Symbolic
-
+-->
+</p>
+<center><img src="images/fig15_15.png"></center>
+<p>
+<center>図15.15: (a) 構造化要素、(b) 画像、(c) 形態学的オープニングの結果</center>
+<!--
+Figure 15.15: A structuring clement (a), an image (b), and the result of the
+morphological opening (c).
+-->
+</p>
+<h3>15.6.3 シンボリック</h3>
+<!--
+<h3>15.6.3 Symbolic</h3>
+-->
+<p>
+上で述べたように、オブジェクトのモデルと未知のオブジェクトの両方がグラフとして表現されている場合、それらのグラフ表現を一致させるために何らかのアプローチを用いる必要があります。ここでは、これらのアプローチの背後にある基本概念を定義します。
+<!--
 As discussed above, if both medels of objects and the unknown object are rep-
 resented as graphs, then some approach must. be used for matching graphical
 representations. Here we define the basic concepts behind these approaches.
-484 CHAPTER 15. OBJECT RECOGNITION
+-->
 
-: objects in the real
-bject models, This {
-cognition effortlessl
-ask for implement:
-x we will discuss d
+</p><p>
+<strong>グラフ同型性</strong><br>
 
-echniques that hav
+2つのグラフ \((V_1, E_1)\) と \((V_2, E_2)\) が与えられたとき、\(V_1\) と \(V_2\) の間の 1:1 かつ全射写像（同型性）\(f\) を求めよ。\(\theta_1, \theta_2\in V_1,V_2, f(\theta_1) = \theta_2\) であり、\(E_1\) の任意のノード対 \(\theta_1\) と \(\theta_1^\prime\in V_1\) を結ぶ辺ごとに、\(E_2\) の辺に \(f(\theta_1)\) と \(f(\theta_1^\prime)\) を結ぶ辺が存在する。
+<!--
+<strong>Graph Isomorphism</strong><br>
 
-We will discuss diff
-
-(c) (d)
-Figure 15.14: A template (a), an image (b), the result of the template match-
-ing computations discussed above (c), and the thresholded result to find the
-match locations (d), T = 240.
-
-Graph Isomorphism
-
-Given two graphs (4, 2.) and (V%, Fa), find a 1:1 and onto mapping (an
-isomorphism) f between V, and V2 such that for 6,02 € Vi,Ve, f(Ai) = %
-aud for each edge of B, connecting any pair of nodes @, and 6, € Vj, there is
-an edge of By connecting f(@,) and f(6,).
-
+Given two graphs \((V_1, E_1)\) and \((V_2, E_2)\), find a 1:1 and onto mapping (an
+isomorphism) \(f\) between \(V_1\) and \(V_2\) such that for \(\theta_1, \theta_2\in V_1,V_2, f(\theta_1) = \theta_2\) and for each edge of \(E_1\) connecting any pair of nodes \(\theta_1\) and \(\theta_1^\prime \in V_1\), there is
+an edge of \(E_2\) connecting \(f(\theta_1)\) and \(f(\theta_1^\prime)\).
+-->
+</p><p>
+グラフ同型性は、オブジェクトが完全に可視である場合にのみ使用できます。オブジェクトが部分的に可視である場合、または2.5次元の記述を3次元の記述と一致させる必要がある場合は、グラフ埋め込み、または部分グラフ同型性を使用できます。
+<!--
 Graph isomorphism can be used only in cases of completely visible ob-
 jects. If an object is partially visible, or a 2.5-dimensional description is
 to be matched with a 3-dimensional description, then graph embedding, or
 subgraph isomorphisms, can be used.
-15.6. VERIFICATION 485
+-->
 
-(a)
-‘objectsinthe real © €
-bject models. This |
+</p><p>
+<strong>部分グラフ同型性</strong><br>
 
-cognition effortless] e
-ask for implement: e
-‘r we will discuss d_ e
+グラフ \((V_1, E_1)\) と別のグラフの部分グラフ \((V_2, E_2)\) との間の同型性を見つけます。
+<!--
+<strong>Subgraph Isomorphisms</strong><br>
 
-echniques that hav e
-
-We will discuss difl e
-(b) (c)
-Figure 15.15: A structuring clement (a), an image (b), and the result of the
-morphological opening (c).
-
-Subgraph Isomorphisms
-
-Find isomorphisms between a graph (Vi, £;) and subgraphs of another graph
-(Va, Ba).
-
+Find isomorphisms between a graph \((V_1, E_1)\) and subgraphs of another graph
+\((V_2, E_2)\).
+-->
+</p><p>
+これらのマッチング手法の問題点は、グラフ同型性がNP問題であることです。どんな合理的なオブジェクト記述に対しても、マッチングに必要な時間は法外なものになります。幸いなことに、グラフ同型性アルゴリズムで使用される情報よりも多くの情報を使用できます。この情報は、ノードの特性という観点から得られます。グラフマッチング問題を解決するために、多くのヒューリスティックが提案されています。これらのヒューリスティックでは、以下の点を考慮する必要があります。
+<!--
 A problem with these approaches for matching is that the graph isomor-
 phism is an NP problem. For any reasonable object description, the time
 required for matching will be prohibitive. Fortunately, we can use more
 information than that used by graph isomorphism algorithms. This informa-
-486 CHAPTER 15. OBJECT RECOGNITION
-
 tion is available in terms of the propertics of nodes. Many heuristics have
 been proposed to solve the graph matching problem. These heuristics should
 consider:
+-->
+<div class="styleBullet">
+<ul><li>
+● プロパティと関係の可変性
+</li><br><li>● プロパティまたは関係の欠如
+</li><br><li>● モデルはオブジェクトのクラスの抽象化であるという事実
+</li><br><li>● インスタンスには追加情報が含まれる可能性があるという事実
+<!--
+● Variability in properties and relations
+</li><br><li>● Absence of properties or relations
+</li><br><li>● The fact that a model is an abstraction of a class of objects
 
-e Variability in properties and relations
-e Absence of properties or relations
-e The fact that a model is an abstraction of a class of objects
-
-e The fact that instances may contain extra information.
-
+</li><br><li>● The fact that instances may contain extra information.
+-->
+</li></ul></div>
+</p><p>
+類似性を定式化する一つの方法は、グラフ内の弧を、ノードで二つの質量を結ぶバネとみなすことです。すると、マッチングの質は、テンプレートの局所的な適合度と、バネを伸張させて未知の要素をモデルデータに押し付けるために必要なエネルギー量の関数となります。
+<!--
 One way to formulate the similarity is to consider the arcs in the graph
 as springs connecting two masses at the nodes. The quality of the match
 is then a function of the goodness of fit of the templates locally and the
 amount of energy needed to stretch the springs to force the unknown onto
 the modelence data.
-
-C = > template cost(d, F(d))
-deRy
-+ 3¥° spring cost(F(d), F(e))
-(de) € Ba
-+ S° missing cost(c) (15.14)
-cé Rg
-
-where R,= {found in model}, Rz= {found in model x found in unknown},
-and Rs = {missing in model} U {missing in unknown}. This function rep-
+-->
+\[
+\begin{align}
+C =& \sum_{d\in R_1} \text{template cost}(d, F(d)) \\
+\\
+&+ \sum_{(d,e)\in R_2} \text{spring cost}(F(d), F(e)) \\
+\\
+&+ \sum_{c\in R_2} \text{missing cost}(c) \tag{15.14}
+\end{align}
+\]
+ここで、\(R_1 = \{\text{モデルで見つかった値}\}、R_2 = \{\text{モデルで見つかった値 x 未知で見つかった値}\}\)、
+\(R_3 = \{\text{モデルに欠けている値}\} U \{\text{未知に欠けている値}\}\)。この関数は非常に一般的な定式化を表しています。テンプレートコスト、スプリングコスト、および欠落コストは、さまざまな形式をとることができます。これらの関数の正確な形式は、アプリケーションによって決まります。
+<!--
+where \(R_1= \{\text{found in model}\}, R_2= \{\text{found in model x found in unknown}\}\),
+and \(R_3 = \{\text{missing in model}\} U \{\text{missing in unknown}\}\). This function rep-
 resents a very general formulation. Template cost, spring cost, and missing
 cost can take many different forms. Applications will determine the exact
 form of these functions.
-
-15.6.4 Analogical Methods
-
+-->
+</p>
+<h3>15.6.4 類推的方法</h3>
+<!--
+<h3>15.6.4 Analogical Methods</h3>
+-->
+<p>
+2つの曲線の類似性は、図15.16に示すように、同じ参照フレーム上で2つの曲線を比較し、すべての点におけるそれらの差を直接測定することによって測ることができます。図15.16では、差は\(x\)軸上のすべての点で測定されていることに注意してください。差は常にいずれかの軸に沿って測定されます。合計差は、絶対誤差の合計または二乗誤差の合計のいずれかです。正確な位置合わせが与えられていない場合は、相関に基づく手法の何らかのバリエーションを使用する必要があります。
+<!--
 A measure of similarity between two curves can be obtained by comparing
 them on the same frame of reference, as shown in Figure 15.16, and directly
 measuring the difference between them at every point. Notice that in Figure
-15.16 the difference is measured at every point along the x axis. The differ-
+15.16 the difference is measured at every point along the \(x\) axis. The differ-
 ence will always be measured along some axis. The total difference is either
-FURTHER READING 487
-
-| Ba | @ Curve |
-
-; | © Curve 2
-4 |
-
-@ Curves | and 2 coincide
-
-x
-
-Figure 15.16: Matching of two entities by directly measuring the errors be-
-tween them.
-
 the sum of absolute errors or the sum of squared errors. If exact. registration
 is not given, some variation of correlation-based methods must be used.
-
+-->
+</p>
+<center><img src="images/fig15_16.png"></center>
+<p>
+図15.16: 2つのエンティティ間の誤差を直接測定することによるそれらのマッチング。
+<!--
+Figure 15.16: Matching of two entities by directly measuring the errors be-
+tween them.
+-->
+</p><p>
+3次元モデルを用いて物体を認識する場合、コンピュータグラフィックスのレンダリング技術を用いて画像内での物体の外観を見つけ、元の画像と比較して物体の存在を確認することが考えられます。物体のレンダリングに必要なパラメータは通常は不明であるため、通常は3次元モデル上のいくつかの顕著な特徴を考慮し、それらを検出してマッチングさせることで、画像内のモデルのインスタンスを検証します。この結果、物体の3次元表面特性とその投影を研究し、物体認識に使用できる不変量を決定する理論が発展しました。不変量とは通常、物体の向きやシーンの照明に比較的影響を受けない画像内の特徴または特性です。このような特徴は、2次元投影から3次元物体を検出する際に非常に役立ちます。
+<!--
 For recognizing objects using three-dimensional models, one may use
 rendering techniques from computer graphics to find their appearence in
 an image and then try to compare with the original image to verify the
@@ -1122,19 +1419,26 @@ nition. Invariants are usually features or characteristics in images that are
 relatively insensitive to an object’s orientation and scene illumination. Such
 features are very useful in detecting three-dimensional objects from their
 two-dimensional projections.
-
-Further Reading
-
+-->
+</p><p>
+<h2>さらに学ぶために</h2>
+<!--
+<h2>Further Reading</h2>
+-->
+<p>
+物体認識は、マシンビジョンにおける最も重要なトピックの一つであり、様々な形で大きな注目を集めてきました。パターン分類のための多くのアプローチが開発されてきました。これらのアプローチは、マシンビジョンの多くの応用において非常に有用です。パターン分類の優れた入門書として、[70]を参照してください。物体認識に関する優れたサーベイ論文としては、ChinとDyer [57]、Binford [34]、BeslとJain [27]などがあります。
+<!--
 Object recognition has been one of the most important topics in machine
 vision. In one form or another, it has attracted significant attention. Many
 approaches have been developed for pattern classification. These approaches
-488 CHAPTER 15. OBJECT RECOGNITION
-
 are very useful in many applications of machine vision. For an excellent
 introduction to pattern classification, see [70]. Some very good survey papers
 on object recognition are by Chin and Dyer [57], Binford [34], and Besl and
 Jain [27].
-
+-->
+</p><p>
+多くの物体認識システムは、画像に対して奥行き計測を行う低レベルの視覚モジュールを基盤としています。これらの計測値はしばしば不完全で信頼性に欠け、高レベルの認識モジュールの性能に悪影響を及ぼします。このアプローチとは対照的に、Lowe は、画像のボトムアップ記述によって視点不変な画像特徴のグループ化を生成するシステムを説明しています [158]。Brooks の ACRONYM システムは、モデルとシーンオブジェクトの記述に一般化円筒を用いる、ドメインに依存しないモデルベース解釈システムです [49, 50]。この方向に沿ったその後の研究は、SUCCESSOR プロジェクトの下で行われ、[33] に掲載されています。
+<!--
 Many object recognition systems are built upon low-level vision modules
 which operate upon images to derive depth measurements. These measure-
 ments are often incomplete and unrcliable and thus adversely affect the per-
@@ -1145,7 +1449,10 @@ ACRONYM system is a domain-independent model-based interpretation sys-
 tem which uses generalized cylinders for the description of modcl and scene
 objects [49, 50]. Some later work along this line was performed under the
 SUCCESSOR project and is given in [33].
-
+-->
+</p><p>
+ほとんどの物体認識研究は、少数の物体を対象としてきました。非常に多くの物体を認識する必要がある場合、認識タスクは仮説検定アプローチによって支配されます。仮説段階では、特徴によってインデックス付けされたモデルを体系化し、観測された特徴に基づいて、可能性のある物体の少数の集合を選択する必要があります。その後、選択されたモデルは、この集合のどの物体が与えられた画像に存在するかを検証することで、物体を認識するために使用されます。このようなアプローチは、Knoll and Jain [143]、Ettinger [75]、Grimson [93]、Lamdan and Wolfson [151]で示されています。
+<!--
 Most object recognition research has considered a small set of objects. If
 a very large number of objects are to be recognized, the recognition task will
 be dominated by hypothesis and test approaches. The hypothesis phase will
@@ -1154,7 +1461,10 @@ features, a small set of likely objects can be selected. Later these selected
 models may be used to recognize objects by verifying which object from this
 set is present in the given image. Such approaches are given in Knoll and
 Jain [143], Ettinger [75], Grimson [93], Lamdan and Wolfson [151].
-
+-->
+</p><p>
+多くの産業用途では、物体の詳細な幾何モデルが利用可能である。これらのモデルは、3次元物体の特徴選択を含む認識戦略の生成に使用できる。CADベースの物体認識は、現在いくつかの場所で研究されている[34, 99, 32, 221, 178]。3次元物体の認識における重要なステップは、それらの可能な2次元投影を考慮して、有効な特徴と認識戦略を決定することである。物体の無限2次元投影ビューをアスペクトグラフと呼ばれる位相的に等価なクラスに分類する手法は、KoenderinkとVan Doornによって導入された[144, 145]。その認識への応用は、ChakravartyとFreemanによって説明されている[56]。GigusとMalik[88]は、アスペクトグラフを生成するアルゴリズムを開発した。最近、曲面物体のアスペクトグラフを計算するアルゴリズムも設計されている[73, 149, 226]。
+<!--
 In many industrial applications, detailed geometric models of objects are
 available. These models can be used for generating recognition strategics,
 including feature selection, for three-dimensional objects. CAD-based object
@@ -1168,11 +1478,12 @@ to recognition is described by Chakravarty and Freeman [56]. Gigus and
 Malik [88] developed an algorithm for generating aspect graphs. Recently al-
 gorithms have been designed for computing aspect graphs for curved objects
 also [73, 149, 226}.
-
+-->
+</p><p>
+池内と金出[120]は、物体モデルとセンサーモデルを自動的に視覚認識戦略にコンパイルする新しいシステムについて述べている。このシステムは、モデルから認識に有用な特徴を抽出し、異なる物体の外観に対応するために適用すべき制御シーケンスを決定する。この種のアプローチに代わる手法として、物体認識のためのニューラルネットワークアプローチがある。物体認識は、ニューラルネットワークにおいて最も研究されている分野の一つである。しかしながら、ニューラルネットワークの研究のほとんどは、限られた2次元物体のみを対象としてきた。
+<!--
 Ikeuchi and Kanade [120] describe a novel system in which the object and
 sensor models are automatically compiled into a visual recognition strategy.
-EXERCISES 489
-
 The system extracts from the models those features that are useful for recog-
 nition and determines the control sequence that must be applied to handle
 different object appearances. An alternative to this kind of approach is pre-
@@ -1180,71 +1491,111 @@ sented by neural network approaches for object recognition. Object. recogni-
 tion is one of the most researched areas in neural networks. Most research
 in neural networks, however, has addressed only limited two-dimensional ob-
 jects.
+-->
+</p><p>
 
-Exercises
+<h2>Exercises</h2>
+<div class="styleRef">
+<ul><li>
+15.1 物体認識システムの主要な構成要素を列挙し、認識タスクにおけるそれらの役割について論じなさい。
 
+</li><br><li>15.2 ステレオタイプ化は社会でしばしば批判される現象である。しかし、物体認識タスクはステレオタイプ化に依存している。ステレオタイプ化が物体認識においてどのように重要な役割を果たすか、特にモデルベースと特徴集合を関連付ける役割について説明しなさい。
+
+</li><br><li>15.3 モデルベースの適切な表現を選択する際に考慮すべき要素は何か。物体中心表現と観察者中心表現の長所と短所について論じなさい。
+
+</li><br><li>15.4 アスペクトグラフとは何か。物体の画像特徴とそれらの関係性に基づいた一般化アスペクトグラフを作成しなさい。このようなアスペクトグラフはどこで使用できますか。
+
+</li><br><li>15.5 特徴空間とは何か。特徴空間を用いてどのように物体を認識するのでしょうか？
+
+</li><br><li>15.6 ベイズ推定に基づく従来のパターン認識手法とニューラルネット手法を比較し、それぞれの手法で用いられる特徴空間、分類手法、物体モデルについて考察しなさい。
+
+</li><br><li>15.7 ニューラルネットの最も魅力的な特徴の一つは学習能力です。ニューラルネットの学習能力は物体認識にどのように活用されるのでしょうか？ニューラルネットはどのようなモデルを作成するのでしょうか？物体に関する知識をニューラルネットにどのように取り入れることができるのでしょうか？
+
+</li><br><li>15.8 物体認識においてマッチングはどこで用いられますか？シンボリックマッチング手法とは何ですか？
+
+</li><br><li>15.9 特徴インデックスとは何ですか？物体認識をどのように向上させるのでしょうか？
+
+</li><br><li>15.10 テンプレートマッチングについて論じなさい。どのような種類のアプリケーションでテンプレートマッチングを用いるのでしょうか？テンプレートマッチングの主な限界は何ですか？これらの限界をどのように克服できますか？
+
+</li><br><li>15.11 三角形の面を持つ4面三面体多面体のアスペクトグラフを描きなさい。
+
+</li><br><li>15.12 以下に示すテンプレート g と画像 f を、正規化相互相関法を用いてマッチングさせなさい。以下の式を求めなさい。
+
+<ul><li>
+a. 相互相関 \(C_{fg}\)。
+
+</li><br><li>b. \(\sum\sum f^2\)。
+
+</li><br><li>c. 正規化相互相関 \(M[i,j]\)。
+<!--
 15.1 List the major components of an object recognition system. Discuss
 their role in the recognition task.
 
-15.2 Stereotyping is a phenomenon often criticized in society. Object
+</li><br><li>15.2 Stereotyping is a phenomenon often criticized in society. Object
 recognition tasks, however, are dependent on stereotyping. Explain
 how stereotyping plays an important role in object recognition, par-
 ticularly its role in relating modelbase and set of features.
 
-15.3 What factors would you consider in selecting an appropriate represen-
+</li><br><li>15.3 What factors would you consider in selecting an appropriate represen-
 tation for the modelbase’? Discuss the advantages and disadvantages
 of object-centered and observer-centered representations.
 
-15.4 What is an aspect graph? Develop a generalized aspect graph that is
+</li><br><li>15.4 What is an aspect graph? Develop a generalized aspect graph that is
 based on image featurcs and their relationships for an object. Where
 can you use such an aspect graph?
 
-15.5 What is feature space? How can you recognize objects using feature
+</li><br><li>15.5 What is feature space? How can you recognize objects using feature
 space?
 
-15.6 Compare classical pattern recognition approaches based on Bayesian
+</li><br><li>15.6 Compare classical pattern recognition approaches based on Bayesian
 approaches with neural net approaches by considering the feature
 space, classification approaches, and object models used by both of
 these approaches.
 
-15.7 One of the most attractive features of neural ncts is their ability to
+</li><br><li>15.7 One of the most attractive features of neural ncts is their ability to
 learn. How is their ability to learn used in object recognition? What
 kind of model is prepared by a neural net? How can you introduce
 your knowledge about objects in neural nets?
-490 CHAPTER 15. OBJECT RECOGNITION
 
-15.8 Where do you use matching in object recognition? What is a symbolic
+</li><br><li>15.8 Where do you use matching in object recognition? What is a symbolic
 matching approach?
 
-15.9 What is feature indexing? How does it improve object recognition?
+</li><br><li>15.9 What is feature indexing? How does it improve object recognition?
 
-15.10 Discuss template matching. In which type of applications would you
+</li><br><li>15.10 Discuss template matching. In which type of applications would you
 use template matching? What are the major limitations of template
 matching? How can you overcome these limitations?
 
-15.11 Sketch the aspect graph of a four-faced trihedral polyhedron with
+</li><br><li>15.11 Sketch the aspect graph of a four-faced trihedral polyhedron with
 triangular faces.
 
-15.12 A template g is matched with an image f, both shown below, using
+</li><br><li>15.12 A template g is matched with an image f, both shown below, using
 the normalized cross-correlation method. Find:
 
-a. The cross-correlation C'yg.
+<ul><li>
+a. The cross-correlation \(C_{fg}\).
 
-b. SY f?.
+</li><br><li>b. \(\sum\sum f^2\).
 
-c. The normalized cross-correlation Mz, j].
+</li><br><li>c. The normalized cross-correlation \(M[i,j]\).
+-->
+</li></ul>
+</li></ul></div>
+</p>
+<center><img src="images/excercise15_12.png"></center>
+<h2>コンピュータープロジェクト</h2>
+<!--
+<h2>Computer Projects</h2>
+-->
+<p>
+<div class="styleRef">
+<ul><li>
+15.1 物体認識システムを実装し、物体を部分的な視点から認識する。画像内の物体は、オフィスの風景によく見られる約10個の物体から構成される。多かれ少なかれ2次元的な物体（コイン、鍵、付箋紙、名刺など）のみを選択する。カメラは机の約8倍の高さに設置する。これらの物体が異なる形で写っている多数のランダムな画像を用いて、システムをテストする。
 
-0,000 [0,0 070
-0/2/4/2/ 0/0/00
-Te :
-, - Se Pfoleleto _ RHE
-0{ 7,0; dTo/0T2/0 g roto
-Tf2{1[0[0}2/ 4/2
-d]Lofolo][d o]o
-Of1[o/o}o[o/o/6
+</li><br><li>15.2 上記の例を続け、今度は物体が3次元的な物体（マウス、ホッチキスなど）である場合を考え、プロトタイプの物体認識システムを再設計・実装する。このシステムは、3次元的な物体を部分的な視点から認識する。
 
-Computer Projects
-
+</li><br><li>15.3 モデルベースに多数の物体があると仮定する。多数のオブジェクトに対してオブジェクト認識タスクを効率的に実行できるようにシステムを再設計します。
+<!--
 15.1 Implement an object recognition system to recognize objects from their
 partial views. The objects in an image are from a given set of about
 10 objects that are commonly found in an office scenc. Select only
@@ -1255,12 +1606,12 @@ COMPUTER PROJECTS 491
 above the desk. Test your system by considering many random images
 in which these objects appear in different ways.
 
-15.2 Continuing the above example, now consider that the objects are three-
+</li><br><li>15.2 Continuing the above example, now consider that the objects are three-
 dimensional (mouse, stapler, etc.), and redesign and reimplement a
 prototype object recognition system. This system should recognize
 three-dimensional objects from their partial views.
 
-15.3 Now assume that you have a large number of objects in your modelbase.
+</li><br><li>15.3 Now assume that you have a large number of objects in your modelbase.
 Redesign your system to perform the objcct recognition task efficiently
 for a large number of objects.
 -->
