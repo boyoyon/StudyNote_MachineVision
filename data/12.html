@@ -814,6 +814,8 @@ Now we are left with the problem of determining the rotation that will align
 the two bundles of rays.
 -->
 </p><p>
+回転の導出の残りの部分では、点は重心の周りの光線として表され、すべての座標は光線座標となります。光線束は共役光線対の集合から導出されているため、カメラの光線束のどの光線が絶対座標のどの光線束に対応するかがわかります。2つの光線束が一直線になると、図12.2に示すように、対応する各光線対は一致します。言い換えれば、各光線対は同じ線上にあり、同じ方向を向きます。測定誤差の影響を無視すると、各光線対間の角度は0、この角度の余弦は1になります。測定誤差によって光線束が完全に一直線になることは妨げられますが、各光線対のスカラー積を最大化する回転R(q)を見つけることで、最小二乗法の意味で最適な一直線を実現できます。
+<!--
 In the rest of this derivation of the rotation, the points will be expressed as
 rays about the centroids and all coordinates will be ray coordinates. Since the
 bundles of rays were derived from the set of conjugate pairs, we know which
@@ -826,7 +828,7 @@ rays will be 0 and the cosine of this angle will be 1. Measurement errors
 will prevent the bundles from being perfectly aligned, but we can achieve
 the best alignment in a least-squares sense by finding the rotation R(q) that
 maximizes the scalar product of each ray pair:
-
+-->
 </p>
 <center><img src="images/fig12_2.png"></center>
 <p class="margin-large">
